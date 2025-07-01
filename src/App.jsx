@@ -16,9 +16,9 @@ import TentangKamiLPKPage from "./component/pages/TentangKamiLPKpage";
 import TentangKamiLKPPage from "./component/pages/TentangKamiLKPpage";
 import TentangKamiYayasanPage from "./component/pages/TentangKamiYayasanpage";
 import LupaPasswordPage from "./component/pages/LupaPasswordpage";
+import VerificationResultPage from "./component/pages/VerificationResultPage";
 
-
-import KetuaDashboardPage from "./component/pages/KetuaDashboardpage"
+import KetuaDashboardPage from "./component/pages/KetuaDashboardpage";
 
 import AdminPesertaPage from "./component/pages/AdminPesertapage";
 import AdminKontenPage from "./component/pages/AdminKontenpage";
@@ -32,8 +32,6 @@ import StatusPendaftaranPage from "./component/pages/StatusPendaftaranpage";
 import FeedBackPage from "./component/pages/Feedbackpage";
 import AdminFeedbackPage from "./component/pages/AdminFeedbackpage";
 
-
-
 function App() {
   return (
     <Routes>
@@ -43,7 +41,10 @@ function App() {
         <Route path="/daftar/:id" element={<DaftarPage />} />
         <Route path="/tentangkamiLPK" element={<TentangKamiLPKPage />} />
         <Route path="/tentangkamiLKP" element={<TentangKamiLKPPage />} />
-        <Route path="/tentangkamiYayasan" element={<TentangKamiYayasanPage />} />
+        <Route
+          path="/tentangkamiYayasan"
+          element={<TentangKamiYayasanPage />}
+        />
         <Route path="/pelatihan/:id" element={<DetailPelatihan />} />
         <Route path="/berita/:id" element={<DetailBeritaPage />} />
         <Route path="/statusdaftar" element={<StatusPendaftaranPage />} />
@@ -54,6 +55,7 @@ function App() {
         <Route path="/regis" element={<RegisterPage />} />
         <Route path="/profil" element={<ProfilePage />} />
         <Route path="/editprofil" element={<EditProfilePage />} />
+        <Route path="/verify-email" element={<VerificationResultPage />} />
       </Route>
 
       {/* Layout untuk Admin */}
