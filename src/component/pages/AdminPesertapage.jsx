@@ -1,183 +1,226 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Button from '../Elements/Button/index';
 import Typography from '../Elements/AdminSource/Typhography';
-import PaginatedDataTable from '../Fragments/PaginationDataTable';
 import DetailModal from '../Fragments/DetailModal';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaExclamationCircle, FaEdit, FaTrashAlt, FaSpinner } from 'react-icons/fa';
 import { fetchData, updateData, deleteData, apiEndpoints } from '../../services/api.js';
 
 const PesertaPage = () => {
-  // Dummy Data
-  const dummyPendidikanOptions = [
-    { value: '1', label: 'SD/Sederajat' },
-    { value: '2', label: 'SMP/Sederajat' },
-    { value: '3', label: 'SMA/SMK/Sederajat' },
-    { value: '4', label: 'D3/Diploma' },
-    { value: '5', label: 'S1/Sarjana' },
-    { value: '6', label: 'S2/Magister' },
-    { value: '7', label: 'S3/Doktor' }
-  ];
-
-  const dummyPesertaData = [
-    {
-      id: 1,
-      nama: 'Ahmad Budiman',
-      email: 'ahmad.budiman@email.com',
-      telepon: '08123456789',
-      alamat: 'Jl. Merdeka No. 123, Jakarta Pusat',
-      nik_peserta: '3171234567890001',
-      jenis_kelamin: 'Laki-laki',
-      tanggal_lahir: '1990-05-15',
-      status_kerja: 'bekerja',
-      pendidikan_id: '5',
-      nama_pendidikan: 'S1/Sarjana',
-      foto_peserta: 'https://via.placeholder.com/150x150/0066cc/ffffff?text=Ahmad',
-      pelatihan: 'Web Development Fullstack',
-      status_pendaftaran: 'diterima',
-      tanggalDaftar: '15 Januari 2024',
-      ktp_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      kk_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      pas_photo_file: 'https://via.placeholder.com/300x400/0066cc/ffffff?text=Pas+Photo+Ahmad',
-      ijazah_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      original_user_id: 1,
-      original_user_name: 'Ahmad Budiman',
-      original_user_email: 'ahmad.budiman@email.com'
-    },
-    {
-      id: 2,
-      nama: 'Siti Nurhaliza',
-      email: 'siti.nurhaliza@email.com',
-      telepon: '08234567890',
-      alamat: 'Jl. Sudirman No. 456, Bandung',
-      nik_peserta: '3273456789012345',
-      jenis_kelamin: 'Perempuan',
-      tanggal_lahir: '1995-08-20',
-      status_kerja: 'kuliah',
-      pendidikan_id: '3',
-      nama_pendidikan: 'SMA/SMK/Sederajat',
-      foto_peserta: 'https://via.placeholder.com/150x150/ff6b9d/ffffff?text=Siti',
-      pelatihan: 'Digital Marketing',
-      status_pendaftaran: 'diterima',
-      tanggalDaftar: '20 Januari 2024',
-      ktp_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      kk_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      pas_photo_file: 'https://via.placeholder.com/300x400/ff6b9d/ffffff?text=Pas+Photo+Siti',
-      ijazah_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      original_user_id: 2,
-      original_user_name: 'Siti Nurhaliza',
-      original_user_email: 'siti.nurhaliza@email.com'
-    },
-    {
-      id: 3,
-      nama: 'Budi Santoso',
-      email: 'budi.santoso@email.com',
-      telepon: '08345678901',
-      alamat: 'Jl. Gatot Subroto No. 789, Surabaya',
-      nik_peserta: '3578901234567890',
-      jenis_kelamin: 'Laki-laki',
-      tanggal_lahir: '1988-12-10',
-      status_kerja: 'wirausaha',
-      pendidikan_id: '4',
-      nama_pendidikan: 'D3/Diploma',
-      foto_peserta: 'https://via.placeholder.com/150x150/4ecdc4/ffffff?text=Budi',
-      pelatihan: 'Data Analytics',
-      status_pendaftaran: 'diterima',
-      tanggalDaftar: '25 Januari 2024',
-      ktp_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      kk_file: null, // Tidak ada file KK
-      pas_photo_file: 'https://via.placeholder.com/300x400/4ecdc4/ffffff?text=Pas+Photo+Budi',
-      ijazah_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      original_user_id: 3,
-      original_user_name: 'Budi Santoso',
-      original_user_email: 'budi.santoso@email.com'
-    },
-    {
-      id: 4,
-      nama: 'Maya Sari',
-      email: 'maya.sari@email.com',
-      telepon: '08456789012',
-      alamat: 'Jl. Diponegoro No. 321, Yogyakarta',
-      nik_peserta: '3401234567890123',
-      jenis_kelamin: 'Perempuan',
-      tanggal_lahir: '1992-03-25',
-      status_kerja: 'belum_bekerja',
-      pendidikan_id: '5',
-      nama_pendidikan: 'S1/Sarjana',
-      foto_peserta: null, // Tidak ada foto
-      pelatihan: 'UI/UX Design',
-      status_pendaftaran: 'diterima',
-      tanggalDaftar: '30 Januari 2024',
-      ktp_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      kk_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      pas_photo_file: 'https://via.placeholder.com/300x400/ffd93d/ffffff?text=Pas+Photo+Maya',
-      ijazah_file: null, // Tidak ada ijazah
-      original_user_id: 4,
-      original_user_name: 'Maya Sari',
-      original_user_email: 'maya.sari@email.com'
-    },
-    {
-      id: 5,
-      nama: 'Rizki Pratama',
-      email: 'rizki.pratama@email.com',
-      telepon: '08567890123',
-      alamat: 'Jl. Ahmad Yani No. 654, Medan',
-      nik_peserta: '1271098765432109',
-      jenis_kelamin: 'Laki-laki',
-      tanggal_lahir: '1993-07-08',
-      status_kerja: 'bekerja',
-      pendidikan_id: '6',
-      nama_pendidikan: 'S2/Magister',
-      foto_peserta: 'https://via.placeholder.com/150x150/6c5ce7/ffffff?text=Rizki',
-      pelatihan: 'Mobile App Development',
-      status_pendaftaran: 'diterima',
-      tanggalDaftar: '5 Februari 2024',
-      ktp_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      kk_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      pas_photo_file: 'https://via.placeholder.com/300x400/6c5ce7/ffffff?text=Pas+Photo+Rizki',
-      ijazah_file: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      original_user_id: 5,
-      original_user_name: 'Rizki Pratama',
-      original_user_email: 'rizki.pratama@email.com'
-    }
-  ];
-
-  // States
-  const [dataPeserta, setDataPeserta] = useState(dummyPesertaData); 
-  const [loading, setLoading] = useState(false);
+  const [dataPeserta, setDataPeserta] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(dummyPesertaData.length);
-  
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10; // per_page yang dikirim ke backend
+
   const [selectedPeserta, setSelectedPeserta] = useState(null);
   const [editedPeserta, setEditedPeserta] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   
-  const [selectedEditFiles, setSelectedEditFiles] = useState({});
-  const [pendidikanOptions, setPendidikanOptions] = useState(dummyPendidikanOptions);
-  
-  const itemsPerPage = 10;
+  const [searchTerm, setSearchTerm] = useState(''); // Untuk input langsung oleh user
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState(''); // Search term yang benar-benar akan digunakan untuk request API
+                                                                  // Ini yang akan diubah saat tombol Cari diklik atau Enter
 
-  // Simulate data fetching
+  const [selectedPelatihanId, setSelectedPelatihanId] = useState(''); 
+  const [pelatihanOptions, setPelatihanOptions] = useState([]); 
+
+  const [selectedEditFiles, setSelectedEditFiles] = useState({});
+  const [pendidikanOptions, setPendidikanOptions] = useState([]);
+  
   useEffect(() => {
-    setTotalPages(Math.ceil(dummyPesertaData.length / itemsPerPage));
-    setTotalItems(dummyPesertaData.length);
+    const fetchPendidikanOptions = async () => {
+      try {
+        const response = await fetchData(apiEndpoints.pendidikan);
+        if (response && Array.isArray(response.data)) { 
+          setPendidikanOptions(response.data.map(p => ({ value: p.id, label: p.nama_pendidikan })));
+        } else if (response && response.data && Array.isArray(response.data.data)) { 
+          setPendidikanOptions(response.data.data.map(p => ({ value: p.id, label: p.nama_pendidikan })));
+        }
+      } catch (err) {
+        console.error("Failed to fetch pendidikan options:", err);
+      }
+    };
+    fetchPendidikanOptions();
   }, []);
 
-  const filteredDataDisplay = dataPeserta.filter(peserta => {
-    const matchesSearch = (searchTerm === '' || (peserta.nama || '').toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesSearch;
-  });
+  useEffect(() => {
+    const fetchPelatihanOptions = async () => {
+      try {
+        let allPelatihanItems = [];
+        let nextPageUrl = `${apiEndpoints.pelatihan}`; 
 
+        while (nextPageUrl) {
+          const response = await fetchData(nextPageUrl);
+          if (response && Array.isArray(response.data)) {
+              allPelatihanItems = allPelatihanItems.concat(response.data);
+              nextPageUrl = response.links?.next; 
+          } else if (response && response.data && Array.isArray(response.data.data)) {
+              allPelatihanItems = allPelatihanItems.concat(response.data.data);
+              nextPageUrl = response.data.links?.next; 
+          } else {
+              nextPageUrl = null; 
+          }
+        }
+        setPelatihanOptions(allPelatihanItems.map(p => ({ value: p.id, label: p.nama_pelatihan })));
+      } catch (err) {
+        console.error("Failed to fetch pelatihan options:", err);
+      }
+    };
+    fetchPelatihanOptions();
+  }, []);
+
+  // --- FUNGSI PENGAMBILAN DATA (SERVER-SIDE PAGINATION) ---
+  const fetchPesertaData = useCallback(async () => {
+    setLoading(true);
+    setError(null); 
+    try {
+      let url = `${apiEndpoints.peserta}?registration_status=diterima`; 
+      url += `&page=${currentPage}`; 
+      url += `&per_page=${itemsPerPage}`; 
+
+      if (appliedSearchTerm) { 
+        url += `&search=${encodeURIComponent(appliedSearchTerm)}`;
+      }
+      if (selectedPelatihanId) {
+        url += `&pelatihan_id=${encodeURIComponent(selectedPelatihanId)}`;
+      }
+
+      console.log("Fetching Peserta Data (Server-Side) from URL:", url);
+      const response = await fetchData(url);
+      console.log("API Raw Response (Server-Side) for Peserta:", response);
+      
+      let fetchedRawItems = [];
+      let currentTotal = 0;
+      let currentLastPage = 1;
+      let currentCurrentPage = 1;
+
+      // Logika pemrosesan respons API (sesuai struktur respons Anda)
+      if (response && Array.isArray(response.data)) {
+          fetchedRawItems = response.data;
+          currentTotal = response.total || response.data.length;
+          currentLastPage = response.last_page || 1;
+          currentCurrentPage = response.current_page || 1;
+      } 
+      else if (response && response.data && Array.isArray(response.data.data)) {
+          fetchedRawItems = response.data.data;
+          currentTotal = response.data.total || response.data.data.length;
+          currentLastPage = response.data.last_page || 1;
+          currentCurrentPage = response.data.current_page || 1;
+      } else {
+        console.warn('API response for peserta data is not in expected format:', response);
+      }
+
+      // --- Mapping data ke format frontend yang konsisten ---
+      const mappedData = fetchedRawItems.map(item => {
+        const allDaftarPelatihan = item.daftar_pelatihan || []; 
+        const acceptedRegistrations = allDaftarPelatihan.filter(reg => reg.status?.toLowerCase() === 'diterima');
+        
+        const primaryAcceptedReg = acceptedRegistrations.length > 0 ? acceptedRegistrations[0] : null;
+
+        const getFilenameFromPath = (fullPath) => fullPath ? fullPath.split('/').pop() : null;
+
+        const ktpFilename = getFilenameFromPath(primaryAcceptedReg?.ktp);
+        const kkFilename = getFilenameFromPath(primaryAcceptedReg?.kk);
+        const pasPhotoFilename = getFilenameFromPath(primaryAcceptedReg?.foto);
+        const ijazahFilename = getFilenameFromPath(primaryAcceptedReg?.ijazah);
+        const fotoPesertaFilename = getFilenameFromPath(item.foto_peserta);
+
+        const ktp_file_url = ktpFilename ? `http://localhost:8000/api/documents/${ktpFilename}` : null; // NEW URL
+        const kk_file_url = kkFilename ? `http://localhost:8000/api/documents/${kkFilename}` : null; // NEW URL
+        const pas_photo_file_url = pasPhotoFilename ? `http://localhost:8000/api/documents/${pasPhotoFilename}` : null; // NEW URL
+       const ijazah_file_url = ijazahFilename ? `http://localhost:8000/api/documents/${ijazahFilename}` : null; // NEW URL
+        const foto_peserta_url = fotoPesertaFilename ? `http://localhost:8000/api/profile-photos/${fotoPesertaFilename}` : null; // NEW URL (adjust if using a single /documents endpoint)
+
+        return {
+          id: item.id,
+          nama: item.user?.name || 'N/A', // Ambil nama dari relasi user
+          email: item.user?.email || 'N/A', // Ambil email dari relasi user
+          telepon: item.nomor_telp || 'N/A',
+          alamat: item.alamat_peserta || 'N/A',
+          nik_peserta: item.nik_peserta || '',
+          jenis_kelamin: item.jenis_kelamin || '',
+          tanggal_lahir: item.tanggal_lahir || '',
+          pendidikan_id: item.pendidikan_id || '',
+          nama_pendidikan: item.pendidikan?.nama_pendidikan || 'N/A',
+          foto_peserta: foto_peserta_url,
+
+          daftar_pelatihan_diterima: acceptedRegistrations,
+          
+          ktp_file: ktp_file_url,
+          kk_file: kk_file_url,
+          pas_photo_file: pas_photo_file_url,
+          ijazah_file: ijazah_file_url,
+          
+          original_user_id: item.user_id,
+          original_user_name: item.user?.name || '',
+          original_user_email: item.user?.email || '',
+        };
+      });
+      // --- Akhir Mapping data ---
+
+      setDataPeserta(mappedData);
+      setTotalPages(currentLastPage);
+      setCurrentPage(currentCurrentPage);
+      setTotalItems(currentTotal);
+
+    } catch (err) {
+      console.error("Failed to fetch peserta:", err);
+      if (err.code === 'ERR_NETWORK') {
+        setError('Network Error: Pastikan backend Laravel berjalan dan CORS dikonfigurasi dengan benar.');
+      } else if (err.response) {
+        setError(`Gagal memuat data peserta: ${err.response.status} - ${err.response.statusText}`);
+      } else {
+        setError("Gagal memuat data peserta.");
+      }
+      setDataPeserta([]);
+      setTotalItems(0);
+      setTotalPages(1);
+      setCurrentPage(1);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, itemsPerPage, appliedSearchTerm, selectedPelatihanId]); // Dependency diubah ke appliedSearchTerm
+
+  // Efek ini akan terpicu saat currentPage, appliedSearchTerm, atau selectedPelatihanId berubah
+  useEffect(() => {
+    fetchPesertaData();
+  }, [fetchPesertaData]);
+
+  // --- Kolom Tabel ---
   const columns = [
     { key: 'index', header: 'No', render: (value, row, index) => (currentPage - 1) * itemsPerPage + index + 1 },
     { key: 'nama', header: 'Nama' },
-    { key: 'pelatihan', header: 'Pelatihan' },
-    { key: 'tanggalDaftar', header: 'Tanggal Diterima' }
+    { key: 'email', header: 'Email' },
+    { 
+      key: 'pelatihan', 
+      header: 'Pelatihan',
+      render: (value, row) => {
+          if (row.daftar_pelatihan_diterima && Array.isArray(row.daftar_pelatihan_diterima)) {
+              if (row.daftar_pelatihan_diterima.length > 0) {
+                  return row.daftar_pelatihan_diterima.map(reg => reg.pelatihan?.nama_pelatihan || 'N/A').join(', ');
+              }
+          }
+          return 'N/A';
+      }
+    },
+    { 
+      key: 'tanggalDaftar', 
+      header: 'Tanggal Diterima',
+      render: (value, row) => {
+          if (row.daftar_pelatihan_diterima && Array.isArray(row.daftar_pelatihan_diterima)) {
+              const primaryAcceptedReg = row.daftar_pelatihan_diterima.find(reg => reg.status?.toLowerCase() === 'diterima');
+              return primaryAcceptedReg ? new Date(primaryAcceptedReg.created_at).toLocaleDateString('id-ID') : 'N/A';
+          }
+          return 'N/A';
+      }
+    },
+    { key: 'telepon', header: 'Telepon' },
   ];
 
+  // --- Modal Fields ---
   const modalFields = [
     { key: 'nama', label: 'Nama Lengkap', type: 'text', backendKey: 'name' },
     { key: 'email', label: 'Email', type: 'email', backendKey: 'email' },
@@ -187,12 +230,6 @@ const PesertaPage = () => {
     { key: 'jenis_kelamin', label: 'Jenis Kelamin', type: 'select', backendKey: 'jenis_kelamin',
       options: [{ value: 'Laki-laki', label: 'Laki-laki' }, { value: 'Perempuan', label: 'Perempuan' }] },
     { key: 'tanggal_lahir', label: 'Tanggal Lahir', type: 'date', backendKey: 'tanggal_lahir' },
-    { key: 'status_kerja', label: 'Status Kerja', type: 'select', backendKey: 'status_kerja',
-      options: [
-        { value: 'bekerja', label: 'Bekerja' }, { value: 'belum_bekerja', label: 'Belum Bekerja' },
-        { value: 'kuliah', label: 'Kuliah' }, { value: 'wirausaha', label: 'Wirausaha' },
-        { value: 'tidak_diketahui', label: 'Tidak Diketahui' }
-      ] },
     { key: 'pendidikan_id', label: 'Pendidikan', type: 'select', backendKey: 'pendidikan_id',
       options: pendidikanOptions,
       renderDisplay: (value) => {
@@ -200,9 +237,26 @@ const PesertaPage = () => {
         return opt ? opt.label : 'N/A';
       }},
     { key: 'foto_peserta', label: 'Foto Profil Peserta', type: 'file', accept: 'image/*', backendKey: 'foto_peserta' },
-    { key: 'pelatihan', label: 'Pelatihan Diikuti', type: 'text', readonly: true },
-    { key: 'tanggalDaftar', label: 'Tanggal Diterima', type: 'text', readonly: true }
   ];
+
+  const customModalContent = (data) => (
+    <>
+      <div className="mb-4">
+        <h4 className="text-sm font-semibold text-gray-700 mb-1">Pelatihan yang Diikuti (Diterima):</h4>
+        {data.daftar_pelatihan_diterima && data.daftar_pelatihan_diterima.length > 0 ? (
+          <ul className="list-disc list-inside text-sm text-gray-800">
+            {data.daftar_pelatihan_diterima.map((reg, idx) => (
+              <li key={idx}>
+                {reg.pelatihan?.nama_pelatihan || 'Nama Pelatihan Tidak Diketahui'} (Diterima pada: {new Date(reg.created_at).toLocaleDateString('id-ID')})
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-500">Tidak ada pelatihan yang diikuti dengan status Diterima.</p>
+        )}
+      </div>
+    </>
+  );
 
   const documentFields = [
     { key: 'ktp_file', label: 'KTP', type: 'document', backendKey: 'ktp', urlPrefix: 'documents/daftar_pelatihan' },
@@ -213,8 +267,11 @@ const PesertaPage = () => {
 
   const handleViewDetail = (peserta) => {
     setSelectedPeserta(peserta);
-    setEditedPeserta({ ...peserta });
-    setSelectedEditFiles({}); 
+    setEditedPeserta({ 
+        ...peserta, 
+        daftar_pelatihan_diterima: peserta.daftar_pelatihan_diterima || [] 
+    });
+    setSelectedEditFiles({});
     setShowDetail(true);
     setIsEditing(false);
   };
@@ -231,38 +288,66 @@ const PesertaPage = () => {
 
   const handleSaveEdit = async () => {
     setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      // Update data in state
-      const updatedData = dataPeserta.map(item => 
-        item.id === selectedPeserta.id ? { ...editedPeserta } : item
-      );
-      setDataPeserta(updatedData);
+    setError(null);
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('_method', 'PUT');
+
+      modalFields.forEach(field => {
+        if (field.backendKey === 'name') {
+            formDataToSend.append('name', editedPeserta.nama); 
+        } else if (field.backendKey === 'email') {
+            formDataToSend.append('email', editedPeserta.email);
+        } else if (editedPeserta[field.key] !== undefined && field.type !== 'file') {
+            formDataToSend.append(field.backendKey, editedPeserta[field.key]);
+        }
+      });
       
-      alert('Data peserta berhasil diperbarui!');
-      setShowDetail(false);
-      setIsEditing(false);
-      setSelectedEditFiles({});
+      if (selectedEditFiles.foto_peserta) {
+        formDataToSend.append('foto_peserta', selectedEditFiles.foto_peserta);
+      } else if (editedPeserta.foto_peserta === null && selectedPeserta.foto_peserta) {
+        formDataToSend.append('remove_foto_peserta', true);
+      }
+
+      const response = await updateData(apiEndpoints.peserta, selectedPeserta.id, formDataToSend);
+
+      if (response) {
+        await fetchPesertaData(); 
+        alert('Data peserta berhasil diperbarui!');
+        setShowDetail(false);
+        setIsEditing(false);
+        setSelectedEditFiles({});
+      } else {
+        throw new Error('Respons update kosong atau tidak valid.');
+      }
+    } catch (err) {
+      console.error('Gagal memperbarui peserta:', err);
+      if (err.response && err.response.data && err.response.data.errors) {
+        const errorMessages = Object.values(err.response.data.errors).flat().join('; ');
+        setError(`Validasi gagal: ${errorMessages}`);
+      } else {
+        setError(`Gagal memperbarui peserta: ${err.message}`);
+      }
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleDelete = async () => {
     if (window.confirm(`Apakah Anda yakin ingin menghapus peserta ${selectedPeserta.nama} ini? Semua data terkait juga akan dihapus.`)) {
       setLoading(true);
-      
-      // Simulate API call
-      setTimeout(() => {
-        const updatedData = dataPeserta.filter(item => item.id !== selectedPeserta.id);
-        setDataPeserta(updatedData);
-        setTotalItems(updatedData.length);
-        setTotalPages(Math.ceil(updatedData.length / itemsPerPage));
-        
+      setError(null);
+      try {
+        await deleteData(apiEndpoints.peserta, selectedPeserta.id);
+        await fetchPesertaData(); 
         alert('Peserta berhasil dihapus!');
         setShowDetail(false);
+      } catch (err) {
+        console.error('Gagal menghapus peserta:', err);
+        setError(`Gagal menghapus peserta: ${err.message}`);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     }
   };
 
@@ -288,14 +373,45 @@ const PesertaPage = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+  
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
 
   const handleRowAction = (row) => {
     handleViewDetail(row);
   };
 
+  const handlePelatihanFilterChange = (e) => {
+    setSelectedPelatihanId(e.target.value);
+    setCurrentPage(1); // Reset ke halaman 1 saat filter berubah
+    fetchPesertaData(); // Trigger fetch data saat filter pelatihan berubah
+  };
+
+  const handleSearchTermChange = (e) => {
+    setSearchTerm(e.target.value); // Update input field value immediately
+  };
+
+  const handleSearchButtonClick = () => {
+    setAppliedSearchTerm(searchTerm); // Set appliedSearchTerm dari searchTerm saat ini
+    setCurrentPage(1); // Reset ke halaman 1 untuk pencarian baru
+    // fetchPesertaData() akan terpicu oleh perubahan appliedSearchTerm di useEffect
+  };
+
+  const handleSearchInputKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchButtonClick(); // Panggil fungsi klik tombol Cari
+    }
+  };
+
+
   if (loading) {
     return (
-      <div>
+      <div className="p-6 bg-gray-100 min-h-screen">
         <Typography variant="h2" className="mb-6">
           Peserta
         </Typography>
@@ -306,11 +422,12 @@ const PesertaPage = () => {
 
   if (error) {
     return (
-      <div>
+      <div className="p-6 bg-gray-100 min-h-screen text-center text-red-500">
         <Typography variant="h2" className="mb-6">
-          Peserta
+          Terjadi Kesalahan
         </Typography>
-        <div className="text-center text-red-500 py-8">Error: {error}</div>
+        <p>{error}</p>
+        <Button onClick={() => fetchPesertaData()} variant="primary" className="mt-4">Coba Lagi</Button>
       </div>
     );
   }
@@ -318,49 +435,130 @@ const PesertaPage = () => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <Typography variant="h2" className="mb-6">
-        Demo Peserta Page
+        Peserta
       </Typography>
-
-      <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-800 mb-2">🎯 Demo Features:</h3>
-        <ul className="text-sm text-blue-700 space-y-1">
-          <li>• <strong>Tabel Peserta</strong> dengan data dummy lengkap</li>
-          <li>• <strong>DetailModal</strong> dengan tab Informasi + Dokumen</li>
-          <li>• <strong>Download ZIP</strong> untuk semua dokumen peserta</li>
-          <li>• <strong>Individual download/view</strong> untuk setiap dokumen</li>
-          <li>• <strong>Edit & Delete</strong> functionality (simulated)</li>
-        </ul>
-      </div>
 
       <div className="mb-4 flex flex-wrap gap-4 items-center justify-end">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
+          {/* Input Search Nama */}
           <input
             type="text"
             placeholder="Cari nama peserta..."
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={handleSearchTermChange}
+            onKeyPress={handleSearchInputKeyPress} // Tambahkan ini
             className="border border-gray-300 p-2 rounded w-60"
           />
+          {/* Tombol Cari */}
+          <button
+            onClick={handleSearchButtonClick}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Cari
+          </button>
+          {/* Dropdown Filter Pelatihan */}
+          <select
+            value={selectedPelatihanId}
+            onChange={handlePelatihanFilterChange}
+            className="border border-gray-300 p-2 rounded w-60"
+          >
+            <option value="">Semua Pelatihan</option>
+            {pelatihanOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <PaginatedDataTable
-        title="Daftar Peserta"
-        columns={columns}
-        data={filteredDataDisplay} 
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        onPageChange={handlePageChange}
-        totalItems={totalItems} 
-        totalPages={totalPages} 
-        hasActions={true}
-        onRowAction={handleRowAction}
-        actionIcon={FaSearch}
-      />
+      <div className="bg-white p-4 rounded shadow mb-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm text-left">
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                {columns.map(col => (
+                  <th key={col.key} className="px-4 py-2">{col.header}</th>
+                ))}
+                <th className="px-4 py-2 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dataPeserta.length > 0 ? (
+                dataPeserta.map((peserta, idx) => (
+                  <tr key={peserta.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                    {columns.map(col => (
+                      <td key={col.key} className="px-4 py-2">
+                        {col.render ? col.render(peserta[col.key], peserta, idx) : peserta[col.key]}
+                      </td>
+                    ))}
+                    <td className="px-4 py-2 text-center">
+                      <button 
+                        onClick={() => handleViewDetail(peserta)}
+                        className="text-gray-600 hover:text-blue-500 transition-colors"
+                        title="Lihat Detail Peserta"
+                      >
+                        <FaSearch />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={columns.length + 1} className="px-4 py-8 text-center text-gray-500">
+                    <div className="flex flex-col items-center">
+                      <FaExclamationCircle className="text-3xl mb-2 text-gray-400" />
+                      <p className="text-sm">
+                        Tidak ada peserta yang ditemukan sesuai filter.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
+        {totalItems > 0 && (
+          <div className="flex justify-between items-center mt-4">
+            <div className="text-sm text-gray-600">
+              Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, (currentPage - 1) * itemsPerPage + dataPeserta.length)} dari {totalItems} data
+            </div>
+            <div className="flex justify-center space-x-2">
+              <button
+                onClick={handlePrevPage}
+                className="px-3 py-2 border rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={currentPage === 1}
+              >
+                Prev
+              </button>
+
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`px-3 py-2 border rounded ${
+                    currentPage === i + 1 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={handleNextPage}
+                className="px-3 py-2 border rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      
       {/* Modal Detail/Edit Peserta */}
       <DetailModal
         isOpen={showDetail}
@@ -378,6 +576,7 @@ const PesertaPage = () => {
         fields={modalFields}
         documentFields={documentFields}
         showDocuments={true}
+        customContent={customModalContent}
       />
     </div>
   );

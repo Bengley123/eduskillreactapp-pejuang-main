@@ -33,6 +33,8 @@ const NavMenu = ({ isLoggedIn }) => {
       {/* Link Navigasi */}
       <NavLink href="/">Home</NavLink>
       <NavLink href="/galeri">Galeri</NavLink>
+      <NavLink href="/pelatihanlengkap">Pelatihan</NavLink>
+      <NavLink href="/beritalengkap">Berita</NavLink>
 
       {/* Dropdown Tentang Kami */}
       <div className="relative" ref={dropdownRef}>

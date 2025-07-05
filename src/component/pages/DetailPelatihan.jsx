@@ -90,16 +90,18 @@ const DetailPelatihan = () => {
 
   return (
     <DetailPelatihanSection
-      id={pelatihan.id}
-      title={pelatihan.nama_pelatihan}
-      imageSrc={imageUrl}
-      description={pelatihan.keterangan_pelatihan}
-      instructor={pelatihan.instruktur || "Tidak tersedia"}
-      biaya={pelatihan.biaya || 0}
-      kuota={pelatihan.kuota || 0}
-      onDaftar={handleDaftar}
+    id={pelatihan.id}
+    title={pelatihan.nama_pelatihan}
+    imageSrc={imageUrl}
+    description={pelatihan.keterangan_pelatihan}
+    kategori={pelatihan.kategori}
+    instructor={pelatihan.mentor?.nama_mentor || "Tidak tersedia"} // Access mentor name from nested object
+    biaya={pelatihan.biaya || 0}
+    kuota={pelatihan.jumlah_kuota || 0} // Use jumlah_kuota from backend
+    deadline={pelatihan.waktu_pengumpulan} // Pass deadline if you want to use it
+    onDaftar={handleDaftar}
     />
   );
 };
 
-export default DetailPelatihan;
+export default DetailPelatihan; 

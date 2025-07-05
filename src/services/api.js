@@ -126,15 +126,21 @@ export const apiEndpoints = {
   lpk: '/profile-lpk',
   yayasan: '/profile-yayasan',
 
-  // Endpoints untuk Slideshow, Banner, Berita, Galeri
   slideshow: '/slideshow',
   banner: '/banner',
   berita: '/berita',
   informasiGaleri: '/informasi-galeri',
   feedback: '/feedback',
 
-  pendidikan: '/pendidikan', // Asumsi ada endpoint untuk data master pendidikan
+  pendidikan: '/pendidikan', 
   peserta: '/peserta', 
+
+  visiMisi: '/informasi-lembaga',
+  informasiKontak: '/informasi-kontak',
+
+  daftarPelatihan:'/daftar-pelatihan',
+  pelatihan: '/pelatihan',
+  mentor: '/mentor',
 };
 
 export default api;

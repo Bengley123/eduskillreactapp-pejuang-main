@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaPlus, FaTimes, FaTrashAlt, FaEdit, FaSave, FaUpload, FaChevronDown, FaChevronRight, FaImage, FaInfo, FaBuilding, FaNewspaper, FaCalendarAlt, FaChevronLeft, FaEye, FaFlag } from 'react-icons/fa';
 
+// Pastikan apiEndpoints memiliki definisi untuk visiMisi
 import api, { fetchData, updateData, createData, deleteData, apiEndpoints, setAuthToken } from '../../services/api.js';
 
-// --- Komponen Pagination ---
+// --- Komponen Pagination (Tidak Berubah) ---
 const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, searchTerm, onSearchChange }) => {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -93,7 +94,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
   );
 };
 
-// --- Komponen VisiMisiEditor (SUB dari Tentang Kami) ---
+// --- Komponen VisiMisiEditor (SUB dari Tentang Kami) - Modifikasi untuk Integrasi API ---
 const VisiMisiEditor = ({ data, setData, apiEndpoint, visiMisiId, setVisiMisiId, onSaveSuccess }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({ 
@@ -133,33 +134,37 @@ const VisiMisiEditor = ({ data, setData, apiEndpoint, visiMisiId, setVisiMisiId,
 
       let response;
       if (visiMisiId) {
-        formDataToSend.append('_method', 'PUT');
+        // Jika ada ID, gunakan PUT untuk update
+        formDataToSend.append('_method', 'PUT'); // Penting untuk Laravel PUT dengan FormData
         response = await updateData(apiEndpoint, visiMisiId, formDataToSend);
       } else {
+        // Jika tidak ada ID, gunakan POST untuk membuat baru
         response = await createData(apiEndpoint, formDataToSend);
       }
 
+      // Pastikan response.data memiliki struktur yang diharapkan
       const apiResponseData = response.data.data ? response.data.data : response.data;
 
       setData({
-        visi: apiResponseData.visi || editedData.visi,
-        misi: apiResponseData.misi || editedData.misi,
-        id: apiResponseData.id || visiMisiId,
+        visi: apiResponseData.visi || editedData.visi, // Gunakan data dari API jika tersedia
+        misi: apiResponseData.misi || editedData.misi, // Gunakan data dari API jika tersedia
+        id: apiResponseData.id || visiMisiId, // Perbarui ID jika ini adalah entri baru
       });
 
       if (!visiMisiId && apiResponseData.id) {
-        setVisiMisiId(apiResponseData.id);
+        setVisiMisiId(apiResponseData.id); // Set ID jika baru dibuat
       }
 
       alert('Visi dan Misi berhasil disimpan!');
       setIsEditing(false);
       
       if (onSaveSuccess) {
-        onSaveSuccess();
+        onSaveSuccess(); // Panggil fungsi refresh data di parent
       }
 
     } catch (err) {
       console.error('Failed to save Visi Misi data:', err);
+      // Penanganan error yang lebih detail dari response API
       setError(`Gagal menyimpan data Visi dan Misi. Pesan: ${err.response?.data?.message || err.message}.`);
     } finally {
       setLoading(false);
@@ -275,7 +280,7 @@ const VisiMisiEditor = ({ data, setData, apiEndpoint, visiMisiId, setVisiMisiId,
   );
 };
 
-// --- Komponen TableSection (untuk Slideshow dan Banner) LENGKAP ---
+// --- Komponen TableSection (Tidak Berubah) ---
 const TableSection = ({ title, apiEndpoint, data, setData }) => {
   const [showForm, setShowForm] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -769,7 +774,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
   );
 };
 
-// --- Komponen BeritaSection (LENGKAP) ---
+// --- Komponen BeritaSection (Tidak Berubah) ---
 const BeritaSection = ({ apiEndpoint, data, setData }) => {
   const [showForm, setShowForm] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -1330,7 +1335,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
   );
 };
 
-// --- Komponen GaleriSection (LENGKAP) ---
+// --- Komponen GaleriSection (Tidak Berubah) ---
 const GaleriSection = ({ apiEndpoint, data, setData }) => {
   const [showForm, setShowForm] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -1822,7 +1827,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
   );
 };
 
-// --- Komponen InformasiKontakEditor (FITUR BARU) ---
+// --- Komponen InformasiKontakEditor (Tidak Berubah) ---
 const InformasiKontakEditor = ({ data, setData, apiEndpoint, kontakId, setKontakId, onSaveSuccess }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({
@@ -2243,7 +2248,7 @@ const InformasiKontakEditor = ({ data, setData, apiEndpoint, kontakId, setKontak
   );
 };
 
-// --- Komponen TentangKamiEditor - LENGKAP ---
+// --- Komponen TentangKamiEditor (Tidak Berubah) ---
 const TentangKamiEditor = ({ data, setData, type, apiEndpoint, aboutId, setAboutId, onSaveSuccess }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({ ...data });
@@ -2472,14 +2477,14 @@ const TentangKamiEditor = ({ data, setData, type, apiEndpoint, aboutId, setAbout
   );
 };
 
-// Komponen utama untuk Kelola Informasi - LENGKAP
+// Komponen utama untuk Kelola Informasi - Modifikasi untuk Integrasi API Visi Misi
 const AdminKontenpage = () => {
   const [slideshowData, setSlideshowData] = useState([]);
   const [bannerData, setBannerData] = useState([]);
   const [beritaData, setBeritaData] = useState([]);
   const [galeriData, setGaleriData] = useState([]);
 
-  // State untuk Visi Misi (SUB dari Tentang Kami)
+  // State untuk Visi Misi
   const [visiMisiData, setVisiMisiData] = useState({ visi: '', misi: '' });
   const [visiMisiId, setVisiMisiId] = useState(null);
   const [loadingVisiMisi, setLoadingVisiMisi] = useState(true);
@@ -2512,25 +2517,35 @@ const AdminKontenpage = () => {
   const [activeSection, setActiveSection] = useState(null);
   const [activeTentangKami, setActiveTentangKami] = useState(null);
 
-  // Fungsi untuk fetch data Visi Misi
+  // Fungsi untuk fetch data Visi Misi (Implementasi API)
   const fetchVisiMisiData = async () => {
     setLoadingVisiMisi(true);
     try {
-      // Asumsikan API endpoint untuk visi misi adalah apiEndpoints.visiMisi
-      const response = await fetchData(apiEndpoints.visiMisi || '/api/visi-misi');
+      // Menggunakan apiEndpoints.visiMisi yang diasumsikan ada
+      const response = await fetchData(apiEndpoints.visiMisi || '/api/informasi-lembaga'); // Default fallback jika apiEndpoints.visiMisi belum ada
       if (response && response.data) {
+        // Asumsi API mengembalikan objek tunggal atau array dengan satu objek
         const apiItem = Array.isArray(response.data) ? response.data[0] : response.data;
-        if (apiItem && apiItem.id) {
+        if (apiItem && apiItem.id) { // Pastikan ada ID untuk mengidentifikasi record
           setVisiMisiData({
             visi: apiItem.visi || '',
             misi: apiItem.misi || '',
-            id: apiItem.id
+            id: apiItem.id // Simpan ID
           });
-          setVisiMisiId(apiItem.id);
+          setVisiMisiId(apiItem.id); // Set ID ke state
+        } else {
+             // Jika API mengembalikan data tapi tanpa ID atau tidak terstruktur, inisialisasi kosong
+            setVisiMisiData({ visi: '', misi: '' });
+            setVisiMisiId(null);
         }
+      } else {
+         // Jika tidak ada data atau response tidak valid
+        setVisiMisiData({ visi: '', misi: '' });
+        setVisiMisiId(null);
       }
     } catch (error) {
       console.error("Error fetching Visi Misi data:", error);
+      setError("Gagal memuat Visi dan Misi. Coba refresh halaman."); // Set error state jika ada masalah
       setVisiMisiData({ visi: '', misi: '' });
       setVisiMisiId(null);
     } finally {
@@ -2538,7 +2553,7 @@ const AdminKontenpage = () => {
     }
   };
 
-  // Fungsi untuk fetch data Informasi Kontak (FITUR BARU)
+  // Fungsi untuk fetch data Informasi Kontak (Tidak Berubah)
   const fetchInformasiKontakData = async () => {
     setLoadingKontak(true);
     try {
@@ -2732,8 +2747,8 @@ const AdminKontenpage = () => {
       console.log('AdminKontenpage useEffect: Token set from localStorage for initial data fetch.');
       fetchAllContentData();
       fetchAllTentangKamiData();
-      fetchVisiMisiData(); // Fetch data Visi Misi
-      fetchInformasiKontakData(); // Fetch data Informasi Kontak (FITUR BARU)
+      fetchVisiMisiData(); // Panggil saat komponen dimuat
+      fetchInformasiKontakData(); // Panggil saat komponen dimuat
     } else {
       console.log('AdminKontenpage useEffect: No token found in localStorage for initial data fetch. Please login.');
     }
@@ -2872,7 +2887,7 @@ const AdminKontenpage = () => {
                 <p className="text-blue-500 text-center">Memuat informasi Tentang Kami...</p>
               ) : (
                 <>
-                  {/* SUB-SECTION: Visi dan Misi (FITUR BARU) */}
+                  {/* SUB-SECTION: Visi dan Misi (INTEGRASI API) */}
                   <div className="mb-6">
                     <div className="bg-white border rounded-lg overflow-hidden">
                       <button
@@ -2895,10 +2910,10 @@ const AdminKontenpage = () => {
                             <VisiMisiEditor
                               data={visiMisiData}
                               setData={setVisiMisiData}
-                              apiEndpoint={apiEndpoints.visiMisi || '/api/visi-misi'}
+                              apiEndpoint={apiEndpoints.visiMisi || '/api/informasi-lembaga'} // Menggunakan endpoint API
                               visiMisiId={visiMisiId}
                               setVisiMisiId={setVisiMisiId}
-                              onSaveSuccess={fetchVisiMisiData}
+                              onSaveSuccess={fetchVisiMisiData} // Memanggil ulang fetch setelah save
                             />
                           )}
                         </div>
@@ -2906,7 +2921,7 @@ const AdminKontenpage = () => {
                     </div>
                   </div>
 
-                  {/* SUB-SECTIONS: Lembaga Information */}
+                  {/* SUB-SECTIONS: Lembaga Information (Tidak Berubah) */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div className="bg-white border rounded-lg overflow-hidden">
                       <button
@@ -2951,7 +2966,7 @@ const AdminKontenpage = () => {
                     </div>
                   </div>
 
-                  {/* Detail Sections untuk setiap lembaga */}
+                  {/* Detail Sections untuk setiap lembaga (Tidak Berubah) */}
                   {activeTentangKami === 'LKP BINA ESSA' && (
                     <TentangKamiEditor
                       data={tentangKamiData['LKP BINA ESSA']}
@@ -2991,7 +3006,7 @@ const AdminKontenpage = () => {
           )}
         </div>
 
-        {/* Section Informasi Kontak (FITUR BARU) */}
+        {/* Section Informasi Kontak (Tidak Berubah) */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <button
             onClick={() => toggleSection('informasiKontak')}
@@ -3014,7 +3029,7 @@ const AdminKontenpage = () => {
                   setData={setInformasiKontakData}
                   apiEndpoint={apiEndpoints.informasiKontak || '/api/informasi-kontak'}
                   kontakId={kontakId}
-                  setKontakId={setKontakId}
+                  setKontakId={setKontakId}   
                   onSaveSuccess={fetchInformasiKontakData}
                 />
               )}

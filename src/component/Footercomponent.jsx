@@ -35,7 +35,7 @@ const FooterComponent = () => {
             <li>Publikasi</li>
             <li>Pelayanan Publik</li>
             <li>FAQ</li>
-            <li>Hubungi Kami</li>
+            <li>Hubungi Kamia</li>
           </ul>
         </div>
 

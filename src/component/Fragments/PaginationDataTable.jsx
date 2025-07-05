@@ -16,11 +16,13 @@ const PaginatedDataTable = ({
   onAdd, 
   onRowAction,
   className = ""
+  
 }) => {
   const totalPages = Math.ceil(data.length / itemsPerPage);
   const paginatedData = data.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
+
   );
 
   return (
