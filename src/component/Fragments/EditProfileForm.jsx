@@ -2,7 +2,16 @@ import React, { useState, useEffect } from "react";
 import InputWithLabel from "../Elements/Input/index";
 import Button from "../Elements/Button/index";
 import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaPhone } from "react-icons/fa";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+  FaChevronDown,
+  FaChevronUp,
+} from "react-icons/fa";
 
 import api, { fetchData, updateData } from "../../services/api";
 import { setAuthToken } from "../../services/api";
@@ -14,6 +23,21 @@ const EditProfileForm = () => {
     email: "",
     nomor_telp: "",
   });
+
+  // State untuk password
+  const [passwordData, setPasswordData] = useState({
+    current_password: "",
+    new_password: "",
+    new_password_confirmation: "",
+  });
+
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirmation: false,
+  });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -22,8 +46,14 @@ const EditProfileForm = () => {
   const [emailError, setEmailError] = useState(null);
   const [nomorTelpError, setNomorTelpError] = useState(null);
 
+  // State untuk validasi password
+  const [currentPasswordError, setCurrentPasswordError] = useState(null);
+  const [newPasswordError, setNewPasswordError] = useState(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState(null);
+
   const [isFormValid, setIsFormValid] = useState(false);
   const [pesertaId, setPesertaId] = useState(null);
+
   const [isVerified, setIsVerified] = useState(false);
   const [originalEmail, setOriginalEmail] = useState("");
   const [sendingLink, setSendingLink] = useState(false);
@@ -166,6 +196,32 @@ const EditProfileForm = () => {
     checkFormValidity();
   }, [formData.name, formData.email, formData.nomor_telp]);
 
+  useEffect(() => {
+    const checkPasswordFormValidity = () => {
+      if (!showPasswordSection) {
+        setIsPasswordFormValid(false);
+        return;
+      }
+
+      const currentErr = validateCurrentPassword(passwordData.current_password);
+      const newErr = validateNewPassword(passwordData.new_password);
+      const confirmErr = validateConfirmPassword(
+        passwordData.new_password_confirmation,
+        passwordData.new_password
+      );
+
+      const isValid = !currentErr && !newErr && !confirmErr;
+      setIsPasswordFormValid(isValid);
+    };
+
+    checkPasswordFormValidity();
+  }, [
+    passwordData.current_password,
+    passwordData.new_password,
+    passwordData.new_password_confirmation,
+    showPasswordSection,
+  ]);
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
@@ -184,6 +240,38 @@ const EditProfileForm = () => {
     } else if (name === "nomor_telp") {
       setNomorTelpError(validateNomorTelp(value));
     }
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+
+    setPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (name === "current_password") {
+      setCurrentPasswordError(validateCurrentPassword(value));
+    } else if (name === "new_password") {
+      setNewPasswordError(validateNewPassword(value));
+      // Re-validate confirmation password when new password changes
+      if (passwordData.new_password_confirmation) {
+        setConfirmPasswordError(
+          validateConfirmPassword(passwordData.new_password_confirmation, value)
+        );
+      }
+    } else if (name === "new_password_confirmation") {
+      setConfirmPasswordError(
+        validateConfirmPassword(value, passwordData.new_password)
+      );
+    }
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
   };
 
   const handleSave = async () => {
@@ -263,6 +351,65 @@ const EditProfileForm = () => {
     }
   };
 
+  const handleChangePassword = async () => {
+    const currentErr = validateCurrentPassword(passwordData.current_password);
+    const newErr = validateNewPassword(passwordData.new_password);
+    const confirmErr = validateConfirmPassword(
+      passwordData.new_password_confirmation,
+      passwordData.new_password
+    );
+
+    setCurrentPasswordError(currentErr);
+    setNewPasswordError(newErr);
+    setConfirmPasswordError(confirmErr);
+
+    if (currentErr || newErr || confirmErr) {
+      return;
+    }
+
+    setSavingPassword(true);
+    setPasswordError(null);
+
+    try {
+      const response = await api.put("/change-password", {
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password,
+        new_password_confirmation: passwordData.new_password_confirmation,
+      });
+
+      console.log("Password berhasil diubah:", response.data);
+      alert("Password berhasil diubah!");
+
+      // Reset form password
+      setPasswordData({
+        current_password: "",
+        new_password: "",
+        new_password_confirmation: "",
+      });
+      setShowPasswordSection(false);
+    } catch (err) {
+      console.error("Gagal mengubah password:", err);
+      let errorMessage = "Gagal mengubah password.";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      } else if (
+        err.response &&
+        err.response.data &&
+        err.response.data.errors
+      ) {
+        errorMessage += " Kesalahan validasi: ";
+        for (const key in err.response.data.errors) {
+          errorMessage += `${err.response.data.errors[key].join(", ")} `;
+        }
+      } else {
+        errorMessage += ` Pesan: ${err.message}`;
+      }
+      setPasswordError(errorMessage);
+    } finally {
+      setSendingLink(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center mt-10 text-gray-600">
@@ -293,54 +440,60 @@ const EditProfileForm = () => {
       )}
 
       <div className="space-y-6">
-        <InputWithLabel
-          label="Nama Lengkap"
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          icon={FaUser}
-          disabled={saving}
-          error={nameError}
-        />
+        {/* Form Data Profil */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-medium text-gray-800 border-b pb-2">
+            Informasi Profil
+          </h3>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
-          <div className="flex items-end gap-4">
-            {/* Input field tetap sama */}
-            <div className="flex-grow">
-              <InputWithLabel
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                icon={FaEnvelope}
-                disabled={saving || sendingLink} // Tambahkan disabled saat sendingLink
-                error={emailError}
-              />
-            </div>
+          <InputWithLabel
+            label="Nama Lengkap"
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            icon={FaUser}
+            disabled={saving}
+            error={nameError}
+          />
 
-            {/* Logika untuk menampilkan badge atau tombol */}
-            <div className="flex-shrink-0">
-              {isVerified && formData.email === originalEmail ? (
-                <span className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-green-100 text-green-800 h-10">
-                  Terverifikasi
-                </span>
-              ) : (
-                <Button
-                  variant="primary"
-                  onClick={handleSendVerification}
-                  disabled={sendingLink || saving}
-                  className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 h-10 px-4" // Added h-10 px-4
-                >
-                  {sendingLink ? "Mengirim..." : "Verify"}
-                </Button>
-              )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <div className="flex items-end gap-4">
+              {/* Input field tetap sama */}
+              <div className="flex-grow">
+                <InputWithLabel
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  icon={FaEnvelope}
+                  disabled={saving || sendingLink} // Tambahkan disabled saat sendingLink
+                  error={emailError}
+                />
+              </div>
+
+              {/* Logika untuk menampilkan badge atau tombol */}
+              <div className="flex-shrink-0">
+                {isVerified && formData.email === originalEmail ? (
+                  <span className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-green-100 text-green-800 h-10">
+                    Terverifikasi
+                  </span>
+                ) : (
+                  <Button
+                    variant="primary"
+                    onClick={handleSendVerification}
+                    disabled={sendingLink || saving}
+                    className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 h-10 px-4" // Added h-10 px-4
+                  >
+                    {sendingLink ? "Mengirim..." : "Verify"}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
         <InputWithLabel
           label="Nomor Telepon"
@@ -353,21 +506,122 @@ const EditProfileForm = () => {
           error={nomorTelpError}
         />
 
-        <div className="flex justify-between mt-8">
-          <Button
-            variant="secondary"
-            onClick={() => navigate("/profil")}
-            disabled={saving}
+          <div className="flex justify-between mt-8">
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/profil")}
+              disabled={saving}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              disabled={saving || !isFormValid}
+            >
+              {saving ? "Menyimpan..." : "Simpan Profil"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Section Ganti Password */}
+        <div className="border-t pt-6">
+          <button
+            onClick={() => setShowPasswordSection(!showPasswordSection)}
+            className="flex items-center justify-between w-full text-left text-lg font-medium text-gray-800 hover:text-blue-600 transition-colors"
           >
-            Batal
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            disabled={saving || !isFormValid}
-          >
-            {saving ? "Menyimpan..." : "Simpan"}
-          </Button>
+            <span>Ganti Password</span>
+            {showPasswordSection ? <FaChevronUp /> : <FaChevronDown />}
+          </button>
+
+          {showPasswordSection && (
+            <div className="mt-4 space-y-4 bg-gray-50 p-4 rounded-lg">
+              {passwordError && (
+                <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded-md text-sm">
+                  {passwordError}
+                </div>
+              )}
+
+              <div className="relative">
+                <InputWithLabel
+                  label="Password Saat Ini"
+                  type={showPasswords.current ? "text" : "password"}
+                  name="current_password"
+                  value={passwordData.current_password}
+                  onChange={handlePasswordChange}
+                  icon={FaLock}
+                  disabled={savingPassword}
+                  error={currentPasswordError}
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("current")}
+                  className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
+                >
+                  {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+
+              <div className="relative">
+                <InputWithLabel
+                  label="Password Baru"
+                  type={showPasswords.new ? "text" : "password"}
+                  name="new_password"
+                  value={passwordData.new_password}
+                  onChange={handlePasswordChange}
+                  icon={FaLock}
+                  disabled={savingPassword}
+                  error={newPasswordError}
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("new")}
+                  className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
+                >
+                  {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+
+              <div className="relative">
+                <InputWithLabel
+                  label="Konfirmasi Password Baru"
+                  type={showPasswords.confirmation ? "text" : "password"}
+                  name="new_password_confirmation"
+                  value={passwordData.new_password_confirmation}
+                  onChange={handlePasswordChange}
+                  icon={FaLock}
+                  disabled={savingPassword}
+                  error={confirmPasswordError}
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("confirmation")}
+                  className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
+                >
+                  {showPasswords.confirmation ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+
+              <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                <p className="font-medium mb-1">Ketentuan Password Baru:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Minimal 8 karakter</li>
+                  <li>Mengandung huruf besar dan huruf kecil</li>
+                  <li>Mengandung minimal 1 angka</li>
+                </ul>
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  variant="primary"
+                  onClick={handleChangePassword}
+                  disabled={savingPassword || !isPasswordFormValid}
+                >
+                  {savingPassword ? "Mengubah Password..." : "Ubah Password"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
