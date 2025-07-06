@@ -1,309 +1,645 @@
-import React, { useState } from 'react';
-import { FaSearch, FaPlus, FaTimes, FaTrashAlt, FaEdit, FaSave, FaUserFriends, FaExclamationCircle, FaCheck } from 'react-icons/fa';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  FaSearch,
+  FaPlus,
+  FaTimes,
+  FaTrashAlt,
+  FaEdit,
+  FaSave,
+  FaUserFriends,
+  FaExclamationCircle,
+  FaCheck,
+  FaSpinner,
+  FaImage,
+  FaEye,
+} from "react-icons/fa";
+import Typography from "../Elements/AdminSource/Typhography";
+import Button from "../Elements/Button/index";
+import InputText from "../Elements/Input/Input";
+import Label from "../Elements/Input/Label";
 
-const dataPelatihanAwal = [
-  { 
-    id: 1,
-    nama: 'Penjahitan profesional siap industri Ekspor', 
-    tanggalMulai: '15 Juni 2025',
-    tanggalSelesai: '15 Agustus 2025',
-    deskripsi: 'Pelatihan intensif untuk penjahitan profesional dengan standar ekspor',
-    instruktur: 'Pak Budi Santoso',
-    kapasitas: '30 peserta',
-    lokasi: 'Workshop Bina Essa, Bandung',
-    biaya: 'Rp. 2,500,000',
-    status: 'Dimulai',
-    postStatus: 'Published' // Draft atau Published
-  },
-  { 
-    id: 2,
-    nama: 'Desain Fashion Modern', 
-    tanggalMulai: '1 Juli 2025',
-    tanggalSelesai: '1 September 2025',
-    deskripsi: 'Pelatihan desain fashion dengan tren terkini untuk pasar global',
-    instruktur: 'Ibu Sinta Wijaya',
-    kapasitas: '25 peserta',
-    lokasi: 'Workshop Bina Essa, Bandung',
-    biaya: 'Rp. 3,000,000',
-    status: 'Sedang berlangsung',
-    postStatus: 'Published'
-  },
-  { 
-    id: 3,
-    nama: 'Manajemen Produksi Garmen', 
-    tanggalMulai: '10 Juli 2025',
-    tanggalSelesai: '10 September 2025',
-    deskripsi: 'Pelatihan manajemen dan pengawasan produksi garmen skala industri',
-    instruktur: 'Pak Denny Pratama',
-    kapasitas: '20 peserta',
-    lokasi: 'Workshop Bina Essa, Bandung',
-    biaya: 'Rp. 2,800,000',
-    status: 'Selesai',
-    postStatus: 'Published'
-  },
-  { 
-    id: 4,
-    nama: 'Quality Control Tekstil', 
-    tanggalMulai: '5 Agustus 2025',
-    tanggalSelesai: '5 Oktober 2025',
-    deskripsi: 'Pelatihan kontrol kualitas untuk produk tekstil dan garmen',
-    instruktur: 'Ibu Ratna Dewi',
-    kapasitas: '15 peserta',
-    lokasi: 'Workshop Bina Essa, Bandung',
-    biaya: 'Rp. 2,200,000',
-    status: 'Dimulai',
-    postStatus: 'Draft'
-  },
-  { 
-    id: 5,
-    nama: 'Teknik Bordiran Modern', 
-    tanggalMulai: '20 Agustus 2025',
-    tanggalSelesai: '20 Oktober 2025',
-    deskripsi: 'Pelatihan teknik bordiran dengan menggunakan mesin modern',
-    instruktur: 'Pak Ahmad Ridwan',
-    kapasitas: '18 peserta',
-    lokasi: 'Workshop Bina Essa, Bandung',
-    biaya: 'Rp. 2,300,000',
-    status: 'Sedang berlangsung',
-    postStatus: 'Published'
-  },
-  { 
-    id: 6,
-    nama: 'Cutting Pattern Profesional', 
-    tanggalMulai: '1 September 2025',
-    tanggalSelesai: '1 November 2025',
-    deskripsi: 'Pelatihan pembuatan pola dan cutting untuk berbagai jenis pakaian',
-    instruktur: 'Ibu Dewi Sartika',
-    kapasitas: '22 peserta',
-    lokasi: 'Workshop Bina Essa, Bandung',
-    biaya: 'Rp. 2,600,000',
-    status: 'Dimulai',
-    postStatus: 'Draft'
-  },
-  { 
-    id: 7,
-    nama: 'Fashion Merchandising', 
-    tanggalMulai: '15 September 2025',
-    tanggalSelesai: '15 November 2025',
-    deskripsi: 'Pelatihan merchandising dan marketing untuk produk fashion',
-    instruktur: 'Pak Rizki Pratama',
-    kapasitas: '20 peserta',
-    lokasi: 'Workshop Bina Essa, Bandung',
-    biaya: 'Rp. 2,700,000',
-    status: 'Selesai',
-    postStatus: 'Published'
-  }
-];
+import {
+  fetchData,
+  createData,
+  updateData,
+  deleteData,
+  apiEndpoints,
+} from "../../services/api.js";
 
-// Data mockup untuk pelamar
-const dataPelamarMockupAwal = {
-  1: [ // Pelamar untuk pelatihan ID 1
-    { id: 101, nama: 'Budi Belus', email: 'budi.belus@gmail.com', telepon: '08123456789', status: 'Diterima', tanggalDaftar: '5 Mei 2025' },
-    { id: 102, nama: 'David Dagu', email: 'david.dagu@gmail.com', telepon: '08234567890', status: 'Ditinjau', tanggalDaftar: '6 Mei 2025' },
-    { id: 103, nama: 'Ujang Kijang', email: 'ujang.kijang@gmail.com', telepon: '08345678901', status: 'Ditolak', tanggalDaftar: '7 Mei 2025' },
-    { id: 104, nama: 'Deddy Botak', email: 'deddy.botak@gmail.com', telepon: '08456789012', status: 'Diterima', tanggalDaftar: '8 Mei 2025' },
-    { id: 105, nama: 'Siti Aminah', email: 'siti.aminah@gmail.com', telepon: '08567890123', status: 'Ditinjau', tanggalDaftar: '9 Mei 2025' },
-    { id: 106, nama: 'Agus Salim', email: 'agus.salim@gmail.com', telepon: '08678901234', status: 'Ditolak', tanggalDaftar: '10 Mei 2025' },
-    { id: 107, nama: 'Maya Sari', email: 'maya.sari@gmail.com', telepon: '08789012345', status: 'Diterima', tanggalDaftar: '11 Mei 2025' },
-  ],
-  2: [ // Pelamar untuk pelatihan ID 2
-    { id: 201, nama: 'Rini Wulandari', email: 'rini.wulandari@gmail.com', telepon: '08567890123', status: 'Diterima', tanggalDaftar: '10 Mei 2025' },
-    { id: 202, nama: 'Andri Santoso', email: 'andri.santoso@gmail.com', telepon: '08678901234', status: 'Ditinjau', tanggalDaftar: '11 Mei 2025' },
-  ],
-  3: [ // Pelamar untuk pelatihan ID 3
-    { id: 301, nama: 'Maya Indah', email: 'maya.indah@gmail.com', telepon: '08789012345', status: 'Diterima', tanggalDaftar: '12 Mei 2025' },
-    { id: 302, nama: 'Dimas Prayoga', email: 'dimas.prayoga@gmail.com', telepon: '08890123456', status: 'Ditolak', tanggalDaftar: '13 Mei 2025' },
-    { id: 303, nama: 'Nina Kartika', email: 'nina.kartika@gmail.com', telepon: '08901234567', status: 'Ditinjau', tanggalDaftar: '14 Mei 2025' },
-  ],
-  4: [], // Belum ada pelamar untuk pelatihan ID 4
-  5: [
-    { id: 501, nama: 'Lestari Dewi', email: 'lestari.dewi@gmail.com', telepon: '08123987654', status: 'Diterima', tanggalDaftar: '16 Mei 2025' },
-  ],
-  6: [
-    { id: 601, nama: 'Andi Wijaya', email: 'andi.wijaya@gmail.com', telepon: '08234876543', status: 'Ditinjau', tanggalDaftar: '18 Mei 2025' },
-    { id: 602, nama: 'Sari Indah', email: 'sari.indah@gmail.com', telepon: '08345765432', status: 'Diterima', tanggalDaftar: '19 Mei 2025' },
-  ],
-  7: []
-};
-
-const TableSection = () => {
+const AdminPelatihanPage = () => {
   const [showForm, setShowForm] = useState(false);
-  const [dataPelatihan, setDataPelatihan] = useState(dataPelatihanAwal);
+  const [dataPelatihan, setDataPelatihan] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-  
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
+
   const [selectedPelatihan, setSelectedPelatihan] = useState(null);
   const [editedPelatihan, setEditedPelatihan] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
-  // State untuk modal pelamar
+
   const [showPelamarModal, setShowPelamarModal] = useState(false);
   const [selectedPelamarList, setSelectedPelamarList] = useState([]);
-  const [selectedPelatihanNama, setSelectedPelatihanNama] = useState('');
+  const [selectedPelatihanNama, setSelectedPelatihanNama] = useState("");
   const [selectedPelatihanId, setSelectedPelatihanId] = useState(null);
-  const [dataPelamarMockup, setDataPelamarMockup] = useState(dataPelamarMockupAwal);
-  
-  // State untuk popup status pelamar
+  const [loadingPelamar, setLoadingPelamar] = useState(false);
+
   const [showStatusPopup, setShowStatusPopup] = useState(false);
   const [selectedPelamar, setSelectedPelamar] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
-  
-  const [form, setForm] = useState({ 
-    nama: '', 
-    tanggalMulai: '', 
-    tanggalSelesai: '',
-    deskripsi: '',
-    instruktur: '',
-    kapasitas: '',
-    lokasi: '',
-    biaya: '',
-    status: 'Dimulai'
+  const [newStatus, setNewStatus] = useState("");
+  const [savingStatus, setSavingStatus] = useState(false);
+
+  // State untuk gambar
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState(null);
+  const [selectedEditImage, setSelectedEditImage] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalImageSrc, setModalImageSrc] = useState("");
+
+  const [form, setForm] = useState({
+    nama_pelatihan: "",
+    keterangan_pelatihan: "",
+    kategori: "",
+    biaya: "",
+    jumlah_kuota: "",
+    waktu_pengumpulan: "",
+    mentor_id: "",
   });
 
-  // State untuk search dan filter
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('Semua');
-  const [postStatusFilter, setPostStatusFilter] = useState('Semua');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("Semua");
+  const [postStatusFilter, setPostStatusFilter] = useState("Semua");
 
-  // Filter data berdasarkan search dan status
-  const filteredData = dataPelatihan.filter(pelatihan => {
-    const matchSearch = pelatihan.nama.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = statusFilter === 'Semua' || pelatihan.status === statusFilter;
-    const matchPostStatus = postStatusFilter === 'Semua' || pelatihan.postStatus === postStatusFilter;
-    return matchSearch && matchStatus && matchPostStatus;
-  });
+  const [mentorOptions, setMentorOptions] = useState([]);
+  const [loadingMentorOptions, setLoadingMentorOptions] = useState(true);
+  const [mentorOptionsError, setMentorOptionsError] = useState(null);
 
-  // Calculate pagination dengan data yang sudah difilter
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Fungsi untuk handle upload gambar
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validasi file
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+      const maxSize = 5 * 1024 * 1024; // 5MB
 
-  const handleViewDetail = (pelatihan) => {
-    setSelectedPelatihan({...pelatihan});
-    setEditedPelatihan({...pelatihan});
-    setShowDetail(true);
-    setIsEditing(false);
+      if (!validTypes.includes(file.type)) {
+        alert("Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau GIF.");
+        return;
+      }
+
+      if (file.size > maxSize) {
+        alert("Ukuran file terlalu besar. Maksimal 5MB.");
+        return;
+      }
+
+      setSelectedImage(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  // Fungsi untuk melihat daftar pelamar
-  const handleViewPelamar = (pelatihan) => {
-    const pelamarList = dataPelamarMockup[pelatihan.id] || [];
-    setSelectedPelamarList(pelamarList);
+  const handleEditImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validasi file
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!validTypes.includes(file.type)) {
+        alert("Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau GIF.");
+        return;
+      }
+
+      if (file.size > maxSize) {
+        alert("Ukuran file terlalu besar. Maksimal 5MB.");
+        return;
+      }
+
+      setSelectedEditImage(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setEditImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImagePreview = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    // Clear file input
+    const fileInput = document.getElementById("image_upload");
+    if (fileInput) fileInput.value = "";
+  };
+
+  const removeEditImagePreview = () => {
+    setSelectedEditImage(null);
+    setEditImagePreview(null);
+    // Clear file input
+    const fileInput = document.getElementById("edit_image_upload");
+    if (fileInput) fileInput.value = "";
+  };
+
+  const openImageModal = (imageSrc) => {
+    setModalImageSrc(imageSrc);
+    setShowImageModal(true);
+  };
+
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    // Sesuaikan dengan base URL backend Anda
+    const baseUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
+    return `${baseUrl}/storage/${imagePath}`;
+  };
+
+  useEffect(() => {
+    const fetchMentorOptions = async () => {
+      setLoadingMentorOptions(true);
+      setMentorOptionsError(null);
+      try {
+        const response = await fetchData(apiEndpoints.mentor || "/api/mentor");
+        if (response && Array.isArray(response.data)) {
+          setMentorOptions(
+            response.data.map((m) => ({ value: m.id, label: m.nama_mentor }))
+          );
+        } else if (
+          response &&
+          response.data &&
+          Array.isArray(response.data.data)
+        ) {
+          setMentorOptions(
+            response.data.data.map((m) => ({
+              value: m.id,
+              label: m.nama_mentor,
+            }))
+          );
+        } else {
+          console.warn(
+            "API response for mentor options is not in expected format:",
+            response
+          );
+          setMentorOptions([]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch mentor options:", err);
+        setMentorOptionsError(
+          "Gagal memuat daftar mentor. Pastikan API mentor berfungsi."
+        );
+        setMentorOptions([]);
+      } finally {
+        setLoadingMentorOptions(false);
+      }
+    };
+    fetchMentorOptions();
+  }, []);
+
+  const fetchPelatihanData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      let url = `${apiEndpoints.pelatihan}?page=${currentPage}&per_page=${itemsPerPage}`;
+
+      if (appliedSearchQuery) {
+        url += `&search=${encodeURIComponent(appliedSearchQuery)}`;
+      }
+      if (statusFilter !== "Semua") {
+        url += `&status_pelatihan=${encodeURIComponent(statusFilter)}`;
+      }
+      if (postStatusFilter !== "Semua") {
+        url += `&post_status=${encodeURIComponent(postStatusFilter)}`;
+      }
+
+      console.log("Fetching Pelatihan Data from URL:", url);
+      const response = await fetchData(url);
+      console.log("API Raw Response for Pelatihan:", response);
+
+      let fetchedRawItems = [];
+      let currentTotal = 0;
+      let currentLastPage = 1;
+      let currentCurrentPage = 1;
+
+      if (response && Array.isArray(response.data)) {
+        fetchedRawItems = response.data;
+        currentTotal = response.total || response.data.length;
+        currentLastPage = response.last_page || 1;
+        currentCurrentPage = response.current_page || 1;
+      } else if (
+        response &&
+        response.data &&
+        Array.isArray(response.data.data)
+      ) {
+        fetchedRawItems = response.data.data;
+        currentTotal = response.data.total || response.data.data.length;
+        currentLastPage = response.data.last_page || 1;
+        currentCurrentPage = response.data.current_page || 1;
+      } else {
+        console.warn(
+          "API response for pelatihan data is not in expected format:",
+          response
+        );
+      }
+
+      const mappedData = fetchedRawItems.map((item) => ({
+        id: item.id,
+        nama: item.nama_pelatihan,
+        keterangan: item.keterangan_pelatihan,
+        kategori: item.kategori,
+        biaya: item.biaya,
+        jumlah_kuota: item.jumlah_kuota,
+        jumlah_peserta: item.jumlah_peserta || 0,
+        waktu_pengumpulan: item.waktu_pengumpulan
+          ? item.waktu_pengumpulan.slice(0, 16)
+          : "",
+        mentor_id: item.mentor_id,
+        instruktur: item.mentor ? item.mentor.nama_mentor : "N/A",
+        status: item.status_pelatihan || "Belum Dimulai",
+        postStatus: item.post_status || "Draft",
+        image: item.image || null, // Tambahkan field image
+      }));
+
+      setDataPelatihan(mappedData);
+      setTotalPages(currentLastPage);
+      setTotalItems(currentTotal);
+      setCurrentPage(currentCurrentPage);
+
+      console.log("DEBUG: Total items fetched from API:", currentTotal);
+      console.log("DEBUG: Total pages calculated:", currentLastPage);
+    } catch (err) {
+      console.error("Failed to fetch pelatihan:", err);
+      if (err.code === "ERR_NETWORK") {
+        setError(
+          "Network Error: Pastikan backend Laravel berjalan dan CORS dikonfigurasi dengan benar."
+        );
+      } else if (err.response) {
+        setError(
+          `Failed to load pelatihan data: ${err.response.status} - ${
+            err.response.statusText || "Unknown Error"
+          }`
+        );
+        console.error("API Response Error:", err.response.data);
+      } else {
+        setError("Failed to load pelatihan data.");
+      }
+      setDataPelatihan([]);
+      setTotalPages(1);
+      setTotalItems(0);
+      setCurrentPage(1);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    currentPage,
+    itemsPerPage,
+    appliedSearchQuery,
+    statusFilter,
+    postStatusFilter,
+  ]);
+
+  useEffect(() => {
+    fetchPelatihanData();
+  }, [fetchPelatihanData]);
+
+  const handleViewDetail = (pelatihan) => {
+    const formattedWaktuPengumpulan = pelatihan.waktu_pengumpulan
+      ? pelatihan.waktu_pengumpulan.slice(0, 16)
+      : "";
+
+    setSelectedPelatihan({
+      ...pelatihan,
+      waktu_pengumpulan: formattedWaktuPengumpulan,
+    });
+    setEditedPelatihan({
+      ...pelatihan,
+      waktu_pengumpulan: formattedWaktuPengumpulan,
+    });
+    setShowDetail(true);
+    setIsEditing(false);
+    setValidationErrors({});
+    // Reset edit image states
+    setSelectedEditImage(null);
+    setEditImagePreview(null);
+  };
+
+  const handleViewPelamar = async (pelatihan) => {
+    setLoadingPelamar(true);
+    setSelectedPelamarList([]);
     setSelectedPelatihanNama(pelatihan.nama);
     setSelectedPelatihanId(pelatihan.id);
     setShowPelamarModal(true);
-  };
-
-  // Fungsi untuk membuka popup status pelamar
-  const handleChangeStatus = (pelamar) => {
-    setSelectedPelamar(pelamar);
-    setNewStatus(pelamar.status); // Set status saat ini sebagai default
-    setShowStatusPopup(true);
-  };
-
-  // Fungsi untuk menyimpan perubahan status
-  const handleSaveStatus = () => {
-    if (selectedPelamar && selectedPelatihanId) {
-      const updatedMockup = { ...dataPelamarMockup };
-      const pelamarIndex = updatedMockup[selectedPelatihanId].findIndex(p => p.id === selectedPelamar.id);
-      
-      if (pelamarIndex !== -1) {
-        updatedMockup[selectedPelatihanId][pelamarIndex].status = newStatus;
-        setDataPelamarMockup(updatedMockup);
-        
-        // Update juga selectedPelamarList untuk refresh tampilan
-        const updatedPelamarList = updatedMockup[selectedPelatihanId];
-        setSelectedPelamarList(updatedPelamarList);
+    try {
+      const response = await fetchData(
+        `${apiEndpoints.daftarPelatihan}?pelatihan_id=${pelatihan.id}`
+      );
+      let fetchedPelamar = [];
+      if (response && Array.isArray(response.data)) {
+        fetchedPelamar = response.data;
+      } else if (
+        response &&
+        response.data &&
+        Array.isArray(response.data.data)
+      ) {
+        fetchedPelamar = response.data.data;
       }
+
+      const mappedPelamar = fetchedPelamar.map((item) => ({
+        id: item.id,
+        nama: item.user?.name || item.peserta?.user?.name || "N/A",
+        email: item.user?.email || item.peserta?.user?.email || "N/A",
+        telepon: item.peserta?.nomor_telp || "N/A",
+        status: item.status,
+        tanggalDaftar: item.created_at
+          ? new Date(item.created_at).toLocaleDateString("id-ID")
+          : "N/A",
+        originalRegistration: item,
+      }));
+      setSelectedPelamarList(mappedPelamar);
+    } catch (err) {
+      console.error("Failed to fetch pelamar list:", err);
+      alert("Gagal memuat daftar pelamar.");
+      setSelectedPelamarList([]);
+    } finally {
+      setLoadingPelamar(false);
     }
-    
-    setShowStatusPopup(false);
-    setSelectedPelamar(null);
-    setNewStatus('');
   };
 
-  const handleDelete = (index) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus pelatihan ini?')) {
-      const actualIndex = (currentPage - 1) * itemsPerPage + index;
-      const newData = [...dataPelatihan];
-      newData.splice(actualIndex, 1);
-      setDataPelatihan(newData);
-      
-      // Adjust current page if necessary
-      const newTotalPages = Math.ceil(newData.length / itemsPerPage);
-      if (currentPage > newTotalPages && newTotalPages > 0) {
-        setCurrentPage(newTotalPages);
+  const handleSaveStatus = async () => {
+    if (!selectedPelamar || !selectedPelatihanId || !newStatus) return;
+
+    setSavingStatus(true);
+    try {
+      const formData = new FormData();
+      formData.append("_method", "PUT");
+      formData.append("status", newStatus);
+
+      const response = await updateData(
+        apiEndpoints.daftarPelatihan,
+        selectedPelamar.id,
+        formData
+      );
+
+      if (response) {
+        alert("Status pelamar berhasil diperbarui!");
+        handleViewPelamar({
+          id: selectedPelatihanId,
+          nama: selectedPelatihanNama,
+        });
+        setShowStatusPopup(false);
+        setSelectedPelamar(null);
+        setNewStatus("");
+        fetchPelatihanData();
+      } else {
+        throw new Error("Respon API tidak valid.");
       }
-      
-      setShowDetail(false);
+    } catch (err) {
+      console.error("Gagal memperbarui status pelamar:", err);
+      alert(
+        `Gagal memperbarui status: ${
+          err.response?.data?.message || err.message
+        }`
+      );
+    } finally {
+      setSavingStatus(false);
+    }
+  };
+
+  const handleDelete = async (pelatihanToDelete) => {
+    if (
+      window.confirm(
+        `Apakah Anda yakin ingin menghapus pelatihan "${pelatihanToDelete.nama}" ini?`
+      )
+    ) {
+      setLoading(true);
+      try {
+        await deleteData(apiEndpoints.pelatihan, pelatihanToDelete.id);
+        alert("Pelatihan berhasil dihapus!");
+        fetchPelatihanData();
+        setShowDetail(false);
+      } catch (err) {
+        console.error("Failed to delete pelatihan:", err);
+        alert(
+          `Gagal menghapus pelatihan: ${
+            err.response?.data?.message || err.message
+          }`
+        );
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   const handleEdit = () => {
     setIsEditing(true);
+    setValidationErrors({});
   };
 
   const handleCancelEdit = () => {
-    setEditedPelatihan({...selectedPelatihan});
+    const formattedWaktuPengumpulan = selectedPelatihan.waktu_pengumpulan
+      ? selectedPelatihan.waktu_pengumpulan.slice(0, 16)
+      : "";
+    setEditedPelatihan({
+      ...selectedPelatihan,
+      waktu_pengumpulan: formattedWaktuPengumpulan,
+    });
     setIsEditing(false);
+    setValidationErrors({});
+    // Reset edit image states
+    setSelectedEditImage(null);
+    setEditImagePreview(null);
   };
 
-  const handleSaveEdit = () => {
-    const index = dataPelatihan.findIndex(p => p.id === selectedPelatihan.id);
-    if (index !== -1) {
-      const newData = [...dataPelatihan];
-      newData[index] = {...editedPelatihan};
-      setDataPelatihan(newData);
-      setSelectedPelatihan({...editedPelatihan});
-      setIsEditing(false);
+  const handleSaveEdit = async () => {
+    setLoading(true);
+    setValidationErrors({});
+    try {
+      const formData = new FormData();
+      formData.append("_method", "PUT");
+      formData.append("nama_pelatihan", editedPelatihan.nama);
+      formData.append("keterangan_pelatihan", editedPelatihan.keterangan);
+      formData.append("kategori", editedPelatihan.kategori || "Umum");
+      formData.append("biaya", editedPelatihan.biaya);
+      formData.append("jumlah_kuota", editedPelatihan.jumlah_kuota);
+      const formattedTime =
+        editedPelatihan.waktu_pengumpulan.replace("T", " ") + ":00";
+      formData.append("waktu_pengumpulan", formattedTime);
+      formData.append("mentor_id", editedPelatihan.mentor_id);
+      formData.append("status_pelatihan", editedPelatihan.status);
+      formData.append("post_status", editedPelatihan.postStatus);
+
+      // Tambahkan gambar jika ada yang baru dipilih
+      if (selectedEditImage) {
+        formData.append("image", selectedEditImage);
+      }
+
+      const response = await updateData(
+        apiEndpoints.pelatihan,
+        selectedPelatihan.id,
+        formData
+      );
+      if (response) {
+        alert("Pelatihan berhasil diperbarui!");
+        fetchPelatihanData();
+        setShowDetail(false);
+        setIsEditing(false);
+        // Reset edit image states
+        setSelectedEditImage(null);
+        setEditImagePreview(null);
+      } else {
+        throw new Error("Respon update kosong atau tidak valid.");
+      }
+    } catch (err) {
+      console.error("Failed to save pelatihan:", err);
+      if (
+        err.response &&
+        err.response.status === 422 &&
+        err.response.data.errors
+      ) {
+        setValidationErrors(err.response.data.errors);
+        alert("Validasi gagal. Mohon periksa kembali input Anda.");
+      } else {
+        alert(
+          `Gagal menyimpan perubahan: ${
+            err.response?.data?.message || err.message
+          }`
+        );
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setEditedPelatihan({...editedPelatihan, [field]: value});
+    setEditedPelatihan((prev) => ({ ...prev, [field]: value }));
+    setValidationErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const handleSubmit = (postStatus = 'Published') => {
-    if (form.nama && form.tanggalMulai && form.tanggalSelesai && form.deskripsi && form.instruktur && form.kapasitas && form.lokasi && form.biaya) {
-      const newPelatihan = {
-        ...form,
-        id: Math.max(...dataPelatihan.map(p => p.id), 0) + 1, // Generate ID baru
-        postStatus: postStatus
-      };
-      setDataPelatihan([...dataPelatihan, newPelatihan]);
-      setForm({ 
-        nama: '', 
-        tanggalMulai: '', 
-        tanggalSelesai: '',
-        deskripsi: '',
-        instruktur: '',
-        kapasitas: '',
-        lokasi: '',
-        biaya: '',
-        status: 'Dimulai'
-      });
-      setShowForm(false);
-    } else {
-      alert('Mohon lengkapi semua field yang wajib diisi');
+  const handleSubmit = async (postStatusValue) => {
+    setValidationErrors({});
+    if (
+      !form.nama_pelatihan ||
+      !form.keterangan_pelatihan ||
+      !form.kategori ||
+      !form.biaya ||
+      !form.jumlah_kuota ||
+      !form.waktu_pengumpulan ||
+      !form.mentor_id
+    ) {
+      alert("Mohon lengkapi semua field yang wajib diisi");
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("nama_pelatihan", form.nama_pelatihan);
+      formData.append("keterangan_pelatihan", form.keterangan_pelatihan);
+      formData.append("kategori", form.kategori);
+      formData.append("biaya", form.biaya);
+      formData.append("jumlah_kuota", form.jumlah_kuota);
+      const formattedTime = form.waktu_pengumpulan.replace("T", " ") + ":00";
+      formData.append("waktu_pengumpulan", formattedTime);
+      formData.append("mentor_id", form.mentor_id);
+      formData.append("post_status", postStatusValue);
+
+      // Tambahkan gambar jika ada
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
+      const response = await createData(apiEndpoints.pelatihan, formData);
+      if (response) {
+        alert("Pelatihan berhasil ditambahkan!");
+        fetchPelatihanData();
+        setShowForm(false);
+        setForm({
+          nama_pelatihan: "",
+          keterangan_pelatihan: "",
+          kategori: "",
+          biaya: "",
+          jumlah_kuota: "",
+          waktu_pengumpulan: "",
+          mentor_id: "",
+        });
+        // Reset image states
+        setSelectedImage(null);
+        setImagePreview(null);
+      } else {
+        throw new Error("Respon API tidak valid.");
+      }
+    } catch (err) {
+      console.error("Failed to add pelatihan:", err);
+      if (
+        err.response &&
+        err.response.status === 422 &&
+        err.response.data.errors
+      ) {
+        setValidationErrors(err.response.data.errors);
+        alert("Validasi gagal. Mohon periksa kembali input Anda.");
+      } else {
+        alert(
+          `Gagal menambahkan pelatihan: ${
+            err.response?.data?.message || err.message
+          }`
+        );
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fungsi untuk publish draft
-  const handlePublishDraft = (pelatihan) => {
-    const index = dataPelatihan.findIndex(p => p.id === pelatihan.id);
-    if (index !== -1) {
-      const newData = [...dataPelatihan];
-      newData[index] = {...pelatihan, postStatus: 'Published'};
-      setDataPelatihan(newData);
-      
-      // Update selectedPelatihan jika sedang dibuka
-      if (selectedPelatihan && selectedPelatihan.id === pelatihan.id) {
-        setSelectedPelatihan({...pelatihan, postStatus: 'Published'});
-        setEditedPelatihan({...pelatihan, postStatus: 'Published'});
+  const handlePublishDraft = async (pelatihan) => {
+    if (
+      !window.confirm(
+        `Yakin ingin mempublikasikan pelatihan "${pelatihan.nama}"?`
+      )
+    ) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("_method", "PUT");
+      formData.append("post_status", "Published");
+
+      const response = await updateData(
+        apiEndpoints.pelatihan,
+        pelatihan.id,
+        formData
+      );
+      if (response) {
+        alert("Pelatihan berhasil dipublikasikan!");
+        fetchPelatihanData();
+        if (selectedPelatihan && selectedPelatihan.id === pelatihan.id) {
+          setSelectedPelatihan((prev) => ({
+            ...prev,
+            postStatus: "Published",
+          }));
+          setEditedPelatihan((prev) => ({ ...prev, postStatus: "Published" }));
+        }
+      } else {
+        throw new Error("Respon API tidak valid.");
       }
+    } catch (err) {
+      console.error("Failed to publish draft:", err);
+      alert(
+        `Gagal mempublikasikan pelatihan: ${
+          err.response?.data?.message || err.message
+        }`
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -312,17 +648,26 @@ const TableSection = () => {
   };
 
   const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
   const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
-  // Reset halaman ke 1 ketika search atau filter berubah
   const handleSearchChange = (value) => {
     setSearchQuery(value);
+  };
+
+  const handleApplySearch = () => {
+    setAppliedSearchQuery(searchQuery);
     setCurrentPage(1);
+  };
+
+  const handleSearchInputKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleApplySearch();
+    }
   };
 
   const handleStatusFilterChange = (value) => {
@@ -335,67 +680,150 @@ const TableSection = () => {
     setCurrentPage(1);
   };
 
-  // Reset search dan filter
   const handleResetFilter = () => {
-    setSearchQuery('');
-    setStatusFilter('Semua');
-    setPostStatusFilter('Semua');
+    setSearchQuery("");
+    setAppliedSearchQuery("");
+    setStatusFilter("Semua");
+    setPostStatusFilter("Semua");
     setCurrentPage(1);
   };
 
-  // Helper function untuk status badge pelamar
   const getStatusBadge = (status) => {
-    switch(status) {
-      case 'Diterima':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Diterima</span>;
-      case 'Ditolak':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Ditolak</span>;
-      case 'Ditinjau':
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Ditinjau</span>;
+    switch (status) {
+      case "diterima":
+        return (
+          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+            Diterima
+          </span>
+        );
+      case "ditolak":
+        return (
+          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+            Ditolak
+          </span>
+        );
+      case "ditinjau":
+        return (
+          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+            Ditinjau
+          </span>
+        );
       default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{status}</span>;
+        return (
+          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
+            {status}
+          </span>
+        );
     }
   };
 
-  // Helper function untuk status badge pelatihan
   const getTrainingStatusBadge = (status) => {
-    switch(status) {
-      case 'Dimulai':
-        return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Dimulai</span>;
-      case 'Sedang berlangsung':
-        return <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">Sedang berlangsung</span>;
-      case 'Selesai':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Selesai</span>;
+    switch (status) {
+      case "Belum Dimulai":
+        return (
+          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+            Belum Dimulai
+          </span>
+        );
+      case "Sedang berlangsung":
+        return (
+          <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+            Sedang berlangsung
+          </span>
+        );
+      case "Selesai":
+        return (
+          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+            Selesai
+          </span>
+        );
       default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{status}</span>;
+        return (
+          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+            {status}
+          </span>
+        );
     }
   };
 
-  // Helper function untuk post status badge
   const getPostStatusBadge = (postStatus) => {
-    switch(postStatus) {
-      case 'Published':
-        return <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
-          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-          Published
-        </span>;
-      case 'Draft':
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium flex items-center gap-1">
-          <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-          Draft
-        </span>;
+    switch (postStatus) {
+      case "Published":
+        return (
+          <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
+            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+            Published
+          </span>
+        );
+      case "Draft":
+        return (
+          <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium flex items-center gap-1">
+            <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+            Draft
+          </span>
+        );
       default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{postStatus}</span>;
+        return (
+          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+            {postStatus}
+          </span>
+        );
     }
   };
+
+  const handleChangeStatus = (pelamar) => {
+    setSelectedPelamar(pelamar);
+    setNewStatus(pelamar.status);
+    setShowStatusPopup(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 text-center">
+        <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto" />
+        <Typography variant="h2" className="mt-4 text-gray-700">
+          Memuat data pelatihan...
+        </Typography>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        <Typography variant="h2" className="mb-6">
+          Terjadi Kesalahan
+        </Typography>
+        <p>{error}</p>
+        <Button onClick={fetchPelatihanData} variant="primary" className="mt-4">
+          Coba Lagi
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
       <div className="bg-white p-4 rounded shadow mb-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Kelola Pelatihan</h1>
-          <button 
-            onClick={() => setShowForm(true)}
+          <button
+            onClick={() => {
+              setShowForm(true);
+              setForm({
+                nama_pelatihan: "",
+                keterangan_pelatihan: "",
+                kategori: "",
+                biaya: "",
+                jumlah_kuota: "",
+                waktu_pengumpulan: "",
+                mentor_id: "",
+              });
+              setValidationErrors({});
+              // Reset image states
+              setSelectedImage(null);
+              setImagePreview(null);
+            }}
             className="px-4 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg rounded transition-colors duration-200 flex items-center gap-1"
           >
             <FaPlus size={12} /> Tambah
@@ -415,20 +843,30 @@ const TableSection = () => {
                 placeholder="Cari nama pelatihan..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyPress={handleSearchInputKeyPress}
                 className="block w-full sm:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
+              <button
+                onClick={handleApplySearch}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-500 hover:text-blue-700"
+                title="Cari"
+              >
+                <FaSearch className="h-4 w-4" />
+              </button>
             </div>
 
             {/* Status Filter */}
             <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600 whitespace-nowrap">Filter Status:</label>
+              <label className="text-sm text-gray-600 whitespace-nowrap">
+                Filter Status:
+              </label>
               <select
                 value={statusFilter}
                 onChange={(e) => handleStatusFilterChange(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
               >
                 <option value="Semua">Semua Status</option>
-                <option value="Dimulai">Dimulai</option>
+                <option value="Belum Dimulai">Belum Dimulai</option>
                 <option value="Sedang berlangsung">Sedang berlangsung</option>
                 <option value="Selesai">Selesai</option>
               </select>
@@ -436,7 +874,9 @@ const TableSection = () => {
 
             {/* Post Status Filter */}
             <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600 whitespace-nowrap">Filter Post:</label>
+              <label className="text-sm text-gray-600 whitespace-nowrap">
+                Filter Post:
+              </label>
               <select
                 value={postStatusFilter}
                 onChange={(e) => handlePostStatusFilterChange(e.target.value)}
@@ -451,7 +891,9 @@ const TableSection = () => {
 
           {/* Reset Button dan Info */}
           <div className="flex items-center gap-3">
-            {(searchQuery || statusFilter !== 'Semua' || postStatusFilter !== 'Semua') && (
+            {(appliedSearchQuery ||
+              statusFilter !== "Semua" ||
+              postStatusFilter !== "Semua") && (
               <button
                 onClick={handleResetFilter}
                 className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors duration-200"
@@ -460,52 +902,85 @@ const TableSection = () => {
               </button>
             )}
             <span className="text-sm text-gray-500">
-              {filteredData.length} dari {dataPelatihan.length} pelatihan
+              {totalItems} pelatihan ditemukan
             </span>
           </div>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm text-left">
             <thead className="bg-gray-100 text-gray-700">
               <tr>
                 <th className="px-4 py-2">No</th>
+                <th className="px-4 py-2">Gambar</th>
                 <th className="px-4 py-2">Nama Pelatihan</th>
-                <th className="px-4 py-2">Tanggal Mulai</th>
+                <th className="px-4 py-2">Kategori</th>
                 <th className="px-4 py-2">Instruktur</th>
+                <th className="px-4 py-2">Kuota/Terisi</th>
                 <th className="px-4 py-2">Status</th>
                 <th className="px-4 py-2">Post Status</th>
                 <th className="px-4 py-2 text-center">Action</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedData.length > 0 ? (
-                paginatedData.map((pelatihan, idx) => (
-                  <tr key={idx} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="px-4 py-2">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+              {dataPelatihan.length > 0 ? (
+                dataPelatihan.map((pelatihan, idx) => (
+                  <tr
+                    key={pelatihan.id}
+                    className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="px-4 py-2">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
+                    </td>
+                    <td className="px-4 py-2">
+                      {pelatihan.image ? (
+                        <div className="relative group">
+                          <img
+                            src={getImageUrl(pelatihan.image)}
+                            alt={pelatihan.nama}
+                            className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() =>
+                              openImageModal(getImageUrl(pelatihan.image))
+                            }
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <FaEye className="text-white text-sm" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                          <FaImage className="text-gray-400 text-lg" />
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-2">{pelatihan.nama}</td>
-                    <td className="px-4 py-2">{pelatihan.tanggalMulai}</td>
+                    <td className="px-4 py-2">{pelatihan.kategori}</td>
                     <td className="px-4 py-2">{pelatihan.instruktur}</td>
-                    <td className="px-4 py-2">{getTrainingStatusBadge(pelatihan.status)}</td>
-                    <td className="px-4 py-2">{getPostStatusBadge(pelatihan.postStatus)}</td>
+                    <td className="px-4 py-2">{`${pelatihan.jumlah_peserta}/${pelatihan.jumlah_kuota}`}</td>
+                    <td className="px-4 py-2">
+                      {getTrainingStatusBadge(pelatihan.status)}
+                    </td>
+                    <td className="px-4 py-2">
+                      {getPostStatusBadge(pelatihan.postStatus)}
+                    </td>
                     <td className="px-4 py-2 text-center">
                       <div className="flex justify-center gap-2">
-                        <button 
+                        <button
                           onClick={() => handleViewDetail(pelatihan)}
                           className="text-gray-600 hover:text-blue-500 transition-colors"
                           title="Lihat Detail Pelatihan"
                         >
                           <FaSearch />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleViewPelamar(pelatihan)}
                           className="text-gray-600 hover:text-purple-500 transition-colors"
                           title="Lihat Pelamar"
                         >
                           <FaUserFriends />
                         </button>
-                        {pelatihan.postStatus === 'Draft' && (
-                          <button 
+                        {pelatihan.postStatus === "Draft" && (
+                          <button
                             onClick={() => handlePublishDraft(pelatihan)}
                             className="text-gray-600 hover:text-green-500 transition-colors"
                             title="Publish Draft"
@@ -519,14 +994,18 @@ const TableSection = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                  <td
+                    colSpan="9"
+                    className="px-4 py-8 text-center text-gray-500"
+                  >
                     <div className="flex flex-col items-center">
                       <FaExclamationCircle className="text-3xl mb-2 text-gray-400" />
                       <p className="text-sm">
-                        {searchQuery || statusFilter !== 'Semua' || postStatusFilter !== 'Semua'
-                          ? 'Tidak ada pelatihan yang sesuai dengan pencarian atau filter'
-                          : 'Belum ada data pelatihan'
-                        }
+                        {appliedSearchQuery ||
+                        statusFilter !== "Semua" ||
+                        postStatusFilter !== "Semua"
+                          ? "Tidak ada pelatihan yang sesuai dengan pencarian atau filter"
+                          : "Belum ada data pelatihan"}
                       </p>
                     </div>
                   </td>
@@ -537,13 +1016,15 @@ const TableSection = () => {
         </div>
 
         {/* Pagination */}
-        {paginatedData.length > 0 && (
+        {totalItems > 0 && (
           <div className="flex justify-between items-center mt-4">
             <div className="text-sm text-gray-600">
-              Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} data
-              {(searchQuery || statusFilter !== 'Semua' || postStatusFilter !== 'Semua') && (
-                <span className="text-gray-400"> (difilter dari {dataPelatihan.length} total)</span>
-              )}
+              Menampilkan {(currentPage - 1) * itemsPerPage + 1} -{" "}
+              {Math.min(
+                currentPage * itemsPerPage,
+                (currentPage - 1) * itemsPerPage + dataPelatihan.length
+              )}{" "}
+              dari {totalItems} data
             </div>
             <div className="flex justify-center space-x-2">
               <button
@@ -559,9 +1040,9 @@ const TableSection = () => {
                   key={i}
                   onClick={() => handlePageChange(i + 1)}
                   className={`px-3 py-2 border rounded ${
-                    currentPage === i + 1 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-200 hover:bg-gray-300'
+                    currentPage === i + 1
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 hover:bg-gray-300"
                   }`}
                 >
                   {i + 1}
@@ -582,119 +1063,227 @@ const TableSection = () => {
         {/* Form Tambah Pelatihan */}
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-lg p-3 w-full max-w-sm mx-auto">
+            <div className="bg-white rounded-lg shadow-lg p-3 w-full max-w-md mx-auto">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-base font-semibold">Tambah Pelatihan</h3>
-                <button 
+                <button
                   onClick={() => setShowForm(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FaTimes size={14} />
                 </button>
               </div>
-              
-              <div className="max-h-80 overflow-y-auto pr-1">
+
+              <div className="max-h-96 overflow-y-auto pr-1">
                 <div className="space-y-2">
+                  {/* Upload Gambar */}
                   <div>
-                    <label className="block text-xs text-gray-500">Nama Pelatihan</label>
-                    <input 
-                      type="text" 
-                      value={form.nama}
-                      onChange={(e) => setForm({...form, nama: e.target.value})}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
+                    <Label htmlFor="image_upload">Gambar Pelatihan</Label>
+                    <div className="mt-1">
+                      {imagePreview ? (
+                        <div className="relative">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-32 object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            onClick={removeImagePreview}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <FaTimes size={10} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                          <FaImage className="mx-auto text-gray-400 text-2xl mb-2" />
+                          <p className="text-sm text-gray-500 mb-2">
+                            Klik untuk upload gambar
+                          </p>
+                          <input
+                            type="file"
+                            id="image_upload"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="image_upload"
+                            className="cursor-pointer bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600"
+                          >
+                            Pilih Gambar
+                          </label>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Format: JPG, JPEG, PNG, GIF. Maksimal 5MB.
+                      </p>
+                      {validationErrors.image && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {validationErrors.image[0]}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="nama_pelatihan">Nama Pelatihan</Label>
+                    <InputText
+                      type="text"
+                      id="nama_pelatihan"
+                      name="nama_pelatihan"
+                      value={form.nama_pelatihan}
+                      onChange={(e) =>
+                        setForm({ ...form, nama_pelatihan: e.target.value })
+                      }
                       required
                     />
+                    {validationErrors.nama_pelatihan && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.nama_pelatihan[0]}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500">Tanggal Mulai</label>
-                    <input 
-                      type="text" 
-                      value={form.tanggalMulai}
-                      onChange={(e) => setForm({...form, tanggalMulai: e.target.value})}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
-                      required
-                      placeholder="Contoh: 15 Juni 2025"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500">Tanggal Selesai</label>
-                    <input 
-                      type="text" 
-                      value={form.tanggalSelesai}
-                      onChange={(e) => setForm({...form, tanggalSelesai: e.target.value})}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
-                      required
-                      placeholder="Contoh: 15 Agustus 2025"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500">Deskripsi</label>
-                    <textarea 
-                      value={form.deskripsi}
-                      onChange={(e) => setForm({...form, deskripsi: e.target.value})}
+                    <Label htmlFor="keterangan_pelatihan">
+                      Keterangan Pelatihan
+                    </Label>
+                    <textarea
+                      id="keterangan_pelatihan"
+                      name="keterangan_pelatihan"
+                      value={form.keterangan_pelatihan}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          keterangan_pelatihan: e.target.value,
+                        })
+                      }
                       className="w-full p-1 border rounded mt-0.5 text-xs"
                       rows="2"
                       required
                     />
+                    {validationErrors.keterangan_pelatihan && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.keterangan_pelatihan[0]}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500">Instruktur</label>
-                    <input 
-                      type="text" 
-                      value={form.instruktur}
-                      onChange={(e) => setForm({...form, instruktur: e.target.value})}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
+                    <Label htmlFor="kategori">Kategori</Label>
+                    <InputText
+                      type="text"
+                      id="kategori"
+                      name="kategori"
+                      value={form.kategori}
+                      onChange={(e) =>
+                        setForm({ ...form, kategori: e.target.value })
+                      }
                       required
+                      placeholder="Contoh: Digital Marketing, Menjahit"
                     />
+                    {validationErrors.kategori && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.kategori[0]}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500">Kapasitas</label>
-                    <input 
-                      type="text" 
-                      value={form.kapasitas}
-                      onChange={(e) => setForm({...form, kapasitas: e.target.value})}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
-                      required
-                      placeholder="Contoh: 30 peserta"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500">Lokasi</label>
-                    <input 
-                      type="text" 
-                      value={form.lokasi}
-                      onChange={(e) => setForm({...form, lokasi: e.target.value})}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500">Biaya</label>
-                    <input 
-                      type="text" 
+                    <Label htmlFor="biaya">Biaya</Label>
+                    <InputText
+                      type="text"
+                      id="biaya"
+                      name="biaya"
                       value={form.biaya}
-                      onChange={(e) => setForm({...form, biaya: e.target.value})}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
+                      onChange={(e) =>
+                        setForm({ ...form, biaya: e.target.value })
+                      }
                       required
-                      placeholder="Contoh: Rp. 2,500,000"
+                      placeholder="Contoh: Rp. 2.500.000"
                     />
+                    {validationErrors.biaya && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.biaya[0]}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500">Status Pelatihan</label>
-                    <select 
-                      value={form.status}
-                      onChange={(e) => setForm({...form, status: e.target.value})}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
+                    <Label htmlFor="jumlah_kuota">Jumlah Kuota</Label>
+                    <InputText
+                      type="number"
+                      id="jumlah_kuota"
+                      name="jumlah_kuota"
+                      value={form.jumlah_kuota}
+                      onChange={(e) =>
+                        setForm({ ...form, jumlah_kuota: e.target.value })
+                      }
                       required
-                    >
-                      <option value="Dimulai">Dimulai</option>
-                      <option value="Sedang berlangsung">Sedang berlangsung</option>
-                      <option value="Selesai">Selesai</option>
-                    </select>
+                      min="1"
+                    />
+                    {validationErrors.jumlah_kuota && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.jumlah_kuota[0]}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="waktu_pengumpulan">
+                      Waktu Pengumpulan Berkas
+                    </Label>
+                    <InputText
+                      type="datetime-local"
+                      id="waktu_pengumpulan"
+                      name="waktu_pengumpulan"
+                      value={form.waktu_pengumpulan}
+                      onChange={(e) =>
+                        setForm({ ...form, waktu_pengumpulan: e.target.value })
+                      }
+                      required
+                    />
+                    {validationErrors.waktu_pengumpulan && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.waktu_pengumpulan[0]}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="mentor_id">Mentor</Label>
+                    {loadingMentorOptions ? (
+                      <p className="text-gray-500 text-xs mt-1">
+                        Memuat mentor...
+                      </p>
+                    ) : mentorOptionsError ? (
+                      <p className="text-red-500 text-xs mt-1">
+                        {mentorOptionsError}
+                      </p>
+                    ) : (
+                      <select
+                        id="mentor_id"
+                        name="mentor_id"
+                        value={form.mentor_id}
+                        onChange={(e) =>
+                          setForm({ ...form, mentor_id: e.target.value })
+                        }
+                        className="w-full p-1 border rounded mt-0.5 text-xs"
+                        required
+                      >
+                        <option value="">Pilih Mentor</option>
+                        {mentorOptions.map((mentor) => (
+                          <option key={mentor.value} value={mentor.value}>
+                            {mentor.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {validationErrors.mentor_id && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.mentor_id[0]}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-2 mt-3">
                 <button
                   type="button"
@@ -704,13 +1293,13 @@ const TableSection = () => {
                   Batal
                 </button>
                 <button
-                  onClick={() => handleSubmit('Draft')}
+                  onClick={() => handleSubmit("Draft")}
                   className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs"
                 >
                   Simpan sebagai Draft
                 </button>
                 <button
-                  onClick={() => handleSubmit('Published')}
+                  onClick={() => handleSubmit("Published")}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
                 >
                   Posting
@@ -723,132 +1312,302 @@ const TableSection = () => {
         {/* Detail Modal */}
         {showDetail && selectedPelatihan && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-lg p-3 w-full max-w-sm mx-auto">
+            <div className="bg-white rounded-lg shadow-lg p-3 w-full max-w-md mx-auto">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-base font-semibold">Detail Pelatihan</h3>
-                <button 
+                <button
                   onClick={() => setShowDetail(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FaTimes size={14} />
                 </button>
               </div>
-              
-              <div className="space-y-2 mb-3 max-h-72 overflow-y-auto pr-1">
+
+              <div className="space-y-2 mb-3 max-h-80 overflow-y-auto pr-1">
+                {/* Gambar */}
                 <div>
-                  <p className="text-xs text-gray-500">Nama Pelatihan</p>
+                  <Label>Gambar Pelatihan</Label>
                   {isEditing ? (
-                    <input 
-                      type="text" 
+                    <div className="mt-1">
+                      {editImagePreview ? (
+                        <div className="relative">
+                          <img
+                            src={editImagePreview}
+                            alt="Preview"
+                            className="w-full h-32 object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            onClick={removeEditImagePreview}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <FaTimes size={10} />
+                          </button>
+                        </div>
+                      ) : selectedPelatihan.image ? (
+                        <div className="relative">
+                          <img
+                            src={getImageUrl(selectedPelatihan.image)}
+                            alt={selectedPelatihan.nama}
+                            className="w-full h-32 object-cover rounded border"
+                          />
+                          <div className="mt-2">
+                            <input
+                              type="file"
+                              id="edit_image_upload"
+                              accept="image/*"
+                              onChange={handleEditImageUpload}
+                              className="hidden"
+                            />
+                            <label
+                              htmlFor="edit_image_upload"
+                              className="cursor-pointer bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600"
+                            >
+                              Ganti Gambar
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                          <FaImage className="mx-auto text-gray-400 text-2xl mb-2" />
+                          <p className="text-sm text-gray-500 mb-2">
+                            Klik untuk upload gambar
+                          </p>
+                          <input
+                            type="file"
+                            id="edit_image_upload"
+                            accept="image/*"
+                            onChange={handleEditImageUpload}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="edit_image_upload"
+                            className="cursor-pointer bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600"
+                          >
+                            Pilih Gambar
+                          </label>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Format: JPG, JPEG, PNG, GIF. Maksimal 5MB.
+                      </p>
+                      {validationErrors.image && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {validationErrors.image[0]}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-1">
+                      {selectedPelatihan.image ? (
+                        <img
+                          src={getImageUrl(selectedPelatihan.image)}
+                          alt={selectedPelatihan.nama}
+                          className="w-full h-32 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() =>
+                            openImageModal(getImageUrl(selectedPelatihan.image))
+                          }
+                        />
+                      ) : (
+                        <div className="w-full h-32 bg-gray-200 rounded border flex items-center justify-center">
+                          <div className="text-center">
+                            <FaImage className="mx-auto text-gray-400 text-2xl mb-2" />
+                            <p className="text-sm text-gray-500">
+                              Belum ada gambar
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Label>Nama Pelatihan</Label>
+                  {isEditing ? (
+                    <InputText
+                      type="text"
                       value={editedPelatihan.nama}
-                      onChange={(e) => handleInputChange('nama', e.target.value)}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
+                      onChange={(e) =>
+                        handleInputChange("nama", e.target.value)
+                      }
                     />
                   ) : (
-                    <p className="font-medium text-sm">{selectedPelatihan.nama}</p>
+                    <p className="font-medium text-sm">
+                      {selectedPelatihan.nama}
+                    </p>
+                  )}
+                  {validationErrors.nama && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.nama[0]}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Tanggal Mulai</p>
+                  <Label>Keterangan Pelatihan</Label>
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      value={editedPelatihan.tanggalMulai}
-                      onChange={(e) => handleInputChange('tanggalMulai', e.target.value)}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
-                    />
-                  ) : (
-                    <p className="font-medium text-sm">{selectedPelatihan.tanggalMulai}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Tanggal Selesai</p>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      value={editedPelatihan.tanggalSelesai}
-                      onChange={(e) => handleInputChange('tanggalSelesai', e.target.value)}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
-                    />
-                  ) : (
-                    <p className="font-medium text-sm">{selectedPelatihan.tanggalSelesai}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Deskripsi</p>
-                  {isEditing ? (
-                    <textarea 
-                      value={editedPelatihan.deskripsi}
-                      onChange={(e) => handleInputChange('deskripsi', e.target.value)}
+                    <textarea
+                      value={editedPelatihan.keterangan}
+                      onChange={(e) =>
+                        handleInputChange("keterangan", e.target.value)
+                      }
                       className="w-full p-1 border rounded mt-0.5 text-xs"
                       rows="2"
                     />
                   ) : (
-                    <p className="font-medium text-sm">{selectedPelatihan.deskripsi}</p>
+                    <p className="font-medium text-sm">
+                      {selectedPelatihan.keterangan}
+                    </p>
+                  )}
+                  {validationErrors.keterangan && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.keterangan[0]}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Instruktur</p>
+                  <Label>Kategori</Label>
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      value={editedPelatihan.instruktur}
-                      onChange={(e) => handleInputChange('instruktur', e.target.value)}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
+                    <InputText
+                      type="text"
+                      value={editedPelatihan.kategori}
+                      onChange={(e) =>
+                        handleInputChange("kategori", e.target.value)
+                      }
                     />
                   ) : (
-                    <p className="font-medium text-sm">{selectedPelatihan.instruktur}</p>
+                    <p className="font-medium text-sm">
+                      {selectedPelatihan.kategori}
+                    </p>
+                  )}
+                  {validationErrors.kategori && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.kategori[0]}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Kapasitas</p>
+                  <Label>Biaya</Label>
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      value={editedPelatihan.kapasitas}
-                      onChange={(e) => handleInputChange('kapasitas', e.target.value)}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
-                    />
-                  ) : (
-                    <p className="font-medium text-sm">{selectedPelatihan.kapasitas}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Lokasi</p>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
-                      value={editedPelatihan.lokasi}
-                      onChange={(e) => handleInputChange('lokasi', e.target.value)}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
-                    />
-                  ) : (
-                    <p className="font-medium text-sm">{selectedPelatihan.lokasi}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Biaya</p>
-                  {isEditing ? (
-                    <input 
-                      type="text" 
+                    <InputText
+                      type="text"
                       value={editedPelatihan.biaya}
-                      onChange={(e) => handleInputChange('biaya', e.target.value)}
-                      className="w-full p-1 border rounded mt-0.5 text-xs"
+                      onChange={(e) =>
+                        handleInputChange("biaya", e.target.value)
+                      }
                     />
                   ) : (
-                    <p className="font-medium text-sm">{selectedPelatihan.biaya}</p>
+                    <p className="font-medium text-sm">
+                      {selectedPelatihan.biaya}
+                    </p>
+                  )}
+                  {validationErrors.biaya && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.biaya[0]}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Status Pelatihan</p>
+                  <Label>Jumlah Kuota</Label>
                   {isEditing ? (
-                    <select 
+                    <InputText
+                      type="number"
+                      value={editedPelatihan.jumlah_kuota}
+                      onChange={(e) =>
+                        handleInputChange("jumlah_kuota", e.target.value)
+                      }
+                      min="1"
+                    />
+                  ) : (
+                    <p className="font-medium text-sm">
+                      {selectedPelatihan.jumlah_kuota}
+                    </p>
+                  )}
+                  {validationErrors.jumlah_kuota && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.jumlah_kuota[0]}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label>Jumlah Peserta Terdaftar</Label>
+                  <p className="font-medium text-sm">
+                    {selectedPelatihan.jumlah_peserta}
+                  </p>
+                </div>
+                <div>
+                  <Label>Waktu Pengumpulan Berkas</Label>
+                  {isEditing ? (
+                    <InputText
+                      type="datetime-local"
+                      value={editedPelatihan.waktu_pengumpulan}
+                      onChange={(e) =>
+                        handleInputChange("waktu_pengumpulan", e.target.value)
+                      }
+                    />
+                  ) : (
+                    <p className="font-medium text-sm">
+                      {selectedPelatihan.waktu_pengumpulan}
+                    </p>
+                  )}
+                  {validationErrors.waktu_pengumpulan && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.waktu_pengumpulan[0]}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label>Mentor</Label>
+                  {isEditing ? (
+                    loadingMentorOptions ? (
+                      <p className="text-gray-500 text-xs mt-1">
+                        Memuat mentor...
+                      </p>
+                    ) : mentorOptionsError ? (
+                      <p className="text-red-500 text-xs mt-1">
+                        {mentorOptionsError}
+                      </p>
+                    ) : (
+                      <select
+                        value={editedPelatihan.mentor_id}
+                        onChange={(e) =>
+                          handleInputChange("mentor_id", e.target.value)
+                        }
+                        className="w-full p-1 border rounded mt-0.5 text-xs"
+                      >
+                        <option value="">Pilih Mentor</option>
+                        {mentorOptions.map((mentor) => (
+                          <option key={mentor.value} value={mentor.value}>
+                            {mentor.label}
+                          </option>
+                        ))}
+                      </select>
+                    )
+                  ) : (
+                    <p className="font-medium text-sm">
+                      {selectedPelatihan.instruktur}
+                    </p>
+                  )}
+                  {validationErrors.mentor_id && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.mentor_id[0]}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label>Status Pelatihan</Label>
+                  {isEditing ? (
+                    <select
                       value={editedPelatihan.status}
-                      onChange={(e) => handleInputChange('status', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("status", e.target.value)
+                      }
                       className="w-full p-1 border rounded mt-0.5 text-xs"
                     >
-                      <option value="Dimulai">Dimulai</option>
-                      <option value="Sedang berlangsung">Sedang berlangsung</option>
+                      <option value="Belum Dimulai">Belum Dimulai</option>
+                      <option value="Sedang berlangsung">
+                        Sedang berlangsung
+                      </option>
                       <option value="Selesai">Selesai</option>
                     </select>
                   ) : (
@@ -856,13 +1615,20 @@ const TableSection = () => {
                       {getTrainingStatusBadge(selectedPelatihan.status)}
                     </div>
                   )}
+                  {validationErrors.status && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.status[0]}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Post Status</p>
+                  <Label>Post Status</Label>
                   {isEditing ? (
-                    <select 
+                    <select
                       value={editedPelatihan.postStatus}
-                      onChange={(e) => handleInputChange('postStatus', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("postStatus", e.target.value)
+                      }
                       className="w-full p-1 border rounded mt-0.5 text-xs"
                     >
                       <option value="Draft">Draft</option>
@@ -873,9 +1639,14 @@ const TableSection = () => {
                       {getPostStatusBadge(selectedPelatihan.postStatus)}
                     </div>
                   )}
+                  {validationErrors.postStatus && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.postStatus[0]}
+                    </p>
+                  )}
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-2">
                 {isEditing ? (
                   <>
@@ -895,15 +1666,12 @@ const TableSection = () => {
                 ) : (
                   <>
                     <button
-                      onClick={() => {
-                        const index = paginatedData.findIndex(p => p.id === selectedPelatihan.id);
-                        if (index !== -1) handleDelete(index);
-                      }}
+                      onClick={() => handleDelete(selectedPelatihan)}
                       className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded inline-flex items-center gap-1 text-xs"
                     >
                       <FaTrashAlt size={12} /> Hapus
                     </button>
-                    {selectedPelatihan.postStatus === 'Draft' && (
+                    {selectedPelatihan.postStatus === "Draft" && (
                       <button
                         onClick={() => handlePublishDraft(selectedPelatihan)}
                         className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded inline-flex items-center gap-1 text-xs"
@@ -930,45 +1698,94 @@ const TableSection = () => {
           </div>
         )}
 
+        {/* Modal Gambar */}
+        {showImageModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[9999]">
+            <div className="relative max-w-4xl max-h-full">
+              <button
+                onClick={() => setShowImageModal(false)}
+                className="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-75 z-10"
+              >
+                <FaTimes size={20} />
+              </button>
+              <img
+                src={modalImageSrc}
+                alt="Preview"
+                className="max-w-full max-h-full object-contain rounded-lg"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Modal Daftar Pelamar */}
         {showPelamarModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{zIndex: 9000}}>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            style={{ zIndex: 9000 }}
+          >
             <div className="bg-white rounded-lg shadow-lg p-3 w-full max-w-4xl mx-auto">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold">Daftar Pelamar - {selectedPelatihanNama}</h3>
-                <button 
+                <h3 className="text-lg font-semibold">
+                  Daftar Pelamar - {selectedPelatihanNama}
+                </h3>
+                <button
                   onClick={() => setShowPelamarModal(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FaTimes size={14} />
                 </button>
               </div>
-              
-              {selectedPelamarList.length > 0 ? (
+
+              {loadingPelamar ? (
+                <div className="text-center py-8">
+                  <FaSpinner className="animate-spin text-3xl text-blue-500 mx-auto" />
+                  <p className="text-gray-500 mt-2">Memuat daftar pelamar...</p>
+                </div>
+              ) : selectedPelamarList.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Nama</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Email</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Telepon</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Tanggal Daftar</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">Aksi</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Nama
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Email
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Telepon
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Tanggal Daftar
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Aksi
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {selectedPelamarList.map((pelamar) => (
                         <tr key={pelamar.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 whitespace-nowrap">{pelamar.nama}</td>
-                          <td className="px-4 py-2 whitespace-nowrap">{pelamar.email}</td>
-                          <td className="px-4 py-2 whitespace-nowrap">{pelamar.telepon}</td>
-                          <td className="px-4 py-2 whitespace-nowrap">{pelamar.tanggalDaftar}</td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {pelamar.nama}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {pelamar.email}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {pelamar.telepon}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {pelamar.tanggalDaftar}
+                          </td>
                           <td className="px-4 py-2 whitespace-nowrap">
                             {getStatusBadge(pelamar.status)}
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap text-center">
-                            <button 
+                            <button
                               onClick={() => handleChangeStatus(pelamar)}
                               className="text-blue-500 hover:text-blue-700 transition-colors"
                               title="Ubah Status"
@@ -984,10 +1801,12 @@ const TableSection = () => {
               ) : (
                 <div className="text-center py-8">
                   <FaExclamationCircle className="mx-auto text-gray-400 text-3xl mb-3" />
-                  <p className="text-gray-500">Belum ada pelamar untuk pelatihan ini</p>
+                  <p className="text-gray-500">
+                    Belum ada pelamar untuk pelatihan ini
+                  </p>
                 </div>
               )}
-              
+
               <div className="flex justify-end mt-4">
                 <button
                   onClick={() => setShowPelamarModal(false)}
@@ -1002,54 +1821,69 @@ const TableSection = () => {
 
         {/* Popup Status Pelamar */}
         {showStatusPopup && selectedPelamar && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4" style={{zIndex: 9999}}>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4"
+            style={{ zIndex: 9999 }}
+          >
             <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-sm mx-auto">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold">Ubah Status Pelamar</h3>
-                <button 
+                <button
                   onClick={() => setShowStatusPopup(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FaTimes size={16} />
                 </button>
               </div>
-              
+
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Nama Pelamar:</p>
-                  <p className="font-medium text-base">{selectedPelamar.nama}</p>
+                  <p className="font-medium text-base">
+                    {selectedPelamar.nama}
+                  </p>
                 </div>
-                
+
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Status Saat Ini:</p>
                   <div className="mb-2">
                     {getStatusBadge(selectedPelamar.status)}
                   </div>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm text-gray-600 mb-2">Pilih Status Baru:</label>
+                  <Label htmlFor="newStatus">Pilih Status Baru:</Label>
                   <select
+                    id="newStatus"
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="Ditinjau">Ditinjau</option>
-                    <option value="Diterima">Diterima</option>
-                    <option value="Ditolak">Ditolak</option>
+                    <option value="ditinjau">Ditinjau</option>
+                    <option value="diterima">Diterima</option>
+                    <option value="ditolak">Ditolak</option>
                   </select>
                 </div>
-                
+
                 <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
                   <strong>Keterangan:</strong>
                   <ul className="mt-1 space-y-1">
-                    <li>• <span className="font-medium">Ditinjau:</span> Status default, sedang dalam proses review</li>
-                    <li>• <span className="font-medium">Diterima:</span> Pelamar diterima untuk mengikuti pelatihan</li>
-                    <li>• <span className="font-medium">Ditolak:</span> Pelamar tidak memenuhi syarat pelatihan</li>
+                    <li>
+                      • <span className="font-medium">Ditinjau:</span> Status
+                      default, sedang dalam proses review
+                    </li>
+                    <li>
+                      • <span className="font-medium">Diterima:</span> Pelamar
+                      diterima untuk mengikuti pelatihan
+                    </li>
+                    <li>
+                      • <span className="font-medium">Ditolak:</span> Pelamar
+                      tidak memenuhi syarat pelatihan
+                    </li>
                   </ul>
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   onClick={() => setShowStatusPopup(false)}
@@ -1060,8 +1894,18 @@ const TableSection = () => {
                 <button
                   onClick={handleSaveStatus}
                   className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm inline-flex items-center gap-1 transition-colors"
+                  disabled={savingStatus}
                 >
-                  <FaCheck size={12} /> Simpan
+                  {savingStatus ? (
+                    <>
+                      <FaSpinner size={12} className="animate-spin" />{" "}
+                      Menyimpan...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheck size={12} /> Simpan
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -1072,4 +1916,4 @@ const TableSection = () => {
   );
 };
 
-export default TableSection;
+export default AdminPelatihanPage;

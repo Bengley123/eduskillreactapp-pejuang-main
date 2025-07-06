@@ -31,7 +31,6 @@ export default function UploadLaporanPage() {
         </h2>
 
         <form className="space-y-5">
-
           {/* Kolom Informasi Penting Lainnya */}
           <div>
             <label className="block font-medium text-gray-700 mb-1">

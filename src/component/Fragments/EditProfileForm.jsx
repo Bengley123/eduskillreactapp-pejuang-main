@@ -59,6 +59,10 @@ const EditProfileForm = () => {
   const [sendingLink, setSendingLink] = useState(false);
   const [notification, setNotification] = useState({ message: "", type: "" });
 
+  const [isPasswordFormValid, setIsPasswordFormValid] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState(null);
+
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
@@ -90,6 +94,25 @@ const EditProfileForm = () => {
     if (!name.trim()) {
       return "Nama tidak boleh kosong.";
     }
+    return null;
+  };
+
+  const validateCurrentPassword = (password) => {
+    if (!password) return "Password saat ini tidak boleh kosong.";
+    return null; // Tambahkan logika validasi Anda di sini jika perlu
+  };
+
+  const validateNewPassword = (password) => {
+    if (!password) return "Password baru tidak boleh kosong.";
+    if (password.length < 8) return "Password minimal 8 karakter.";
+    // Anda bisa menambahkan validasi regex yang lebih kompleks di sini
+    return null;
+  };
+
+  const validateConfirmPassword = (confirmPassword, newPassword) => {
+    if (!confirmPassword) return "Konfirmasi password tidak boleh kosong.";
+    if (confirmPassword !== newPassword)
+      return "Konfirmasi password tidak cocok.";
     return null;
   };
 
@@ -495,16 +518,16 @@ const EditProfileForm = () => {
             </div>
           </div>
 
-        <InputWithLabel
-          label="Nomor Telepon"
-          type="tel"
-          name="nomor_telp"
-          value={formData.nomor_telp}
-          onChange={handleChange}
-          icon={FaPhone}
-          disabled={saving}
-          error={nomorTelpError}
-        />
+          <InputWithLabel
+            label="Nomor Telepon"
+            type="tel"
+            name="nomor_telp"
+            value={formData.nomor_telp}
+            onChange={handleChange}
+            icon={FaPhone}
+            disabled={saving}
+            error={nomorTelpError}
+          />
 
           <div className="flex justify-between mt-8">
             <Button
