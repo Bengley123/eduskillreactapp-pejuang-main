@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Typography from "../Elements/AdminSource/Typhography";
 import DetailModal from "../Fragments/DetailModal";
 import { FaSearch, FaExclamationCircle, FaSpinner } from "react-icons/fa"; // Tambahkan FaSpinner, FaExclamationCircle
@@ -7,9 +8,11 @@ import {
   updateData,
   deleteData,
   apiEndpoints,
+  setAuthToken,
 } from "../../services/api.js";
 
 const FeedbackPage = () => {
+  const navigate = useNavigate();
   const [dataFeedback, setDataFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,6 +35,16 @@ const FeedbackPage = () => {
     Ditampilkan: "text-green-700 font-semibold",
     "Tidak Ditampilkan": "text-red-700 font-semibold",
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("jwt");
+    if (token) {
+      setAuthToken(token);
+    } else {
+      console.error("No auth token found, redirecting to login.");
+      navigate("/login");
+    }
+  }, [navigate]);
 
   // Callback untuk mengambil data feedback dari API
   const fetchFeedbackData = useCallback(async () => {

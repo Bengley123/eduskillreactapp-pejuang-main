@@ -32,6 +32,7 @@ import EditProfilePage from "./component/pages/EditProfilePage";
 // import StatusPendaftaranPage from "./component/pages/StatusPendaftaranpage";
 import FeedBackPage from "./component/pages/Feedbackpage";
 import AdminFeedbackPage from "./component/pages/AdminFeedbackpage";
+import ResetPasswordPage from "./component/pages/ResetPasswordPage";
 
 import { setAuthToken } from "./services/api";
 
@@ -75,6 +76,7 @@ function App() {
           element={<TentangKamiYayasanPage />}
         />
         <Route path="/verify-email" element={<VerificationResultPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Layout untuk Admin */}

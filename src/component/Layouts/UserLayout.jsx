@@ -19,7 +19,7 @@ export default function UserLayout() {
 
   if (isLoggedIn) {
     return (
-      <SessionTimeoutProvider timeoutInMinutes={1}>
+      <SessionTimeoutProvider timeoutInMinutes={15}>
         {layoutContent}
       </SessionTimeoutProvider>
     );

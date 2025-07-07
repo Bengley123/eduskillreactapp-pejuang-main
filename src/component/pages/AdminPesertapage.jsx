@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Button from "../Elements/Button/index";
 import Typography from "../Elements/AdminSource/Typhography";
 import DetailModal from "../Fragments/DetailModal";
@@ -14,9 +15,11 @@ import {
   updateData,
   deleteData,
   apiEndpoints,
+  setAuthToken,
 } from "../../services/api.js";
 
 const PesertaPage = () => {
+  const navigate = useNavigate();
   const [dataPeserta, setDataPeserta] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,6 +43,19 @@ const PesertaPage = () => {
 
   const [selectedEditFiles, setSelectedEditFiles] = useState({});
   const [pendidikanOptions, setPendidikanOptions] = useState([]);
+
+  const [statusFilter, setStatusFilter] = useState(""); // Default "" berarti "semua status"
+
+  useEffect(() => {
+    const token = localStorage.getItem("jwt");
+    if (token) {
+      setAuthToken(token);
+    } else {
+      // Jika tidak ada token, paksa kembali ke halaman login
+      console.error("No auth token found, redirecting to login.");
+      navigate("/login");
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const fetchPendidikanOptions = async () => {
@@ -111,15 +127,17 @@ const PesertaPage = () => {
     setLoading(true);
     setError(null);
     try {
-      let url = `${apiEndpoints.peserta}?registration_status=diterima`;
-      url += `&page=${currentPage}`;
-      url += `&per_page=${itemsPerPage}`;
+      let url = `${apiEndpoints.peserta}?page=${currentPage}&per_page=${itemsPerPage}`;
 
       if (appliedSearchTerm) {
         url += `&search=${encodeURIComponent(appliedSearchTerm)}`;
       }
       if (selectedPelatihanId) {
         url += `&pelatihan_id=${encodeURIComponent(selectedPelatihanId)}`;
+      }
+      // TAMBAHKAN BLOK INI
+      if (statusFilter) {
+        url += `&registration_status=${encodeURIComponent(statusFilter)}`;
       }
 
       console.log("Fetching Peserta Data (Server-Side) from URL:", url);
@@ -202,6 +220,7 @@ const PesertaPage = () => {
           foto_peserta: foto_peserta_url,
 
           daftar_pelatihan_diterima: acceptedRegistrations,
+          daftar_pelatihan: allDaftarPelatihan,
 
           ktp_file: ktp_file_url,
           kk_file: kk_file_url,
@@ -239,7 +258,13 @@ const PesertaPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, appliedSearchTerm, selectedPelatihanId]); // Dependency diubah ke appliedSearchTerm
+  }, [
+    currentPage,
+    itemsPerPage,
+    appliedSearchTerm,
+    selectedPelatihanId,
+    statusFilter,
+  ]); // Dependency diubah ke appliedSearchTerm
 
   // Efek ini akan terpicu saat currentPage, appliedSearchTerm, atau selectedPelatihanId berubah
   useEffect(() => {
@@ -258,36 +283,29 @@ const PesertaPage = () => {
     { key: "email", header: "Email" },
     {
       key: "pelatihan",
-      header: "Pelatihan",
+      header: "Pelatihan & Status",
       render: (value, row) => {
-        if (
-          row.daftar_pelatihan_diterima &&
-          Array.isArray(row.daftar_pelatihan_diterima)
-        ) {
-          if (row.daftar_pelatihan_diterima.length > 0) {
-            return row.daftar_pelatihan_diterima
-              .map((reg) => reg.pelatihan?.nama_pelatihan || "N/A")
-              .join(", ");
-          }
+        if (row.daftar_pelatihan && row.daftar_pelatihan.length > 0) {
+          return row.daftar_pelatihan
+            .map(
+              (reg) =>
+                `${reg.pelatihan?.nama_pelatihan || "N/A"} (${
+                  reg.status || "N/A"
+                })`
+            )
+            .join(", ");
         }
-        return "N/A";
+        return "Belum Mendaftar";
       },
     },
     {
       key: "tanggalDaftar",
-      header: "Tanggal Diterima",
+      header: "Tanggal Daftar",
       render: (value, row) => {
-        if (
-          row.daftar_pelatihan_diterima &&
-          Array.isArray(row.daftar_pelatihan_diterima)
-        ) {
-          const primaryAcceptedReg = row.daftar_pelatihan_diterima.find(
-            (reg) => reg.status?.toLowerCase() === "diterima"
-          );
-          return primaryAcceptedReg
-            ? new Date(primaryAcceptedReg.created_at).toLocaleDateString(
-                "id-ID"
-              )
+        if (row.daftar_pelatihan && row.daftar_pelatihan.length > 0) {
+          const tanggal = row.daftar_pelatihan[0].created_at;
+          return tanggal
+            ? new Date(tanggal).toLocaleDateString("id-ID")
             : "N/A";
         }
         return "N/A";
@@ -635,6 +653,14 @@ const PesertaPage = () => {
             onChange={handlePelatihanFilterChange}
             className="border border-gray-300 p-2 rounded w-60"
           >
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1); // Reset ke halaman 1 saat filter berubah
+              }}
+              className="border border-gray-300 p-2 rounded w-60"
+            ></select>
             <option value="">Semua Pelatihan</option>
             {pelatihanOptions.map((option) => (
               <option key={option.value} value={option.value}>

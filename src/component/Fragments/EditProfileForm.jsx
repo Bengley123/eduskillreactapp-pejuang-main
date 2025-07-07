@@ -323,7 +323,7 @@ const EditProfileForm = () => {
       updatePayload.append("email", formData.email);
       updatePayload.append("nomor_telp", formData.nomor_telp);
 
-      const response = await api.post(`/peserta/${pesertaId}`, updatePayload);
+      const response = await api.post(`/profil-saya`, updatePayload);
       console.log("Data profil berhasil diperbarui:", response.data);
 
       const updatedUserData = response.data.data.user;
