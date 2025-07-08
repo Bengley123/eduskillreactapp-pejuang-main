@@ -19,7 +19,9 @@ const DetailPelatihan = () => {
   useEffect(() => {
     const fetchPelatihanDetail = async () => {
       if (!id) {
-        console.warn("DetailPelatihan: ID pelatihan tidak ditemukan di URL, tidak melakukan fetch.");
+        console.warn(
+          "DetailPelatihan: ID pelatihan tidak ditemukan di URL, tidak melakukan fetch."
+        );
         setLoading(false);
         setError("ID pelatihan tidak valid atau tidak ditemukan.");
         return;
@@ -30,24 +32,34 @@ const DetailPelatihan = () => {
       try {
         // Logika location.state di sini adalah untuk optimasi tampilan awal,
         // data API akan menimpanya setelah selesai fetch.
-        if (location.state && location.state.title && location.state.fullDescription) {
+        if (
+          location.state &&
+          location.state.title &&
+          location.state.fullDescription
+        ) {
           // Hanya set sebagai data awal sementara loading dari API
           setPelatihan({
             id: id,
             nama_pelatihan: location.state.title,
             keterangan_pelatihan: location.state.fullDescription,
-            gambar: location.state.image // Asumsi ini adalah URL lengkap atau path storage
+            gambar: location.state.image, // Asumsi ini adalah URL lengkap atau path storage
           });
-          console.log("Data pelatihan dimuat dari location.state (preload):", location.state);
+          console.log(
+            "Data pelatihan dimuat dari location.state (preload):",
+            location.state
+          );
         }
 
         const response = await fetchData(`/pelatihan/${id}`);
         // PERBAIKAN PENTING DI SINI: Akses response.data untuk objek pelatihan
-        if (response && response.data) { // Pastikan response.data ada
+        if (response && response.data) {
+          // Pastikan response.data ada
           setPelatihan(response.data); // <--- UBAH DI SINI! setPelatihan(response.data)
           console.log("Data pelatihan dimuat dari API:", response.data); // Log data yang sudah benar
         } else {
-          setError("Detail pelatihan tidak ditemukan atau format data tidak valid.");
+          setError(
+            "Detail pelatihan tidak ditemukan atau format data tidak valid."
+          );
           setPelatihan(null);
         }
       } catch (err) {
@@ -73,7 +85,11 @@ const DetailPelatihan = () => {
   };
 
   if (loading) {
-    return <div className="text-center mt-10 text-gray-600">Memuat detail pelatihan...</div>;
+    return (
+      <div className="text-center mt-10 text-gray-600">
+        Memuat detail pelatihan...
+      </div>
+    );
   }
 
   if (error) {
@@ -81,7 +97,11 @@ const DetailPelatihan = () => {
   }
 
   if (!pelatihan) {
-    return <div className="text-center mt-10 text-gray-600">Pelatihan tidak ditemukan atau ID tidak valid.</div>;
+    return (
+      <div className="text-center mt-10 text-gray-600">
+        Pelatihan tidak ditemukan atau ID tidak valid.
+      </div>
+    );
   }
 
   const imageUrl = pelatihan.gambar
@@ -94,9 +114,11 @@ const DetailPelatihan = () => {
       title={pelatihan.nama_pelatihan}
       imageSrc={imageUrl}
       description={pelatihan.keterangan_pelatihan}
-      instructor={pelatihan.instruktur || "Tidak tersedia"}
+      kategori={pelatihan.kategori}
+      instructor={pelatihan.mentor?.nama_mentor || "Tidak tersedia"} // Access mentor name from nested object
       biaya={pelatihan.biaya || 0}
-      kuota={pelatihan.kuota || 0}
+      kuota={pelatihan.jumlah_kuota || 0} // Use jumlah_kuota from backend
+      deadline={pelatihan.waktu_pengumpulan} // Pass deadline if you want to use it
       onDaftar={handleDaftar}
     />
   );

@@ -2,11 +2,13 @@ import HeroBanner from "../Moleculs/HeroBanner";
 import Image from "../Elements/Image/ImageIndex";
 import DeskripsiSection from "../Moleculs/DeskripsiSection";
 import Button from "../Elements/Button/index";
+import { BiSprayCan } from "react-icons/bi";
 
 const DetailPelatihanSection = ({
   title,
   imageSrc,
   description,
+  kategori,
   onDaftar,
   instructor,
   biaya,
@@ -28,6 +30,11 @@ const DetailPelatihanSection = ({
       <DeskripsiSection title="Deskripsi Pelatihan" content={description} />
 
       <div className="bg-gray-100 p-4 rounded-lg shadow-md space-y-2">
+        {kategori !== undefined && (
+          <p>
+            <strong>Kategori:</strong> {kategori}
+          </p>
+        )}
         {instructor && (
           <p>
             <strong>Instruktur:</strong> {instructor}
@@ -35,12 +42,17 @@ const DetailPelatihanSection = ({
         )}
         {biaya !== undefined && (
           <p>
-            <strong>Biaya:</strong> Rp {parseInt(biaya).toLocaleString()}
+            <strong>Biaya:</strong> {biaya}
           </p>
         )}
         {kuota !== undefined && (
           <p>
-            <strong>Kuota Tersedia:</strong> {kuota} peserta
+            <strong>Kuota Tersedia:</strong> {kuota} Peserta
+          </p>
+        )}
+        {deadline !== undefined && (
+          <p>
+            <strong>Deadline Pengumpulan Berkas :</strong> {deadline}
           </p>
         )}
       </div>
