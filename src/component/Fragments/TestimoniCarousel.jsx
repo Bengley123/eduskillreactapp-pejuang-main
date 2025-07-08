@@ -25,7 +25,7 @@ const TestimoniCarousel = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetchData('/feedback?status=Ditampilkan');
+        const response = await fetchData('/peserta-alumni');
 
         let fetchedData = [];
         if (response && response.data && Array.isArray(response.data.data)) {

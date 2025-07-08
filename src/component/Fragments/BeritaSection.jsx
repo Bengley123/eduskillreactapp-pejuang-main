@@ -105,7 +105,7 @@ const BeritaSection = () => {
         {beritaTampil.map((item) => (
           <CardBerita
             key={item.id}
-            image={item.gambar ? `http://127.0.0.1:8000/storage/${item.gambar}` : null}
+            image={item.gambar ? `http://127.0.0.1:8000/storage/berita_gambar/${item.gambar}` : null}
             title={item.title}
             date={new Date(item.date).toLocaleDateString('id-ID', {
               year: 'numeric',

@@ -27,6 +27,8 @@ import AdminPelatihanPage from "./component/pages/AdminPelatihanpage";
 import AdminLaporanPage from "./component/pages/AdminLaporanpage";
 import AdminNotifikasiPage from "./component/pages/AdminNotifikasipage";
 import AdminDashboardPage from "./component/pages/AdminDashboardpage";
+import AdminKategoriPelatihanPage from "./component/pages/AdminKategoriPelatihanpage";
+import AdminMentorPage from "./component/pages/AdminMentorpage";
 import ProfilePage from "./component/pages/Profilepage";
 import EditProfilePage from "./component/pages/EditProfilePage";
 //import StatusPendaftaranPage from "./component/pages/StatusPendaftaranpage";
@@ -77,6 +79,8 @@ function App() {
         <Route path="/adpeserta" element={<AdminPesertaPage />} />
         <Route path="/adkonten" element={<AdminKontenPage />} />
         <Route path="/adpelatihan" element={<AdminPelatihanPage />} />
+        <Route path="/adkategori" element={<AdminKategoriPelatihanPage />} />
+        <Route path="/admentor" element={<AdminMentorPage />} />
         <Route path="/adlaporan" element={<AdminLaporanPage />} />
         <Route path="/adfeedback" element={<AdminFeedbackPage />} />
         <Route path="/adnotif" element={<AdminNotifikasiPage />} />

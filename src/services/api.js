@@ -141,6 +141,7 @@ export const apiEndpoints = {
   daftarPelatihan:'/daftar-pelatihan',
   pelatihan: '/pelatihan',
   mentor: '/mentor',
+  kategori: '/kategori-pelatihan'
 };
 
 export default api;

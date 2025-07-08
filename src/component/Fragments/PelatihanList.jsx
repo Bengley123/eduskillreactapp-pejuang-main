@@ -78,7 +78,7 @@ const PelatihanList = () => {
             id={item.id}
             title={item.nama_pelatihan}
             description={item.keterangan_pelatihan}
-            image={item.gambar ? `http://127.0.0.1:8000/storage/${item.gambar}` : null}
+            image={item.gambar ? `http://127.0.0.1:8000/storage/pelatihan_gambar/${item.gambar}` : null}
             kategori={item.kategori}
           />
         ))}

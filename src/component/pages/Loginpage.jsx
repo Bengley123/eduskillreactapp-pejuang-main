@@ -16,10 +16,12 @@ const LoginPage = () => {
     const role = localStorage.getItem("userRole");
 
     if (isLoggedIn === "true") {
-      if (role === "admin" || role === "ketua") {
+      if (role === "admin") {
         navigate("/admindashboard"); 
       } else if (role === "peserta") {
         navigate("/"); 
+      } else if (role === "ketua") {
+        navigate("/ketuadashboard");
       }
     }
   }, [navigate]);
@@ -52,11 +54,14 @@ const LoginPage = () => {
 
       localStorage.setItem("isLoggedIn", "true"); 
 
-      if (userRoleFromAPI === "admin" || userRoleFromAPI === "ketua") {
+      if (userRoleFromAPI === "admin") {
         navigate("/admindashboard");
         window.location.reload()
       } else if (userRoleFromAPI === "peserta") {
         navigate("/");
+        window.location.reload()
+      } else if (userRoleFromAPI === "ketua") {
+        navigate("/ketuadashboard");
         window.location.reload()
       } else {
         setError("Unauthorized role");

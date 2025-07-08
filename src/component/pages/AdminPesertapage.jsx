@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Button from '../Elements/Button/index';
+import Input from '../Elements/Input/InputSearch.jsx';
 import Typography from '../Elements/AdminSource/Typhography';
 import DetailModal from '../Fragments/DetailModal';
 import { FaSearch, FaExclamationCircle, FaEdit, FaTrashAlt, FaSpinner } from 'react-icons/fa';
@@ -131,7 +132,7 @@ const PesertaPage = () => {
         const ktp_file_url = ktpFilename ? `http://localhost:8000/api/documents/${ktpFilename}` : null; // NEW URL
         const kk_file_url = kkFilename ? `http://localhost:8000/api/documents/${kkFilename}` : null; // NEW URL
         const pas_photo_file_url = pasPhotoFilename ? `http://localhost:8000/api/documents/${pasPhotoFilename}` : null; // NEW URL
-       const ijazah_file_url = ijazahFilename ? `http://localhost:8000/api/documents/${ijazahFilename}` : null; // NEW URL
+        const ijazah_file_url = ijazahFilename ? `http://localhost:8000/api/documents/${ijazahFilename}` : null; // NEW URL
         const foto_peserta_url = fotoPesertaFilename ? `http://localhost:8000/api/profile-photos/${fotoPesertaFilename}` : null; // NEW URL (adjust if using a single /documents endpoint)
 
         return {
@@ -450,12 +451,12 @@ const PesertaPage = () => {
             className="border border-gray-300 p-2 rounded w-60"
           />
           {/* Tombol Cari */}
-          <button
+          <Button
             onClick={handleSearchButtonClick}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
           >
             Cari
-          </button>
+          </Button>
           {/* Dropdown Filter Pelatihan */}
           <select
             value={selectedPelatihanId}

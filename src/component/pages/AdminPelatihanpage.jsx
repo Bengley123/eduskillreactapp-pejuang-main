@@ -46,7 +46,7 @@ const AdminPelatihanPage = () => {
   const [form, setForm] = useState({ 
     nama_pelatihan: '', 
     keterangan_pelatihan: '', 
-    kategori: '',
+    kategori_id: '',
     biaya: '',
     jumlah_kuota: '',
     waktu_pengumpulan: '',
@@ -62,11 +62,14 @@ const AdminPelatihanPage = () => {
   const [loadingMentorOptions, setLoadingMentorOptions] = useState(true);
   const [mentorOptionsError, setMentorOptionsError] = useState(null);
 
+  const [kategoriOptions, setKategoriOptions] = useState([]);
+  const [loadingKategoriOptions, setLoadingKategoriOptions] = useState(true);
+  const [kategoriOptionsError, setKategoriOptionsError] = useState(null);
+
   // Fungsi untuk handle upload gambar
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validasi file
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -94,7 +97,6 @@ const AdminPelatihanPage = () => {
   const handleEditImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validasi file
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -122,7 +124,6 @@ const AdminPelatihanPage = () => {
   const removeImagePreview = () => {
     setSelectedImage(null);
     setImagePreview(null);
-    // Clear file input
     const fileInput = document.getElementById('image_upload');
     if (fileInput) fileInput.value = '';
   };
@@ -130,7 +131,6 @@ const AdminPelatihanPage = () => {
   const removeEditImagePreview = () => {
     setSelectedEditImage(null);
     setEditImagePreview(null);
-    // Clear file input
     const fileInput = document.getElementById('edit_image_upload');
     if (fileInput) fileInput.value = '';
   };
@@ -142,25 +142,28 @@ const AdminPelatihanPage = () => {
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-    // Sesuaikan dengan base URL backend Anda
     const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
     return `${baseUrl}/storage/${imagePath}`;
   };
 
+  // Fetch mentor options
   useEffect(() => {
     const fetchMentorOptions = async () => {
       setLoadingMentorOptions(true);
       setMentorOptionsError(null);
       try {
         const response = await fetchData(apiEndpoints.mentor || '/api/mentor');
+        let mentors = [];
         if (response && Array.isArray(response.data)) {
-          setMentorOptions(response.data.map(m => ({ value: m.id, label: m.nama_mentor })));
+          mentors = response.data;
         } else if (response && response.data && Array.isArray(response.data.data)) {
-          setMentorOptions(response.data.data.map(m => ({ value: m.id, label: m.nama_mentor })));
+          mentors = response.data.data;
         } else {
           console.warn('API response for mentor options is not in expected format:', response);
           setMentorOptions([]);
+          return;
         }
+        setMentorOptions(mentors.map(m => ({ value: m.id, label: m.nama_mentor })));
       } catch (err) {
         console.error("Failed to fetch mentor options:", err);
         setMentorOptionsError("Gagal memuat daftar mentor. Pastikan API mentor berfungsi.");
@@ -172,59 +175,89 @@ const AdminPelatihanPage = () => {
     fetchMentorOptions();
   }, []);
 
+  // Fetch kategori options
+  useEffect(() => {
+    const fetchKategoriOptions = async () => {
+      setLoadingKategoriOptions(true);
+      setKategoriOptionsError(null);
+      try {
+        const response = await fetchData(apiEndpoints.kategori || '/api/kategori');
+        let categories = [];
+        if (response && Array.isArray(response.data)) {
+          categories = response.data;
+        } else if (response && response.data && Array.isArray(response.data.data)) {
+          categories = response.data.data;
+        } else {
+          console.warn('API response for kategori options is not in expected format:', response);
+          setKategoriOptions([]);
+          return;
+        }
+        setKategoriOptions(categories.map(k => ({ value: k.id, label: k.nama_kategori })));
+      } catch (err) {
+        console.error("Failed to fetch kategori options:", err);
+        setKategoriOptionsError("Gagal memuat daftar kategori. Pastikan API kategori berfungsi.");
+        setKategoriOptions([]);
+      } finally {
+        setLoadingKategoriOptions(false);
+      }
+    };
+    fetchKategoriOptions();
+  }, []);
+
   const fetchPelatihanData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-        let url = `${apiEndpoints.pelatihan}?page=${currentPage}&per_page=${itemsPerPage}`; 
+      let url = `${apiEndpoints.pelatihan}?page=${currentPage}&per_page=${itemsPerPage}`; 
 
-        if (appliedSearchQuery) {
-            url += `&search=${encodeURIComponent(appliedSearchQuery)}`;
-        }
-        if (statusFilter !== 'Semua') {
-            url += `&status_pelatihan=${encodeURIComponent(statusFilter)}`;
-        }
-        if (postStatusFilter !== 'Semua') {
-            url += `&post_status=${encodeURIComponent(postStatusFilter)}`;
-        }
+      if (appliedSearchQuery) {
+        url += `&search=${encodeURIComponent(appliedSearchQuery)}`;
+      }
+      if (statusFilter !== 'Semua') {
+        url += `&status_pelatihan=${encodeURIComponent(statusFilter)}`;
+      }
+      if (postStatusFilter !== 'Semua') {
+        url += `&post_status=${encodeURIComponent(postStatusFilter)}`;
+      }
 
-        console.log("Fetching Pelatihan Data from URL:", url);
-        const response = await fetchData(url);
-        console.log("API Raw Response for Pelatihan:", response); 
+      console.log("Fetching Pelatihan Data from URL:", url);
+      const response = await fetchData(url);
+      console.log("API Raw Response for Pelatihan:", response); 
 
-        let fetchedRawItems = [];
-        let currentTotal = 0;
-        let currentLastPage = 1;
-        let currentCurrentPage = 1;
+      let fetchedRawItems = [];
+      let currentTotal = 0;
+      let currentLastPage = 1;
+      let currentCurrentPage = 1;
 
-        if (response && Array.isArray(response.data)) {
-            fetchedRawItems = response.data;
-            currentTotal = response.total || response.data.length;
-            currentLastPage = response.last_page || 1;
-            currentCurrentPage = response.current_page || 1;
-        } else if (response && response.data && Array.isArray(response.data.data)) {
-            fetchedRawItems = response.data.data;
-            currentTotal = response.data.total || response.data.data.length;
-            currentLastPage = response.data.last_page || 1;
-            currentCurrentPage = response.data.current_page || 1;
-        } else {
-            console.warn('API response for pelatihan data is not in expected format:', response);
-        }
+      if (response && Array.isArray(response.data)) {
+        fetchedRawItems = response.data;
+        currentTotal = response.total || response.data.length;
+        currentLastPage = response.last_page || 1;
+        currentCurrentPage = response.current_page || 1;
+      } else if (response && response.data && Array.isArray(response.data.data)) {
+        fetchedRawItems = response.data.data;
+        currentTotal = response.data.total || response.data.data.length;
+        currentLastPage = response.data.last_page || 1;
+        currentCurrentPage = response.data.current_page || 1;
+      } else {
+        console.warn('API response for pelatihan data is not in expected format:', response);
+      }
       
       const mappedData = fetchedRawItems.map(item => ({
         id: item.id,
         nama: item.nama_pelatihan,
         keterangan: item.keterangan_pelatihan,
-        kategori: item.kategori,
+        kategori_id: item.kategori_id,
+        kategori: item.kategori ? item.kategori.nama_kategori : item.kategori_nama || 'N/A',
         biaya: item.biaya,
         jumlah_kuota: item.jumlah_kuota,
         jumlah_peserta: item.jumlah_peserta || 0,
-        waktu_pengumpulan: item.waktu_pengumpulan ? item.waktu_pengumpulan.slice(0, 16) : '', 
+        waktu_pengumpulan: item.waktu_pengumpulan ? item.waktu_pengumpulan.slice(0, 16) : '',
         mentor_id: item.mentor_id,
         instruktur: item.mentor ? item.mentor.nama_mentor : 'N/A',
         status: item.status_pelatihan || 'Belum Dimulai',
         postStatus: item.post_status || 'Draft',
-        image: item.image || null, // Tambahkan field image
+        image: item.image || null,
       }));
       
       setDataPelatihan(mappedData);
@@ -274,7 +307,6 @@ const AdminPelatihanPage = () => {
     setShowDetail(true);
     setIsEditing(false);
     setValidationErrors({});
-    // Reset edit image states
     setSelectedEditImage(null);
     setEditImagePreview(null);
   };
@@ -286,30 +318,30 @@ const AdminPelatihanPage = () => {
     setSelectedPelatihanId(pelatihan.id);
     setShowPelamarModal(true);
     try {
-        const response = await fetchData(`${apiEndpoints.daftarPelatihan}?pelatihan_id=${pelatihan.id}`);
-        let fetchedPelamar = [];
-        if (response && Array.isArray(response.data)) {
-            fetchedPelamar = response.data;
-        } else if (response && response.data && Array.isArray(response.data.data)) {
-            fetchedPelamar = response.data.data;
-        }
+      const response = await fetchData(`${apiEndpoints.daftarPelatihan}?pelatihan_id=${pelatihan.id}`);
+      let fetchedPelamar = [];
+      if (response && Array.isArray(response.data)) {
+        fetchedPelamar = response.data;
+      } else if (response && response.data && Array.isArray(response.data.data)) {
+        fetchedPelamar = response.data.data;
+      }
 
-        const mappedPelamar = fetchedPelamar.map(item => ({
-            id: item.id,
-            nama: item.user?.name || item.peserta?.user?.name || 'N/A',
-            email: item.user?.email || item.peserta?.user?.email || 'N/A',
-            telepon: item.peserta?.nomor_telp || 'N/A',
-            status: item.status,
-            tanggalDaftar: item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : 'N/A', 
-            originalRegistration: item,
-        }));
-        setSelectedPelamarList(mappedPelamar);
+      const mappedPelamar = fetchedPelamar.map(item => ({
+        id: item.id,
+        nama: item.user?.name || item.peserta?.user?.name || 'N/A',
+        email: item.user?.email || item.peserta?.user?.email || 'N/A',
+        telepon: item.peserta?.nomor_telp || 'N/A',
+        status: item.status,
+        tanggalDaftar: item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : 'N/A',
+        originalRegistration: item,
+      }));
+      setSelectedPelamarList(mappedPelamar);
     } catch (err) {
-        console.error("Failed to fetch pelamar list:", err);
-        alert("Gagal memuat daftar pelamar.");
-        setSelectedPelamarList([]);
+      console.error("Failed to fetch pelamar list:", err);
+      alert("Gagal memuat daftar pelamar.");
+      setSelectedPelamarList([]);
     } finally {
-        setLoadingPelamar(false);
+      setLoadingPelamar(false);
     }
   };
 
@@ -318,27 +350,27 @@ const AdminPelatihanPage = () => {
 
     setSavingStatus(true);
     try {
-        const formData = new FormData();
-        formData.append('_method', 'PUT');
-        formData.append('status', newStatus);
-        
-        const response = await updateData(apiEndpoints.daftarPelatihan, selectedPelamar.id, formData);
+      const formData = new FormData();
+      formData.append('_method', 'PUT');
+      formData.append('status', newStatus);
+      
+      const response = await updateData(apiEndpoints.daftarPelatihan, selectedPelamar.id, formData);
 
-        if (response) {
-            alert('Status pelamar berhasil diperbarui!');
-            handleViewPelamar({ id: selectedPelatihanId, nama: selectedPelatihanNama }); 
-            setShowStatusPopup(false);
-            setSelectedPelamar(null);
-            setNewStatus('');
-            fetchPelatihanData(); 
-        } else {
-            throw new Error("Respon API tidak valid.");
-        }
+      if (response) {
+        alert('Status pelamar berhasil diperbarui!');
+        handleViewPelamar({ id: selectedPelatihanId, nama: selectedPelatihanNama });
+        setShowStatusPopup(false);
+        setSelectedPelamar(null);
+        setNewStatus('');
+        fetchPelatihanData();
+      } else {
+        throw new Error("Respon API tidak valid.");
+      }
     } catch (err) {
-        console.error("Gagal memperbarui status pelamar:", err);
-        alert(`Gagal memperbarui status: ${err.response?.data?.message || err.message}`);
+      console.error("Gagal memperbarui status pelamar:", err);
+      alert(`Gagal memperbarui status: ${err.response?.data?.message || err.message}`);
     } finally {
-        setSavingStatus(false);
+      setSavingStatus(false);
     }
   };
 
@@ -366,15 +398,14 @@ const AdminPelatihanPage = () => {
 
   const handleCancelEdit = () => {
     const formattedWaktuPengumpulan = selectedPelatihan.waktu_pengumpulan 
-        ? selectedPelatihan.waktu_pengumpulan.slice(0, 16) 
-        : '';
+      ? selectedPelatihan.waktu_pengumpulan.slice(0, 16) 
+      : '';
     setEditedPelatihan({
-        ...selectedPelatihan,
-        waktu_pengumpulan: formattedWaktuPengumpulan,
+      ...selectedPelatihan,
+      waktu_pengumpulan: formattedWaktuPengumpulan,
     });
     setIsEditing(false);
     setValidationErrors({});
-    // Reset edit image states
     setSelectedEditImage(null);
     setEditImagePreview(null);
   };
@@ -383,46 +414,44 @@ const AdminPelatihanPage = () => {
     setLoading(true);
     setValidationErrors({});
     try {
-        const formData = new FormData();
-        formData.append('_method', 'PUT'); 
-        formData.append('nama_pelatihan', editedPelatihan.nama); 
-        formData.append('keterangan_pelatihan', editedPelatihan.keterangan); 
-        formData.append('kategori', editedPelatihan.kategori || 'Umum'); 
-        formData.append('biaya', editedPelatihan.biaya); 
-        formData.append('jumlah_kuota', editedPelatihan.jumlah_kuota); 
-        const formattedTime = editedPelatihan.waktu_pengumpulan.replace('T', ' ') + ':00';
-        formData.append('waktu_pengumpulan', formattedTime); 
-        formData.append('mentor_id', editedPelatihan.mentor_id); 
-        formData.append('status_pelatihan', editedPelatihan.status); 
-        formData.append('post_status', editedPelatihan.postStatus);
-        
-        // Tambahkan gambar jika ada yang baru dipilih
-        if (selectedEditImage) {
-            formData.append('image', selectedEditImage);
-        }
+      const formData = new FormData();
+      formData.append('_method', 'PUT');
+      formData.append('nama_pelatihan', editedPelatihan.nama);
+      formData.append('keterangan_pelatihan', editedPelatihan.keterangan);
+      formData.append('kategori_id', editedPelatihan.kategori_id);
+      formData.append('biaya', editedPelatihan.biaya);
+      formData.append('jumlah_kuota', editedPelatihan.jumlah_kuota);
+      const formattedTime = editedPelatihan.waktu_pengumpulan.replace('T', ' ') + ':00';
+      formData.append('waktu_pengumpulan', formattedTime);
+      formData.append('mentor_id', editedPelatihan.mentor_id);
+      formData.append('status_pelatihan', editedPelatihan.status);
+      formData.append('post_status', editedPelatihan.postStatus);
+      
+      if (selectedEditImage) {
+        formData.append('image', selectedEditImage);
+      }
 
-        const response = await updateData(apiEndpoints.pelatihan, selectedPelatihan.id, formData);
-        if (response) {
-            alert('Pelatihan berhasil diperbarui!');
-            fetchPelatihanData();
-            setShowDetail(false);
-            setIsEditing(false);
-            // Reset edit image states
-            setSelectedEditImage(null);
-            setEditImagePreview(null);
-        } else {
-            throw new Error("Respon update kosong atau tidak valid.");
-        }
+      const response = await updateData(apiEndpoints.pelatihan, selectedPelatihan.id, formData);
+      if (response) {
+        alert('Pelatihan berhasil diperbarui!');
+        fetchPelatihanData();
+        setShowDetail(false);
+        setIsEditing(false);
+        setSelectedEditImage(null);
+        setEditImagePreview(null);
+      } else {
+        throw new Error("Respon update kosong atau tidak valid.");
+      }
     } catch (err) {
-        console.error("Failed to save pelatihan:", err);
-        if (err.response && err.response.status === 422 && err.response.data.errors) {
-            setValidationErrors(err.response.data.errors);
-            alert('Validasi gagal. Mohon periksa kembali input Anda.');
-        } else {
-            alert(`Gagal menyimpan perubahan: ${err.response?.data?.message || err.message}`);
-        }
+      console.error("Failed to save pelatihan:", err);
+      if (err.response && err.response.status === 422 && err.response.data.errors) {
+        setValidationErrors(err.response.data.errors);
+        alert('Validasi gagal. Mohon periksa kembali input Anda.');
+      } else {
+        alert(`Gagal menyimpan perubahan: ${err.response?.data?.message || err.message}`);
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -433,58 +462,56 @@ const AdminPelatihanPage = () => {
 
   const handleSubmit = async (postStatusValue) => {
     setValidationErrors({});
-    if (!form.nama_pelatihan || !form.keterangan_pelatihan || !form.kategori || !form.biaya || !form.jumlah_kuota || !form.waktu_pengumpulan || !form.mentor_id) {
+    if (!form.nama_pelatihan || !form.keterangan_pelatihan || !form.kategori_id || !form.biaya || !form.jumlah_kuota || !form.waktu_pengumpulan || !form.mentor_id) {
       alert('Mohon lengkapi semua field yang wajib diisi');
       return;
     }
     setLoading(true);
     try {
-        const formData = new FormData();
-        formData.append('nama_pelatihan', form.nama_pelatihan); 
-        formData.append('keterangan_pelatihan', form.keterangan_pelatihan); 
-        formData.append('kategori', form.kategori); 
-        formData.append('biaya', form.biaya); 
-        formData.append('jumlah_kuota', form.jumlah_kuota); 
-        const formattedTime = form.waktu_pengumpulan.replace('T', ' ') + ':00';
-        formData.append('waktu_pengumpulan', formattedTime); 
-        formData.append('mentor_id', form.mentor_id); 
-        formData.append('post_status', postStatusValue);
-        
-        // Tambahkan gambar jika ada
-        if (selectedImage) {
-            formData.append('image', selectedImage);
-        }
+      const formData = new FormData();
+      formData.append('nama_pelatihan', form.nama_pelatihan);
+      formData.append('keterangan_pelatihan', form.keterangan_pelatihan);
+      formData.append('kategori_id', form.kategori_id);
+      formData.append('biaya', form.biaya);
+      formData.append('jumlah_kuota', form.jumlah_kuota);
+      const formattedTime = form.waktu_pengumpulan.replace('T', ' ') + ':00';
+      formData.append('waktu_pengumpulan', formattedTime);
+      formData.append('mentor_id', form.mentor_id);
+      formData.append('post_status', postStatusValue);
+      
+      if (selectedImage) {
+        formData.append('image', selectedImage);
+      }
 
-        const response = await createData(apiEndpoints.pelatihan, formData);
-        if (response) {
-            alert('Pelatihan berhasil ditambahkan!');
-            fetchPelatihanData();
-            setShowForm(false);
-            setForm({
-              nama_pelatihan: '', 
-              keterangan_pelatihan: '', 
-              kategori: '',
-              biaya: '',
-              jumlah_kuota: '',
-              waktu_pengumpulan: '',
-              mentor_id: '',
-            });
-            // Reset image states
-            setSelectedImage(null);
-            setImagePreview(null);
-        } else {
-            throw new Error("Respon API tidak valid.");
-        }
+      const response = await createData(apiEndpoints.pelatihan, formData);
+      if (response) {
+        alert('Pelatihan berhasil ditambahkan!');
+        fetchPelatihanData();
+        setShowForm(false);
+        setForm({
+          nama_pelatihan: '',
+          keterangan_pelatihan: '',
+          kategori_id: '',
+          biaya: '',
+          jumlah_kuota: '',
+          waktu_pengumpulan: '',
+          mentor_id: '',
+        });
+        setSelectedImage(null);
+        setImagePreview(null);
+      } else {
+        throw new Error("Respon API tidak valid.");
+      }
     } catch (err) {
-        console.error("Failed to add pelatihan:", err);
-        if (err.response && err.response.status === 422 && err.response.data.errors) {
-            setValidationErrors(err.response.data.errors);
-            alert('Validasi gagal. Mohon periksa kembali input Anda.');
-        } else {
-            alert(`Gagal menambahkan pelatihan: ${err.response?.data?.message || err.message}`);
-        }
+      console.error("Failed to add pelatihan:", err);
+      if (err.response && err.response.status === 422 && err.response.data.errors) {
+        setValidationErrors(err.response.data.errors);
+        alert('Validasi gagal. Mohon periksa kembali input Anda.');
+      } else {
+        alert(`Gagal menambahkan pelatihan: ${err.response?.data?.message || err.message}`);
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -495,25 +522,25 @@ const AdminPelatihanPage = () => {
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.append('_method', 'PUT'); 
-      formData.append('post_status', 'Published'); 
+      formData.append('_method', 'PUT');
+      formData.append('post_status', 'Published');
 
       const response = await updateData(apiEndpoints.pelatihan, pelatihan.id, formData);
       if (response) {
-          alert('Pelatihan berhasil dipublikasikan!');
-          fetchPelatihanData();
-          if (selectedPelatihan && selectedPelatihan.id === pelatihan.id) {
-            setSelectedPelatihan(prev => ({...prev, postStatus: 'Published'}));
-            setEditedPelatihan(prev => ({...prev, postStatus: 'Published'}));
-          }
+        alert('Pelatihan berhasil dipublikasikan!');
+        fetchPelatihanData();
+        if (selectedPelatihan && selectedPelatihan.id === pelatihan.id) {
+          setSelectedPelatihan(prev => ({...prev, postStatus: 'Published'}));
+          setEditedPelatihan(prev => ({...prev, postStatus: 'Published'}));
+        }
       } else {
-          throw new Error("Respon API tidak valid.");
+        throw new Error("Respon API tidak valid.");
       }
     } catch (err) {
-        console.error("Failed to publish draft:", err);
-        alert(`Gagal mempublikasikan pelatihan: ${err.response?.data?.message || err.message}`);
+      console.error("Failed to publish draft:", err);
+      alert(`Gagal mempublikasikan pelatihan: ${err.response?.data?.message || err.message}`);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -605,7 +632,7 @@ const AdminPelatihanPage = () => {
     }
   };
 
-  const handleChangeStatus = (pelamar) => { 
+  const handleChangeStatus = (pelamar) => {
     setSelectedPelamar(pelamar);
     setNewStatus(pelamar.status);
     setShowStatusPopup(true);
@@ -639,16 +666,15 @@ const AdminPelatihanPage = () => {
             onClick={() => {
               setShowForm(true);
               setForm({
-                nama_pelatihan: '', 
-                keterangan_pelatihan: '', 
-                kategori: '',
+                nama_pelatihan: '',
+                keterangan_pelatihan: '',
+                kategori_id: '',
                 biaya: '',
                 jumlah_kuota: '',
                 waktu_pengumpulan: '',
                 mentor_id: '',
               });
               setValidationErrors({});
-              // Reset image states
               setSelectedImage(null);
               setImagePreview(null);
             }}
@@ -661,7 +687,6 @@ const AdminPelatihanPage = () => {
         {/* Search dan Filter Section */}
         <div className="mb-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-            {/* Search Bar */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FaSearch className="h-4 w-4 text-gray-400" />
@@ -683,7 +708,6 @@ const AdminPelatihanPage = () => {
               </button>
             </div>
 
-            {/* Status Filter */}
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600 whitespace-nowrap">Filter Status:</label>
               <select
@@ -698,7 +722,6 @@ const AdminPelatihanPage = () => {
               </select>
             </div>
 
-            {/* Post Status Filter */}
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600 whitespace-nowrap">Filter Post:</label>
               <select
@@ -713,7 +736,6 @@ const AdminPelatihanPage = () => {
             </div>
           </div>
 
-          {/* Reset Button dan Info */}
           <div className="flex items-center gap-3">
             {(appliedSearchQuery || statusFilter !== 'Semua' || postStatusFilter !== 'Semua') && (
               <button
@@ -836,21 +858,15 @@ const AdminPelatihanPage = () => {
               >
                 Prev
               </button>
-
               {[...Array(totalPages)].map((_, i) => (
                 <button
                   key={i}
                   onClick={() => handlePageChange(i + 1)}
-                  className={`px-3 py-2 border rounded ${
-                    currentPage === i + 1 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-200 hover:bg-gray-300'
-                  }`}
+                  className={`px-3 py-2 border rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
                 >
                   {i + 1}
                 </button>
               ))}
-
               <button
                 onClick={handleNextPage}
                 className="px-3 py-2 border rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -878,7 +894,6 @@ const AdminPelatihanPage = () => {
               
               <div className="max-h-96 overflow-y-auto pr-1">
                 <div className="space-y-2">
-                  {/* Upload Gambar */}
                   <div>
                     <Label htmlFor="image_upload">Gambar Pelatihan</Label>
                     <div className="mt-1">
@@ -947,17 +962,29 @@ const AdminPelatihanPage = () => {
                     {validationErrors.keterangan_pelatihan && <p className="text-red-500 text-xs mt-1">{validationErrors.keterangan_pelatihan[0]}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="kategori">Kategori</Label>
-                    <InputText
-                      type="text" 
-                      id="kategori"
-                      name="kategori"
-                      value={form.kategori}
-                      onChange={(e) => setForm({...form, kategori: e.target.value})}
-                      required
-                      placeholder="Contoh: Digital Marketing, Menjahit"
-                    />
-                    {validationErrors.kategori && <p className="text-red-500 text-xs mt-1">{validationErrors.kategori[0]}</p>}
+                    <Label htmlFor="kategori_id">Kategori</Label>
+                    {loadingKategoriOptions ? (
+                      <p className="text-gray-500 text-xs mt-1">Memuat kategori...</p>
+                    ) : kategoriOptionsError ? (
+                      <p className="text-red-500 text-xs mt-1">{kategoriOptionsError}</p>
+                    ) : (
+                      <select
+                        id="kategori_id"
+                        name="kategori_id"
+                        value={form.kategori_id}
+                        onChange={(e) => setForm({...form, kategori_id: e.target.value})}
+                        className="w-full p-1 border rounded mt-0.5 text-xs"
+                        required
+                      >
+                        <option value="">Pilih Kategori</option>
+                        {kategoriOptions.map(kategori => (
+                          <option key={kategori.value} value={kategori.value}>
+                            {kategori.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {validationErrors.kategori_id && <p className="text-red-500 text-xs mt-1">{validationErrors.kategori_id[0]}</p>}
                   </div>
                   <div>
                     <Label htmlFor="biaya">Biaya</Label>
@@ -1000,25 +1027,25 @@ const AdminPelatihanPage = () => {
                   <div>
                     <Label htmlFor="mentor_id">Mentor</Label>
                     {loadingMentorOptions ? (
-                        <p className="text-gray-500 text-xs mt-1">Memuat mentor...</p>
+                      <p className="text-gray-500 text-xs mt-1">Memuat mentor...</p>
                     ) : mentorOptionsError ? (
-                        <p className="text-red-500 text-xs mt-1">{mentorOptionsError}</p>
+                      <p className="text-red-500 text-xs mt-1">{mentorOptionsError}</p>
                     ) : (
-                        <select 
-                            id="mentor_id"
-                            name="mentor_id"
-                            value={form.mentor_id}
-                            onChange={(e) => setForm({...form, mentor_id: e.target.value})}
-                            className="w-full p-1 border rounded mt-0.5 text-xs"
-                            required
-                        >
-                            <option value="">Pilih Mentor</option>
-                            {mentorOptions.map(mentor => (
-                                <option key={mentor.value} value={mentor.value}>
-                                    {mentor.label}
-                                </option>
-                            ))}
-                        </select>
+                      <select 
+                        id="mentor_id"
+                        name="mentor_id"
+                        value={form.mentor_id}
+                        onChange={(e) => setForm({...form, mentor_id: e.target.value})}
+                        className="w-full p-1 border rounded mt-0.5 text-xs"
+                        required
+                      >
+                        <option value="">Pilih Mentor</option>
+                        {mentorOptions.map(mentor => (
+                          <option key={mentor.value} value={mentor.value}>
+                            {mentor.label}
+                          </option>
+                        ))}
+                      </select>
                     )}
                     {validationErrors.mentor_id && <p className="text-red-500 text-xs mt-1">{validationErrors.mentor_id[0]}</p>}
                   </div>
@@ -1065,7 +1092,6 @@ const AdminPelatihanPage = () => {
               </div>
               
               <div className="space-y-2 mb-3 max-h-80 overflow-y-auto pr-1">
-                {/* Gambar */}
                 <div>
                   <Label>Gambar Pelatihan</Label>
                   {isEditing ? (
@@ -1162,7 +1188,7 @@ const AdminPelatihanPage = () => {
                   ) : (
                     <p className="font-medium text-sm">{selectedPelatihan.nama}</p>
                   )}
-                   {validationErrors.nama && <p className="text-red-500 text-xs mt-1">{validationErrors.nama[0]}</p>}
+                  {validationErrors.nama && <p className="text-red-500 text-xs mt-1">{validationErrors.nama[0]}</p>}
                 </div>
                 <div>
                   <Label>Keterangan Pelatihan</Label>
@@ -1176,20 +1202,33 @@ const AdminPelatihanPage = () => {
                   ) : (
                     <p className="font-medium text-sm">{selectedPelatihan.keterangan}</p>
                   )}
-                   {validationErrors.keterangan && <p className="text-red-500 text-xs mt-1">{validationErrors.keterangan[0]}</p>}
+                  {validationErrors.keterangan && <p className="text-red-500 text-xs mt-1">{validationErrors.keterangan[0]}</p>}
                 </div>
                 <div>
                   <Label>Kategori</Label>
                   {isEditing ? (
-                    <InputText
-                      type="text" 
-                      value={editedPelatihan.kategori}
-                      onChange={(e) => handleInputChange('kategori', e.target.value)}
-                    />
+                    loadingKategoriOptions ? (
+                      <p className="text-gray-500 text-xs mt-1">Memuat kategori...</p>
+                    ) : kategoriOptionsError ? (
+                      <p className="text-red-500 text-xs mt-1">{kategoriOptionsError}</p>
+                    ) : (
+                      <select
+                        value={editedPelatihan.kategori_id}
+                        onChange={(e) => handleInputChange('kategori_id', e.target.value)}
+                        className="w-full p-1 border rounded mt-0.5 text-xs"
+                      >
+                        <option value="">Pilih Kategori</option>
+                        {kategoriOptions.map(kategori => (
+                          <option key={kategori.value} value={kategori.value}>
+                            {kategori.label}
+                          </option>
+                        ))}
+                      </select>
+                    )
                   ) : (
                     <p className="font-medium text-sm">{selectedPelatihan.kategori}</p>
                   )}
-                   {validationErrors.kategori && <p className="text-red-500 text-xs mt-1">{validationErrors.kategori[0]}</p>}
+                  {validationErrors.kategori_id && <p className="text-red-500 text-xs mt-1">{validationErrors.kategori_id[0]}</p>}
                 </div>
                 <div>
                   <Label>Biaya</Label>
@@ -1202,7 +1241,7 @@ const AdminPelatihanPage = () => {
                   ) : (
                     <p className="font-medium text-sm">{selectedPelatihan.biaya}</p>
                   )}
-                   {validationErrors.biaya && <p className="text-red-500 text-xs mt-1">{validationErrors.biaya[0]}</p>}
+                  {validationErrors.biaya && <p className="text-red-500 text-xs mt-1">{validationErrors.biaya[0]}</p>}
                 </div>
                 <div>
                   <Label>Jumlah Kuota</Label>
@@ -1216,7 +1255,7 @@ const AdminPelatihanPage = () => {
                   ) : (
                     <p className="font-medium text-sm">{selectedPelatihan.jumlah_kuota}</p>
                   )}
-                   {validationErrors.jumlah_kuota && <p className="text-red-500 text-xs mt-1">{validationErrors.jumlah_kuota[0]}</p>}
+                  {validationErrors.jumlah_kuota && <p className="text-red-500 text-xs mt-1">{validationErrors.jumlah_kuota[0]}</p>}
                 </div>
                 <div>
                   <Label>Jumlah Peserta Terdaftar</Label>
@@ -1233,33 +1272,33 @@ const AdminPelatihanPage = () => {
                   ) : (
                     <p className="font-medium text-sm">{selectedPelatihan.waktu_pengumpulan}</p>
                   )}
-                   {validationErrors.waktu_pengumpulan && <p className="text-red-500 text-xs mt-1">{validationErrors.waktu_pengumpulan[0]}</p>}
+                  {validationErrors.waktu_pengumpulan && <p className="text-red-500 text-xs mt-1">{validationErrors.waktu_pengumpulan[0]}</p>}
                 </div>
                 <div>
                   <Label>Mentor</Label>
                   {isEditing ? (
                     loadingMentorOptions ? (
-                        <p className="text-gray-500 text-xs mt-1">Memuat mentor...</p>
+                      <p className="text-gray-500 text-xs mt-1">Memuat mentor...</p>
                     ) : mentorOptionsError ? (
-                        <p className="text-red-500 text-xs mt-1">{mentorOptionsError}</p>
+                      <p className="text-red-500 text-xs mt-1">{mentorOptionsError}</p>
                     ) : (
-                        <select 
-                            value={editedPelatihan.mentor_id}
-                            onChange={(e) => handleInputChange('mentor_id', e.target.value)}
-                            className="w-full p-1 border rounded mt-0.5 text-xs"
-                        >
-                            <option value="">Pilih Mentor</option>
-                            {mentorOptions.map(mentor => (
-                                <option key={mentor.value} value={mentor.value}>
-                                    {mentor.label}
-                                </option>
-                            ))}
-                        </select>
+                      <select 
+                        value={editedPelatihan.mentor_id}
+                        onChange={(e) => handleInputChange('mentor_id', e.target.value)}
+                        className="w-full p-1 border rounded mt-0.5 text-xs"
+                      >
+                        <option value="">Pilih Mentor</option>
+                        {mentorOptions.map(mentor => (
+                          <option key={mentor.value} value={mentor.value}>
+                            {mentor.label}
+                          </option>
+                        ))}
+                      </select>
                     )
                   ) : (
                     <p className="font-medium text-sm">{selectedPelatihan.instruktur}</p>
                   )}
-                   {validationErrors.mentor_id && <p className="text-red-500 text-xs mt-1">{validationErrors.mentor_id[0]}</p>}
+                  {validationErrors.mentor_id && <p className="text-red-500 text-xs mt-1">{validationErrors.mentor_id[0]}</p>}
                 </div>
                 <div>
                   <Label>Status Pelatihan</Label>
@@ -1278,7 +1317,7 @@ const AdminPelatihanPage = () => {
                       {getTrainingStatusBadge(selectedPelatihan.status)}
                     </div>
                   )}
-                   {validationErrors.status && <p className="text-red-500 text-xs mt-1">{validationErrors.status[0]}</p>}
+                  {validationErrors.status && <p className="text-red-500 text-xs mt-1">{validationErrors.status[0]}</p>}
                 </div>
                 <div>
                   <Label>Post Status</Label>
@@ -1296,7 +1335,7 @@ const AdminPelatihanPage = () => {
                       {getPostStatusBadge(selectedPelatihan.postStatus)}
                     </div>
                   )}
-                   {validationErrors.postStatus && <p className="text-red-500 text-xs mt-1">{validationErrors.postStatus[0]}</p>}
+                  {validationErrors.postStatus && <p className="text-red-500 text-xs mt-1">{validationErrors.postStatus[0]}</p>}
                 </div>
               </div>
               
