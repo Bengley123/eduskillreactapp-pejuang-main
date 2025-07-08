@@ -16,6 +16,7 @@ import TentangKamiLPKPage from "./component/pages/TentangKamiLPKpage";
 import TentangKamiLKPPage from "./component/pages/TentangKamiLKPpage";
 import TentangKamiYayasanPage from "./component/pages/TentangKamiYayasanpage";
 import LupaPasswordPage from "./component/pages/LupaPasswordpage";
+import PelatihanLengkapPage from "./component/pages/PelatihanLengkappage";
 import VerificationResultPage from "./component/pages/VerificationResultPage";
 import BeritaLengkapPage from "./component/pages/BeritaMorepage";
 
@@ -61,6 +62,7 @@ function App() {
           element={<TentangKamiYayasanPage />}
         />
         <Route path="/pelatihan/:id" element={<DetailPelatihan />} />
+        <Route path="/pelatihanlengkap" element={<PelatihanLengkapPage />} />
         <Route path="/berita/:id" element={<DetailBeritaPage />} />
         <Route path="/beritalengkap" element={<BeritaLengkapPage />} />
         {/* <Route path="/statusdaftar" element={<StatusPendaftaranPage />} /> */}

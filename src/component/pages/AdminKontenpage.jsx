@@ -1660,7 +1660,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
           items.map((item) => ({
             ...item,
             file_foto: item.file_foto
-              ? `http://localhost:8000/storage/galeri/${item.file_foto}`
+              ? `http://localhost:8000/storage/galeri_kegiatan/${item.file_foto}`
               : null,
             judulFoto: item.judul_foto || item.judulFoto,
           }))
@@ -1753,7 +1753,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
                 ...updatedItem,
                 judulFoto: updatedItem.judul_foto || item.judulFoto,
                 file_foto: updatedItem.file_foto
-                  ? `http://localhost:8000/storage/galeri/${updatedItem.file_foto}`
+                  ? `http://localhost:8000/storage/galeri_kegiatan/${updatedItem.file_foto}`
                   : null,
               }
             : item
@@ -1764,7 +1764,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
         ...updatedItem,
         judulFoto: updatedItem.judul_foto || prev.judulFoto,
         file_foto: updatedItem.file_foto
-          ? `http://localhost:8000/storage/galeri/${updatedItem.file_foto}`
+          ? `http://localhost:8000/storage/galeri_kegiatan/${updatedItem.file_foto}`
           : null,
       }));
       setIsEditing(false);
@@ -1831,7 +1831,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
           ...newItem,
           judulFoto: newItem.judul_foto || newItem.judulFoto,
           file_foto: newItem.file_foto
-            ? `http://localhost:8000/storage/galeri/${newItem.file_foto}`
+            ? `http://localhost:8000/storage/galeri_kegiatan/${newItem.file_foto}`
             : null,
         },
       ]);
@@ -3269,7 +3269,7 @@ const AdminKontenpage = () => {
           ...item,
           judulFoto: item.judul_foto || item.judulFoto,
           file_foto: item.file_foto
-            ? `http://localhost:8000/storage/galeri/${item.file_foto}`
+            ? `http://localhost:8000/storage/galeri_kegiatan/${item.file_foto}`
             : null,
         }))
       );

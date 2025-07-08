@@ -1,70 +1,111 @@
-import React, { useEffect, useState } from 'react';
-import api, { fetchData } from '../../services/api';
-import CardPelatihan from './CardPelatihan';
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+// src/components/Fragments/PelatihanList.jsx
+import React, { useEffect, useState } from "react";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import CardPelatihan from "./CardPelatihan";
+import { fetchData } from "../../services/api";
 
 const PelatihanList = () => {
   const [pelatihan, setPelatihan] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showAll, setShowAll] = useState(false);  // Toggle lihat semua pelatihan
+  const [showAll, setShowAll] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
 
   useEffect(() => {
     const fetchPelatihan = async () => {
       try {
         setLoading(true);
-        const response = await fetchData('/pelatihan');
-        if (response && Array.isArray(response.data)) {
-          setPelatihan(response.data);
-        } else {
-          setPelatihan([]);
+        const url = `/pelatihan?post_status=Published&per_page=9999`;
+        const response = await fetchData(url);
+
+        let fetched = [];
+        if (Array.isArray(response.data)) {
+          fetched = response.data;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          fetched = response.data.data;
         }
+        setPelatihan(fetched);
       } catch (err) {
+        console.error("Error fetching pelatihan:", err);
         setError("Gagal memuat daftar pelatihan.");
-        setPelatihan([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchPelatihan();
   }, []);
 
-  const limitedPelatihan = showAll ? pelatihan : pelatihan.slice(0, 3);
+  // Ambil daftar kategori unik
+  const categories = [
+    "Semua",
+    ...new Set(pelatihan.map((p) => p.kategori).filter(Boolean)),
+  ];
 
-  if (loading) {
-    return <div className="text-center py-8 text-gray-600">Memuat daftar pelatihan...</div>;
-  }
+  // Filter berdasarkan kategori
+  const filtered =
+    selectedCategory === "Semua"
+      ? pelatihan
+      : pelatihan.filter((p) => p.kategori === selectedCategory);
 
-  if (error) {
-    return <div className="text-center py-8 text-red-500">{error}</div>;
-  }
+  const displayedPelatihan = showAll ? filtered : filtered.slice(0, 3);
 
-  if (pelatihan.length === 0) {
+  if (loading)
     return (
       <div className="text-center py-8 text-gray-600">
-        Belum ada pelatihan yang tersedia saat ini.
+        Memuat daftar pelatihan...
       </div>
     );
-  }
+  if (error)
+    return <div className="text-center py-8 text-red-500">{error}</div>;
+  if (pelatihan.length === 0)
+    return (
+      <div className="text-center py-8 text-gray-600">
+        Belum ada pelatihan tersedia saat ini.
+      </div>
+    );
 
   return (
     <div className="bg-gray-100 rounded-xl shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Pelatihan Terbaru</h2>
-      
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+        Pelatihan Terbaru
+      </h2>
+
+      {/* Filter Kategori */}
+      <div className="flex flex-wrap justify-center gap-2 mb-6">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`px-3 py-1 text-sm rounded-full border ${
+              selectedCategory === cat
+                ? "bg-blue-600 text-white"
+                : "bg-white text-gray-800 border-gray-300 hover:bg-blue-50"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* List Pelatihan */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {limitedPelatihan.map((item) => (
+        {displayedPelatihan.map((item) => (
           <CardPelatihan
             key={item.id}
             id={item.id}
             title={item.nama_pelatihan}
             description={item.keterangan_pelatihan}
-            image={item.gambar ? `http://127.0.0.1:8000/storage/${item.gambar}` : null}
+            image={
+              item.gambar
+                ? `http://127.0.0.1:8000/storage/${item.gambar}`
+                : null
+            }
+            kategori={item.kategori}
           />
         ))}
       </div>
 
-      {pelatihan.length > 3 && (
+      {filtered.length > 3 && (
         <div className="text-center mt-6">
           <button
             onClick={() => setShowAll(!showAll)}
@@ -72,13 +113,11 @@ const PelatihanList = () => {
           >
             {showAll ? (
               <>
-                <FaChevronUp className="mr-2" />
-                Lihat Lebih Sedikit
+                <FaChevronUp className="mr-2" /> Lihat Lebih Sedikit
               </>
             ) : (
               <>
-                <FaChevronDown className="mr-2" />
-                Lihat Lebih Banyak
+                <FaChevronDown className="mr-2" /> Lihat Lebih Banyak
               </>
             )}
           </button>

@@ -15,38 +15,40 @@ const BeritaSection = () => {
   const [showAll, setShowAll] = useState(false);
 
   const currentPage = 1;
-  const itemsPerPage = 9999; // Mengambil semua berita dalam satu halaman
+  const itemsPerPage = 9999;
 
   useEffect(() => {
     const fetchNews = async () => {
       setLoading(true);
       setError(null);
       try {
-        // Menggunakan parameter untuk mengambil semua berita
-        const url = `/berita?page=${currentPage}&per_page=${itemsPerPage}`;
-        const response = await fetchData(url); // Menggunakan variabel url yang sudah dibuat
+        let url = `/berita?page=${currentPage}&per_page=${itemsPerPage}`;
 
+        console.log("Fetching News Data from URL:", url);
+        const response = await fetchData(url);
+        console.log("API Raw Response for News:", response);
+
+        let fetchedNewsData = [];
+        // Memeriksa struktur respons dari Laravel Paginator
         if (response && response.data) {
-          let fetchedNewsData = response.data.data || response.data;
-          // Validasi untuk memastikan data yang diterima adalah array
+          fetchedNewsData = response.data.data || response.data;
           if (!Array.isArray(fetchedNewsData)) {
             console.warn(
               "API response data for news is not an array:",
               fetchedNewsData
             );
             setError("Format data berita tidak valid.");
-            fetchedNewsData = []; // Set ke array kosong jika format salah
+            fetchedNewsData = [];
           }
-          setNews(fetchedNewsData);
         } else {
           setError("Format data berita tidak valid atau tidak ada berita.");
         }
+        setNews(fetchedNewsData);
       } catch (err) {
         console.error("Gagal mengambil data berita:", err);
-        // Penanganan error yang lebih spesifik
         if (err.code === "ERR_NETWORK") {
           setError(
-            "Kesalahan Jaringan: Pastikan backend berjalan dan CORS dikonfigurasi dengan benar."
+            "Kesalahan Jaringan: Pastikan backend Laravel berjalan dan CORS dikonfigurasi dengan benar."
           );
         } else if (err.response) {
           setError(
@@ -58,15 +60,16 @@ const BeritaSection = () => {
         } else {
           setError("Gagal memuat berita terbaru. Silakan coba lagi nanti.");
         }
-        setNews([]); // Pastikan state news kosong saat terjadi error
+        setNews([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchNews();
-  }, []); // Dependensi kosong agar fetch hanya berjalan sekali
+  }, [currentPage, itemsPerPage]); // Tambahkan dependencies untuk useEffect
 
+  // Logika tampilan tetap sama
   const beritaTampil = showAll ? news : news.slice(0, 3);
 
   if (loading) {
@@ -89,13 +92,12 @@ const BeritaSection = () => {
         <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
           Berita Terbaru
         </h2>
-        <div className="text-center py-8 text-red-500 bg-red-50 p-6 rounded-lg">
+        <div className="text-center py-8 text-red-500">
           <FaExclamationCircle className="text-4xl mx-auto mb-3" />
-          <p className="font-semibold">Terjadi Kesalahan</p>
-          <p className="text-sm">{error}</p>
+          <p>{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Refresh Halaman
           </button>
@@ -130,8 +132,8 @@ const BeritaSection = () => {
             key={item.id}
             image={
               item.gambar
-                ? `http://127.0.0.1:8000/storage/gambar_berita/${item.gambar}`
-                : null // Handle jika tidak ada gambar
+                ? `http://127.0.0.1:8000/storage/${item.gambar}`
+                : null
             }
             title={item.title}
             date={new Date(item.date).toLocaleDateString("id-ID", {
