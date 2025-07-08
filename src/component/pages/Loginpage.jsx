@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api, { setAuthToken } from "../../services/api"; 
-import LoginForm from "../Fragments/LoginForm"; 
-
+import api, { setAuthToken } from "../../services/api";
+import LoginForm from "../Fragments/LoginForm";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -16,10 +15,12 @@ const LoginPage = () => {
     const role = localStorage.getItem("userRole");
 
     if (isLoggedIn === "true") {
-      if (role === "admin" || role === "ketua") {
-        navigate("/admindashboard"); 
+      if (role === "admin") {
+        navigate("/admindashboard");
       } else if (role === "peserta") {
-        navigate("/"); 
+        navigate("/");
+      } else if (role === "ketua") {
+        navigate("/ketuadashboard");
       }
     }
   }, [navigate]);
@@ -30,7 +31,7 @@ const LoginPage = () => {
     setError("");
 
     try {
-      const response = await api.post("/login", { 
+      const response = await api.post("/login", {
         username,
         password,
       });
@@ -41,23 +42,26 @@ const LoginPage = () => {
 
       if (data.access_token) {
         localStorage.setItem("jwt", data.access_token);
-        localStorage.setItem("user", JSON.stringify(data.user)); 
+        localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("userRole", userRoleFromAPI);
-        
-        setAuthToken(data.access_token); 
+
+        setAuthToken(data.access_token);
       } else {
         // PERINGATAN: access_token TIDAK ditemukan dalam respons login API.
         // Ini menandakan masalah di backend yang tidak mengembalikan token.
       }
 
-      localStorage.setItem("isLoggedIn", "true"); 
+      localStorage.setItem("isLoggedIn", "true");
 
-      if (userRoleFromAPI === "admin" || userRoleFromAPI === "ketua") {
+      if (userRoleFromAPI === "admin") {
         navigate("/admindashboard");
-        window.location.reload()
+        window.location.reload();
       } else if (userRoleFromAPI === "peserta") {
         navigate("/");
-        window.location.reload()
+        window.location.reload();
+      } else if (userRoleFromAPI === "ketua") {
+        navigate("/ketuadashboard");
+        window.location.reload();
       } else {
         setError("Unauthorized role");
         setAuthToken(null);
@@ -66,7 +70,6 @@ const LoginPage = () => {
         localStorage.removeItem("userRole");
         localStorage.removeItem("isLoggedIn");
       }
-
     } catch (err) {
       setError(
         "Login gagal: " +

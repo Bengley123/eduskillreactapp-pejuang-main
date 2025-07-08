@@ -44,7 +44,7 @@ const PesertaPage = () => {
   const [selectedEditFiles, setSelectedEditFiles] = useState({});
   const [pendidikanOptions, setPendidikanOptions] = useState([]);
 
-  const [statusFilter, setStatusFilter] = useState(""); // Default "" berarti "semua status"
+  const [statusFilter, setStatusFilter] = useState("diterima");
 
   useEffect(() => {
     const token = localStorage.getItem("jwt");
@@ -718,7 +718,8 @@ const PesertaPage = () => {
                     <div className="flex flex-col items-center">
                       <FaExclamationCircle className="text-3xl mb-2 text-gray-400" />
                       <p className="text-sm">
-                        Tidak ada peserta yang ditemukan sesuai filter.
+                        Tidak ada peserta yang diterima pelatihannya. Silahkan
+                        ke menu pelatihan untuk mengelola.
                       </p>
                     </div>
                   </td>

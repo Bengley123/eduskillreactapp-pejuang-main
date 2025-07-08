@@ -65,7 +65,7 @@ const AdminPelatihanPage = () => {
   const [form, setForm] = useState({
     nama_pelatihan: "",
     keterangan_pelatihan: "",
-    kategori: "",
+    kategori_id: "",
     biaya: "",
     jumlah_kuota: "",
     waktu_pengumpulan: "",
@@ -81,11 +81,14 @@ const AdminPelatihanPage = () => {
   const [loadingMentorOptions, setLoadingMentorOptions] = useState(true);
   const [mentorOptionsError, setMentorOptionsError] = useState(null);
 
+  const [kategoriOptions, setKategoriOptions] = useState([]);
+  const [loadingKategoriOptions, setLoadingKategoriOptions] = useState(true);
+  const [kategoriOptionsError, setKategoriOptionsError] = useState(null);
+
   // Fungsi untuk handle upload gambar
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validasi file
       const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -113,7 +116,6 @@ const AdminPelatihanPage = () => {
   const handleEditImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validasi file
       const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -141,7 +143,6 @@ const AdminPelatihanPage = () => {
   const removeImagePreview = () => {
     setSelectedImage(null);
     setImagePreview(null);
-    // Clear file input
     const fileInput = document.getElementById("image_upload");
     if (fileInput) fileInput.value = "";
   };
@@ -149,7 +150,6 @@ const AdminPelatihanPage = () => {
   const removeEditImagePreview = () => {
     setSelectedEditImage(null);
     setEditImagePreview(null);
-    // Clear file input
     const fileInput = document.getElementById("edit_image_upload");
     if (fileInput) fileInput.value = "";
   };
@@ -161,39 +161,37 @@ const AdminPelatihanPage = () => {
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-    // Sesuaikan dengan base URL backend Anda
     const baseUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
     return `${baseUrl}/storage/${imagePath}`;
   };
 
+  // Fetch mentor options
   useEffect(() => {
     const fetchMentorOptions = async () => {
       setLoadingMentorOptions(true);
       setMentorOptionsError(null);
       try {
         const response = await fetchData(apiEndpoints.mentor || "/api/mentor");
+        let mentors = [];
         if (response && Array.isArray(response.data)) {
-          setMentorOptions(
-            response.data.map((m) => ({ value: m.id, label: m.nama_mentor }))
-          );
+          mentors = response.data;
         } else if (
           response &&
           response.data &&
           Array.isArray(response.data.data)
         ) {
-          setMentorOptions(
-            response.data.data.map((m) => ({
-              value: m.id,
-              label: m.nama_mentor,
-            }))
-          );
+          mentors = response.data.data;
         } else {
           console.warn(
             "API response for mentor options is not in expected format:",
             response
           );
           setMentorOptions([]);
+          return;
         }
+        setMentorOptions(
+          mentors.map((m) => ({ value: m.id, label: m.nama_mentor }))
+        );
       } catch (err) {
         console.error("Failed to fetch mentor options:", err);
         setMentorOptionsError(
@@ -205,6 +203,48 @@ const AdminPelatihanPage = () => {
       }
     };
     fetchMentorOptions();
+  }, []);
+
+  // Fetch kategori options
+  useEffect(() => {
+    const fetchKategoriOptions = async () => {
+      setLoadingKategoriOptions(true);
+      setKategoriOptionsError(null);
+      try {
+        const response = await fetchData(
+          apiEndpoints.kategori || "/api/kategori"
+        );
+        let categories = [];
+        if (response && Array.isArray(response.data)) {
+          categories = response.data;
+        } else if (
+          response &&
+          response.data &&
+          Array.isArray(response.data.data)
+        ) {
+          categories = response.data.data;
+        } else {
+          console.warn(
+            "API response for kategori options is not in expected format:",
+            response
+          );
+          setKategoriOptions([]);
+          return;
+        }
+        setKategoriOptions(
+          categories.map((k) => ({ value: k.id, label: k.nama_kategori }))
+        );
+      } catch (err) {
+        console.error("Failed to fetch kategori options:", err);
+        setKategoriOptionsError(
+          "Gagal memuat daftar kategori. Pastikan API kategori berfungsi."
+        );
+        setKategoriOptions([]);
+      } finally {
+        setLoadingKategoriOptions(false);
+      }
+    };
+    fetchKategoriOptions();
   }, []);
 
   const fetchPelatihanData = useCallback(async () => {
@@ -257,7 +297,10 @@ const AdminPelatihanPage = () => {
         id: item.id,
         nama: item.nama_pelatihan,
         keterangan: item.keterangan_pelatihan,
-        kategori: item.kategori,
+        kategori_id: item.kategori_id,
+        kategori: item.kategori
+          ? item.kategori.nama_kategori
+          : item.kategori_nama || "N/A",
         biaya: item.biaya,
         jumlah_kuota: item.jumlah_kuota,
         jumlah_peserta: item.jumlah_peserta || 0,
@@ -268,7 +311,7 @@ const AdminPelatihanPage = () => {
         instruktur: item.mentor ? item.mentor.nama_mentor : "N/A",
         status: item.status_pelatihan || "Belum Dimulai",
         postStatus: item.post_status || "Draft",
-        image: item.image || null, // Tambahkan field image
+        image: item.image || null,
       }));
 
       setDataPelatihan(mappedData);
@@ -329,7 +372,6 @@ const AdminPelatihanPage = () => {
     setShowDetail(true);
     setIsEditing(false);
     setValidationErrors({});
-    // Reset edit image states
     setSelectedEditImage(null);
     setEditImagePreview(null);
   };
@@ -456,7 +498,6 @@ const AdminPelatihanPage = () => {
     });
     setIsEditing(false);
     setValidationErrors({});
-    // Reset edit image states
     setSelectedEditImage(null);
     setEditImagePreview(null);
   };
@@ -469,7 +510,7 @@ const AdminPelatihanPage = () => {
       formData.append("_method", "PUT");
       formData.append("nama_pelatihan", editedPelatihan.nama);
       formData.append("keterangan_pelatihan", editedPelatihan.keterangan);
-      formData.append("kategori", editedPelatihan.kategori || "Umum");
+      formData.append("kategori_id", editedPelatihan.kategori_id);
       formData.append("biaya", editedPelatihan.biaya);
       formData.append("jumlah_kuota", editedPelatihan.jumlah_kuota);
       const formattedTime =
@@ -479,7 +520,6 @@ const AdminPelatihanPage = () => {
       formData.append("status_pelatihan", editedPelatihan.status);
       formData.append("post_status", editedPelatihan.postStatus);
 
-      // Tambahkan gambar jika ada yang baru dipilih
       if (selectedEditImage) {
         formData.append("image", selectedEditImage);
       }
@@ -494,7 +534,6 @@ const AdminPelatihanPage = () => {
         fetchPelatihanData();
         setShowDetail(false);
         setIsEditing(false);
-        // Reset edit image states
         setSelectedEditImage(null);
         setEditImagePreview(null);
       } else {
@@ -531,7 +570,7 @@ const AdminPelatihanPage = () => {
     if (
       !form.nama_pelatihan ||
       !form.keterangan_pelatihan ||
-      !form.kategori ||
+      !form.kategori_id ||
       !form.biaya ||
       !form.jumlah_kuota ||
       !form.waktu_pengumpulan ||
@@ -545,7 +584,7 @@ const AdminPelatihanPage = () => {
       const formData = new FormData();
       formData.append("nama_pelatihan", form.nama_pelatihan);
       formData.append("keterangan_pelatihan", form.keterangan_pelatihan);
-      formData.append("kategori", form.kategori);
+      formData.append("kategori_id", form.kategori_id);
       formData.append("biaya", form.biaya);
       formData.append("jumlah_kuota", form.jumlah_kuota);
       const formattedTime = form.waktu_pengumpulan.replace("T", " ") + ":00";
@@ -553,7 +592,6 @@ const AdminPelatihanPage = () => {
       formData.append("mentor_id", form.mentor_id);
       formData.append("post_status", postStatusValue);
 
-      // Tambahkan gambar jika ada
       if (selectedImage) {
         formData.append("image", selectedImage);
       }
@@ -566,13 +604,12 @@ const AdminPelatihanPage = () => {
         setForm({
           nama_pelatihan: "",
           keterangan_pelatihan: "",
-          kategori: "",
+          kategori_id: "",
           biaya: "",
           jumlah_kuota: "",
           waktu_pengumpulan: "",
           mentor_id: "",
         });
-        // Reset image states
         setSelectedImage(null);
         setImagePreview(null);
       } else {
@@ -813,14 +850,13 @@ const AdminPelatihanPage = () => {
               setForm({
                 nama_pelatihan: "",
                 keterangan_pelatihan: "",
-                kategori: "",
+                kategori_id: "",
                 biaya: "",
                 jumlah_kuota: "",
                 waktu_pengumpulan: "",
                 mentor_id: "",
               });
               setValidationErrors({});
-              // Reset image states
               setSelectedImage(null);
               setImagePreview(null);
             }}
@@ -833,7 +869,6 @@ const AdminPelatihanPage = () => {
         {/* Search dan Filter Section */}
         <div className="mb-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-            {/* Search Bar */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FaSearch className="h-4 w-4 text-gray-400" />
@@ -855,7 +890,6 @@ const AdminPelatihanPage = () => {
               </button>
             </div>
 
-            {/* Status Filter */}
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600 whitespace-nowrap">
                 Filter Status:
@@ -872,7 +906,6 @@ const AdminPelatihanPage = () => {
               </select>
             </div>
 
-            {/* Post Status Filter */}
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600 whitespace-nowrap">
                 Filter Post:
@@ -889,7 +922,6 @@ const AdminPelatihanPage = () => {
             </div>
           </div>
 
-          {/* Reset Button dan Info */}
           <div className="flex items-center gap-3">
             {(appliedSearchQuery ||
               statusFilter !== "Semua" ||
@@ -1034,7 +1066,6 @@ const AdminPelatihanPage = () => {
               >
                 Prev
               </button>
-
               {[...Array(totalPages)].map((_, i) => (
                 <button
                   key={i}
@@ -1048,7 +1079,6 @@ const AdminPelatihanPage = () => {
                   {i + 1}
                 </button>
               ))}
-
               <button
                 onClick={handleNextPage}
                 className="px-3 py-2 border rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1076,7 +1106,6 @@ const AdminPelatihanPage = () => {
 
               <div className="max-h-96 overflow-y-auto pr-1">
                 <div className="space-y-2">
-                  {/* Upload Gambar */}
                   <div>
                     <Label htmlFor="image_upload">Gambar Pelatihan</Label>
                     <div className="mt-1">
@@ -1170,21 +1199,37 @@ const AdminPelatihanPage = () => {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="kategori">Kategori</Label>
-                    <InputText
-                      type="text"
-                      id="kategori"
-                      name="kategori"
-                      value={form.kategori}
-                      onChange={(e) =>
-                        setForm({ ...form, kategori: e.target.value })
-                      }
-                      required
-                      placeholder="Contoh: Digital Marketing, Menjahit"
-                    />
-                    {validationErrors.kategori && (
+                    <Label htmlFor="kategori_id">Kategori</Label>
+                    {loadingKategoriOptions ? (
+                      <p className="text-gray-500 text-xs mt-1">
+                        Memuat kategori...
+                      </p>
+                    ) : kategoriOptionsError ? (
                       <p className="text-red-500 text-xs mt-1">
-                        {validationErrors.kategori[0]}
+                        {kategoriOptionsError}
+                      </p>
+                    ) : (
+                      <select
+                        id="kategori_id"
+                        name="kategori_id"
+                        value={form.kategori_id}
+                        onChange={(e) =>
+                          setForm({ ...form, kategori_id: e.target.value })
+                        }
+                        className="w-full p-1 border rounded mt-0.5 text-xs"
+                        required
+                      >
+                        <option value="">Pilih Kategori</option>
+                        {kategoriOptions.map((kategori) => (
+                          <option key={kategori.value} value={kategori.value}>
+                            {kategori.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {validationErrors.kategori_id && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors.kategori_id[0]}
                       </p>
                     )}
                   </div>
@@ -1324,7 +1369,6 @@ const AdminPelatihanPage = () => {
               </div>
 
               <div className="space-y-2 mb-3 max-h-80 overflow-y-auto pr-1">
-                {/* Gambar */}
                 <div>
                   <Label>Gambar Pelatihan</Label>
                   {isEditing ? (
@@ -1468,21 +1512,38 @@ const AdminPelatihanPage = () => {
                 <div>
                   <Label>Kategori</Label>
                   {isEditing ? (
-                    <InputText
-                      type="text"
-                      value={editedPelatihan.kategori}
-                      onChange={(e) =>
-                        handleInputChange("kategori", e.target.value)
-                      }
-                    />
+                    loadingKategoriOptions ? (
+                      <p className="text-gray-500 text-xs mt-1">
+                        Memuat kategori...
+                      </p>
+                    ) : kategoriOptionsError ? (
+                      <p className="text-red-500 text-xs mt-1">
+                        {kategoriOptionsError}
+                      </p>
+                    ) : (
+                      <select
+                        value={editedPelatihan.kategori_id}
+                        onChange={(e) =>
+                          handleInputChange("kategori_id", e.target.value)
+                        }
+                        className="w-full p-1 border rounded mt-0.5 text-xs"
+                      >
+                        <option value="">Pilih Kategori</option>
+                        {kategoriOptions.map((kategori) => (
+                          <option key={kategori.value} value={kategori.value}>
+                            {kategori.label}
+                          </option>
+                        ))}
+                      </select>
+                    )
                   ) : (
                     <p className="font-medium text-sm">
                       {selectedPelatihan.kategori}
                     </p>
                   )}
-                  {validationErrors.kategori && (
+                  {validationErrors.kategori_id && (
                     <p className="text-red-500 text-xs mt-1">
-                      {validationErrors.kategori[0]}
+                      {validationErrors.kategori_id[0]}
                     </p>
                   )}
                 </div>

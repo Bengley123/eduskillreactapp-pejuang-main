@@ -19,6 +19,8 @@ import LupaPasswordPage from "./component/pages/LupaPasswordpage";
 import PelatihanLengkapPage from "./component/pages/PelatihanLengkappage";
 import VerificationResultPage from "./component/pages/VerificationResultPage";
 import BeritaLengkapPage from "./component/pages/BeritaMorepage";
+import AdminKategoriPelatihanPage from "./component/pages/AdminKategoriPelatihanpage";
+import AdminMentorPage from "./component/pages/AdminMentorpage";
 
 import KetuaDashboardPage from "./component/pages/KetuaDashboardpage";
 
@@ -86,6 +88,8 @@ function App() {
         <Route path="/admindashboard" element={<AdminDashboardPage />} />
         <Route path="/adpeserta" element={<AdminPesertaPage />} />
         <Route path="/adkonten" element={<AdminKontenPage />} />
+        <Route path="/adkategori" element={<AdminKategoriPelatihanPage />} />
+        <Route path="/admentor" element={<AdminMentorPage />} />
         <Route path="/adpelatihan" element={<AdminPelatihanPage />} />
         <Route path="/adlaporan" element={<AdminLaporanPage />} />
         <Route path="/adfeedback" element={<AdminFeedbackPage />} />
