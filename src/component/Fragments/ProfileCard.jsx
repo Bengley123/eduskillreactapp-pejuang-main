@@ -2,12 +2,11 @@ import React from "react";
 import Button from "../Elements/Button/index";
 
 const ProfileCard = ({ user, onEdit }) => {
-
-  const displayName = user.name || user.username || "Pengguna"; 
+  const displayName = user.name || user.username || "Pengguna";
   const displayEmail = user.email || "Tidak ada email";
-  
+
   // Akses data spesifik dari relasi 'peserta' jika user.peserta ada
-  const pesertaData = user.peserta; 
+  const pesertaData = user.peserta;
   const displayNoTelp = pesertaData ? pesertaData.nomor_telp : "Tidak tersedia";
 
   return (
