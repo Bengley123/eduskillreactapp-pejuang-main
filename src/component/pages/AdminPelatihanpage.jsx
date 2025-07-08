@@ -159,12 +159,6 @@ const AdminPelatihanPage = () => {
     setShowImageModal(true);
   };
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    const baseUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
-    return `${baseUrl}/storage/${imagePath}`;
-  };
-
   // Fetch mentor options
   useEffect(() => {
     const fetchMentorOptions = async () => {
@@ -293,26 +287,33 @@ const AdminPelatihanPage = () => {
         );
       }
 
-      const mappedData = fetchedRawItems.map((item) => ({
-        id: item.id,
-        nama: item.nama_pelatihan,
-        keterangan: item.keterangan_pelatihan,
-        kategori_id: item.kategori_id,
-        kategori: item.kategori
-          ? item.kategori.nama_kategori
-          : item.kategori_nama || "N/A",
-        biaya: item.biaya,
-        jumlah_kuota: item.jumlah_kuota,
-        jumlah_peserta: item.jumlah_peserta || 0,
-        waktu_pengumpulan: item.waktu_pengumpulan
-          ? item.waktu_pengumpulan.slice(0, 16)
-          : "",
-        mentor_id: item.mentor_id,
-        instruktur: item.mentor ? item.mentor.nama_mentor : "N/A",
-        status: item.status_pelatihan || "Belum Dimulai",
-        postStatus: item.post_status || "Draft",
-        image: item.image || null,
-      }));
+      const mappedData = fetchedRawItems.map((item) => {
+        // Construct the full and correct image URL if foto_pelatihan exists
+        const imageUrl = item.foto_pelatihan
+          ? `${import.meta.env.VITE_API_URL}/storage/gambar_pelatihan/${
+              item.foto_pelatihan
+            }`
+          : null;
+
+        return {
+          id: item.id,
+          nama: item.nama_pelatihan,
+          keterangan: item.keterangan_pelatihan,
+          kategori_id: item.kategori_id || "",
+          kategori: item.kategori?.nama_kategori || "N/A",
+          biaya: item.biaya,
+          jumlah_kuota: item.jumlah_kuota,
+          jumlah_peserta: item.jumlah_peserta || 0,
+          waktu_pengumpulan: item.waktu_pengumpulan
+            ? item.waktu_pengumpulan.slice(0, 16)
+            : "",
+          mentor_id: item.mentor_id || "",
+          instruktur: item.mentor ? item.mentor.nama_mentor : "N/A",
+          status: item.status_pelatihan || "Belum Dimulai",
+          postStatus: item.post_status || "Draft",
+          foto_pelatihan: imageUrl,
+        };
+      });
 
       setDataPelatihan(mappedData);
       setTotalPages(currentLastPage);
@@ -521,7 +522,7 @@ const AdminPelatihanPage = () => {
       formData.append("post_status", editedPelatihan.postStatus);
 
       if (selectedEditImage) {
-        formData.append("image", selectedEditImage);
+        formData.append("foto_pelatihan", selectedEditImage);
       }
 
       const response = await updateData(
@@ -593,7 +594,7 @@ const AdminPelatihanPage = () => {
       formData.append("post_status", postStatusValue);
 
       if (selectedImage) {
-        formData.append("image", selectedImage);
+        formData.append("foto_pelatihan", selectedImage);
       }
 
       const response = await createData(apiEndpoints.pelatihan, formData);
@@ -965,14 +966,14 @@ const AdminPelatihanPage = () => {
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
                     <td className="px-4 py-2">
-                      {pelatihan.image ? (
+                      {pelatihan.foto_pelatihan ? (
                         <div className="relative group">
                           <img
-                            src={getImageUrl(pelatihan.image)}
+                            src={pelatihan.foto_pelatihan}
                             alt={pelatihan.nama}
                             className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
-                              openImageModal(getImageUrl(pelatihan.image))
+                              openImageModal(pelatihan.foto_pelatihan)
                             }
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1148,9 +1149,9 @@ const AdminPelatihanPage = () => {
                       <p className="text-xs text-gray-500 mt-1">
                         Format: JPG, JPEG, PNG, GIF. Maksimal 5MB.
                       </p>
-                      {validationErrors.image && (
+                      {validationErrors.foto_pelatihan && (
                         <p className="text-red-500 text-xs mt-1">
-                          {validationErrors.image[0]}
+                          {validationErrors.foto_pelatihan[0]}
                         </p>
                       )}
                     </div>
@@ -1388,10 +1389,10 @@ const AdminPelatihanPage = () => {
                             <FaTimes size={10} />
                           </button>
                         </div>
-                      ) : selectedPelatihan.image ? (
+                      ) : selectedPelatihan.foto_pelatihan ? (
                         <div className="relative">
                           <img
-                            src={getImageUrl(selectedPelatihan.image)}
+                            src={selectedPelatihan.foto_pelatihan}
                             alt={selectedPelatihan.nama}
                             className="w-full h-32 object-cover rounded border"
                           />
@@ -1435,21 +1436,21 @@ const AdminPelatihanPage = () => {
                       <p className="text-xs text-gray-500 mt-1">
                         Format: JPG, JPEG, PNG, GIF. Maksimal 5MB.
                       </p>
-                      {validationErrors.image && (
+                      {validationErrors.foto_pelatihan && (
                         <p className="text-red-500 text-xs mt-1">
-                          {validationErrors.image[0]}
+                          {validationErrors.foto_pelatihan[0]}
                         </p>
                       )}
                     </div>
                   ) : (
                     <div className="mt-1">
-                      {selectedPelatihan.image ? (
+                      {selectedPelatihan.foto_pelatihan ? (
                         <img
-                          src={getImageUrl(selectedPelatihan.image)}
+                          src={selectedPelatihan.foto_pelatihan}
                           alt={selectedPelatihan.nama}
                           className="w-full h-32 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() =>
-                            openImageModal(getImageUrl(selectedPelatihan.image))
+                            openImageModal(selectedPelatihan.foto_pelatihan)
                           }
                         />
                       ) : (
