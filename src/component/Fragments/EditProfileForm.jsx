@@ -363,7 +363,7 @@ const EditProfileForm = () => {
 
     try {
       // Panggil API untuk kirim ulang email verifikasi
-      const response = await api.post("http://localhost:8000/api/email/resend");
+      const response = await api.post("/resend");
       setNotification({ message: response.data.message, type: "success" });
     } catch (error) {
       const errorMessage =
