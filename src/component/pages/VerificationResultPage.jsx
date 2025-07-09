@@ -28,17 +28,14 @@ export default function VerificationResultPage() {
     const verifyEmail = async () => {
       try {
         // Panggil API backend Anda
-        const response = await fetch(
-          "http://localhost:8000/api/email/verify-now",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({ id, hash }),
-          }
-        );
+        const response = await fetch("http://localhost:8000/api/verify-now", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ id, hash }),
+        });
 
         const result = await response.json();
 
