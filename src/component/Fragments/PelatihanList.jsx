@@ -1,8 +1,8 @@
 // src/components/Fragments/PelatihanList.jsx
-import React, { useEffect, useState } from 'react';
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import CardPelatihan from './CardPelatihan';
-import { fetchData } from '../../services/api';
+import React, { useEffect, useState } from "react";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import CardPelatihan from "./CardPelatihan";
+import { fetchData } from "../../services/api";
 
 const PelatihanList = () => {
   const [pelatihan, setPelatihan] = useState([]);
@@ -36,26 +36,43 @@ const PelatihanList = () => {
   }, []);
 
   // Ambil daftar kategori unik
-  const categories = ["Semua", ...new Set(pelatihan.map(p => p.kategori).filter(Boolean))];
+  const categories = [
+    "Semua",
+    ...new Set(pelatihan.map((p) => p.kategori).filter(Boolean)),
+  ];
 
   // Filter berdasarkan kategori
-  const filtered = selectedCategory === "Semua"
-    ? pelatihan
-    : pelatihan.filter(p => p.kategori === selectedCategory);
+  const filtered =
+    selectedCategory === "Semua"
+      ? pelatihan
+      : pelatihan.filter((p) => p.kategori === selectedCategory);
 
   const displayedPelatihan = showAll ? filtered : filtered.slice(0, 3);
 
-  if (loading) return <div className="text-center py-8 text-gray-600">Memuat daftar pelatihan...</div>;
-  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
-  if (pelatihan.length === 0) return <div className="text-center py-8 text-gray-600">Belum ada pelatihan tersedia saat ini.</div>;
+  if (loading)
+    return (
+      <div className="text-center py-8 text-gray-600">
+        Memuat daftar pelatihan...
+      </div>
+    );
+  if (error)
+    return <div className="text-center py-8 text-red-500">{error}</div>;
+  if (pelatihan.length === 0)
+    return (
+      <div className="text-center py-8 text-gray-600">
+        Belum ada pelatihan tersedia saat ini.
+      </div>
+    );
 
   return (
     <div className="bg-gray-100 rounded-xl shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Pelatihan Terbaru</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+        Pelatihan Terbaru
+      </h2>
 
       {/* Filter Kategori */}
       <div className="flex flex-wrap justify-center gap-2 mb-6">
-        {categories.map(cat => (
+        {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
@@ -78,7 +95,11 @@ const PelatihanList = () => {
             id={item.id}
             title={item.nama_pelatihan}
             description={item.keterangan_pelatihan}
-            image={item.gambar ? `http://127.0.0.1:8000/storage/pelatihan_gambar/${item.gambar}` : null}
+            image={
+              item.gambar
+                ? `http://127.0.0.1:8000/storage/${item.gambar}`
+                : null
+            }
             kategori={item.kategori}
           />
         ))}
@@ -90,8 +111,15 @@ const PelatihanList = () => {
             onClick={() => setShowAll(!showAll)}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors font-medium"
           >
-            {showAll ? <><FaChevronUp className="mr-2" /> Lihat Lebih Sedikit</> :
-              <><FaChevronDown className="mr-2" /> Lihat Lebih Banyak</>}
+            {showAll ? (
+              <>
+                <FaChevronUp className="mr-2" /> Lihat Lebih Sedikit
+              </>
+            ) : (
+              <>
+                <FaChevronDown className="mr-2" /> Lihat Lebih Banyak
+              </>
+            )}
           </button>
         </div>
       )}

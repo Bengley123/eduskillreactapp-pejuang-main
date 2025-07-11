@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import InputWithLabel from "../Elements/Input/index";
 import ErrorMessage from "../Elements/Message/ErrorMessage";
 import Button from "../Elements/Button/index";
@@ -9,9 +10,10 @@ import {
   FaPhone,
   FaLock,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
 
 const RegisterForm = () => {
+  const navigate = useNavigate();
+  
   const [form, setForm] = useState({
     email: "",
     username: "",
@@ -53,7 +55,7 @@ const RegisterForm = () => {
       if (!res.ok) {
         setError(data.message || "Gagal mendaftar");
       } else {
-        setSuccess("Registrasi berhasil! Silakan login.");
+        setSuccess("Registrasi berhasil! Mengalihkan ke halaman login...");
         setForm({
           email: "",
           username: "",
@@ -62,6 +64,16 @@ const RegisterForm = () => {
           password: "",
           password_confirmation: "",
         });
+
+        // Redirect ke halaman login setelah 2 detik
+        setTimeout(() => {
+          navigate("/login", { 
+            state: { 
+              message: "Registrasi berhasil! Silakan login dengan akun Anda.",
+              email: form.email // Pass email untuk auto-fill di login form
+            }
+          });
+        }, 2000);
       }
     } catch (err) {
       setError("Terjadi kesalahan saat mendaftar");
@@ -80,6 +92,7 @@ const RegisterForm = () => {
         onChange={handleChange}
         icon={FaEnvelope}
         name="email"
+        required
       />
 
       <InputWithLabel
@@ -90,6 +103,7 @@ const RegisterForm = () => {
         onChange={handleChange}
         icon={FaUser}
         name="username"
+        required
       />
 
       <InputWithLabel
@@ -100,6 +114,7 @@ const RegisterForm = () => {
         onChange={handleChange}
         icon={FaSignature}
         name="name"
+        required
       />
 
       <InputWithLabel
@@ -110,6 +125,7 @@ const RegisterForm = () => {
         onChange={handleChange}
         icon={FaPhone}
         name="nomor_telp"
+        required
       />
 
       <InputWithLabel
@@ -120,6 +136,7 @@ const RegisterForm = () => {
         onChange={handleChange}
         icon={FaLock}
         name="password"
+        required
       />
 
       <InputWithLabel
@@ -130,12 +147,16 @@ const RegisterForm = () => {
         onChange={handleChange}
         icon={FaLock}
         name="password_confirmation"
+        required
       />
 
       <ErrorMessage message={error} />
 
       {success && (
-        <div className="bg-green-100 border border-green-300 text-green-700 px-3 py-2 rounded-md mb-4 text-sm">
+        <div className="bg-green-100 border border-green-300 text-green-700 px-3 py-2 rounded-md mb-4 text-sm flex items-center">
+          <svg className="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
           {success}
         </div>
       )}
@@ -147,8 +168,9 @@ const RegisterForm = () => {
           variant="dark"
           size="md"
           className="w-full py-2 text-sm"
+          disabled={loading || success} // Disable button saat loading atau success
         >
-          Daftar
+          {loading ? "Mendaftar..." : success ? "Berhasil!" : "Daftar"}
         </Button>
       </div>
 

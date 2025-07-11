@@ -13,8 +13,6 @@ console.log('API Base URL:', API_BASE_URL);
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    // HAPUS ATAU KOMENTARI BARIS INI KARENA AKAN DITIMPA OTOMATIS OLEH FormData
-    // 'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
 });
@@ -30,14 +28,10 @@ export const setAuthToken = (token) => {
 
 /**
  * Mengambil data dari endpoint API.
- * @param {string} endpoint - Endpoint API relatif (misalnya '/lkp-profiles' atau '/lkp-profiles/1').
- * @returns {Promise<Object>} Data respons dari API.
- * @throws {Error} Jika terjadi kesalahan jaringan atau API.
  */
 export const fetchData = async (endpoint) => {
   try {
-    console.log('Mengirim GET ke:', endpoint); // DEBUG
-    console.log('Headers GET:', api.defaults.headers.common); // DEBUG
+    console.log('Mengirim GET ke:', endpoint);
     const response = await api.get(endpoint);
     return response.data;
   } catch (error) {
@@ -48,20 +42,12 @@ export const fetchData = async (endpoint) => {
 
 /**
  * Memperbarui data pada endpoint API tertentu.
- * @param {string} endpoint - Endpoint API dasar relatif (misalnya '/lkp-profiles').
- * @param {string|number} id - ID item yang akan diperbarui.
- * @param {Object} data - Data yang akan dikirim untuk pembaruan.
- * @returns {Promise<Object>} Data respons dari API.
- * @throws {Error} Jika terjadi kesalahan jaringan atau API.
  */
 export const updateData = async (endpoint, id, data) => {
   try {
     const url = endpoint + '/' + id;
-    console.log('Mengirim PUT ke:', url); // DEBUG
-    console.log('Headers PUT:', api.defaults.headers.common); // DEBUG
-    // Saat mengirim FormData, jangan override Content-Type secara manual.
-    // Axios akan menanganinya dengan benar.
-    const response = await api.post(url, data); // Menggunakan POST dengan _method: PUT untuk FormData
+    console.log('Mengirim PUT ke:', url);
+    const response = await api.post(url, data);
     return response.data;
   } catch (error) {
     console.error(`Error updating data at ${endpoint}/${id}:`, error.message === 'Network Error' ? 'Network Error: Pastikan backend Laravel berjalan, URL API benar, dan CORS dikonfigurasi dengan benar.' : error);
@@ -74,17 +60,10 @@ export const updateData = async (endpoint, id, data) => {
 
 /**
  * Membuat data baru pada endpoint API tertentu.
- * @param {string} endpoint - Endpoint API relatif (misalnya '/lkp-profiles').
- * @param {Object} data - Data yang akan dikirim untuk pembuatan.
- * @returns {Promise<Object>} Data respons dari API.
- * @throws {Error} Jika terjadi kesalahan jaringan atau API.
  */
 export const createData = async (endpoint, data) => {
   try {
-    console.log('Mengirim POST ke:', endpoint); // DEBUG
-    console.log('Headers POST:', api.defaults.headers.common); // DEBUG
-    // Saat mengirim FormData, jangan override Content-Type secara manual.
-    // Axios akan menanganinya dengan benar.
+    console.log('Mengirim POST ke:', endpoint);
     const response = await api.post(endpoint, data);
     return response.data;
   } catch (error) {
@@ -98,16 +77,11 @@ export const createData = async (endpoint, data) => {
 
 /**
  * Menghapus data dari endpoint API tertentu.
- * @param {string} endpoint - Endpoint API dasar relatif (misalnya '/lkp-profiles').
- * @param {string|number} id - ID item yang akan dihapus.
- * @returns {Promise<Object>} Data respons dari API.
- * @throws {Error} Jika terjadi kesalahan jaringan atau API.
  */
 export const deleteData = async (endpoint, id) => {
   try {
     const url = endpoint + '/' + id;
-    console.log('Mengirim DELETE ke:', url); // DEBUG
-    console.log('Headers DELETE:', api.defaults.headers.common); // DEBUG
+    console.log('Mengirim DELETE ke:', url);
     const response = await api.delete(url);
     return response.data;
   } catch (error) {
@@ -119,29 +93,71 @@ export const deleteData = async (endpoint, id) => {
   }
 };
 
+// ⭐ PASTIKAN EXPORT INI ADA - Fungsi khusus untuk notifikasi
+export const notifikasiAPI = {
+  // Untuk Peserta
+  getMyNotifications: async (perPage = 10) => {
+    try {
+      const response = await api.get(`/notifikasi-saya?per_page=${perPage}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching my notifications:', error);
+      throw error;
+    }
+  },
+
+  updateNotificationStatus: async (id, status) => {
+    try {
+      const response = await api.put(`/notifikasi-saya/${id}`, { status });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating notification status:', error);
+      throw error;
+    }
+  },
+
+  deleteMyNotification: async (id) => {
+    try {
+      const response = await api.delete(`/notifikasi-saya/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      throw error;
+    }
+  },
+
+  // Untuk Admin
+  sendAnnouncementToAll: async (data) => {
+    try {
+      const response = await api.post('/notifikasi-pengumuman', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error sending announcement:', error);
+      throw error;
+    }
+  }
+};
+
 // Objek untuk menyimpan daftar semua endpoint API
 export const apiEndpoints = {
-  // Endpoints untuk Tentang Kami (Profile LKP, LPK, Yayasan)
   lkp: '/profile-lkp',
   lpk: '/profile-lpk',
   yayasan: '/profile-yayasan',
-
   slideshow: '/slideshow',
   banner: '/banner',
   berita: '/berita',
   informasiGaleri: '/informasi-galeri',
   feedback: '/feedback',
-
   pendidikan: '/pendidikan', 
   peserta: '/peserta', 
-
   visiMisi: '/informasi-lembaga',
   informasiKontak: '/informasi-kontak',
-
   daftarPelatihan:'/daftar-pelatihan',
   pelatihan: '/pelatihan',
   mentor: '/mentor',
-  kategori: '/kategori-pelatihan'
+  kategori: '/kategori-pelatihan',
+  notifikasi: '/notifikasi-saya',
+  notifikasiPengumuman: '/notifikasi-pengumuman'
 };
 
 export default api;

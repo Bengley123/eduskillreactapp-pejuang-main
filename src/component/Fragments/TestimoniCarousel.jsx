@@ -25,27 +25,29 @@ const TestimoniCarousel = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetchData('/peserta-alumni');
+        const response = await fetchData("/peserta-alumni");
 
         let fetchedData = [];
         if (response && response.data && Array.isArray(response.data.data)) {
           fetchedData = response.data.data;
-        }
-        else if (response && Array.isArray(response.data)) {
+        } else if (response && Array.isArray(response.data)) {
           fetchedData = response.data;
-        }
-        else {
-          setError('Format data testimoni tidak valid dari API. Respons tidak mengandung array data yang diharapkan.');
-          console.error('API Response for feedback was not an array or pagination object:', response);
+        } else {
+          setError(
+            "Format data testimoni tidak valid dari API. Respons tidak mengandung array data yang diharapkan."
+          );
+          console.error(
+            "API Response for feedback was not an array or pagination object:",
+            response
+          );
           setTestimonies([]);
           return;
         }
 
         setTestimonies(fetchedData);
-
       } catch (err) {
-        console.error('Gagal mengambil data testimoni:', err);
-        setError('Gagal memuat testimoni. Silakan coba lagi nanti.');
+        console.error("Gagal mengambil data testimoni:", err);
+        setError("Gagal memuat testimoni. Silakan coba lagi nanti.");
       } finally {
         setLoading(false);
       }
@@ -61,14 +63,14 @@ const TestimoniCarousel = () => {
   }
 
   if (error) {
-    return (
-      <div className="text-center py-8 text-red-500">{error}</div>
-    );
+    return <div className="text-center py-8 text-red-500">{error}</div>;
   }
 
   if (testimonies.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-600">Belum ada testimoni yang ditampilkan saat ini.</div> // Pesan disesuaikan
+      <div className="text-center py-8 text-gray-600">
+        Belum ada testimoni yang ditampilkan saat ini.
+      </div> // Pesan disesuaikan
     );
   }
 
@@ -78,11 +80,14 @@ const TestimoniCarousel = () => {
         const userName = item.peserta?.user?.name ?? "Pengguna Tak Dikenal";
         const userTempatKerja = item.tempat_kerja ?? "Tidak Diketahui";
 
-        const userRoleDisplay = `${userTempatKerja.replace(/_/g, ' ')}`;    
+        const userRoleDisplay = `${userTempatKerja.replace(/_/g, " ")}`;
 
         return (
-          <div key={item.id} className="bg-white rounded-xl p-6 shadow-md text-center">
-            <p className="text-gray-800 font-medium mb-4">"{item.comment}"</p> 
+          <div
+            key={item.id}
+            className="bg-white rounded-xl p-6 shadow-md text-center"
+          >
+            <p className="text-gray-800 font-medium mb-4">"{item.comment}"</p>
             <div className="flex flex-col items-center">
               <p className="font-semibold text-gray-900">{userName}</p>
               <p className="text-sm text-gray-600">{userRoleDisplay}</p>

@@ -135,54 +135,75 @@ const ProfilePage = () => {
       alert("Feedback tidak boleh kosong.");
       return;
     }
-    // Pastikan `selectedTraining.originalRegistration.id` digunakan, karena itu ID dari entri `daftar_pelatihan`
-    // yang akan dikaitkan dengan feedback.
-    // Jika `selectedTraining.id` sudah merupakan ID dari `daftar_pelatihan` (sesuai cara Anda memuatnya), maka itu benar.
-    // Berdasarkan `handleViewPelamar` di `AdminPelatihanPage.jsx` dan cara `selectedTraining` dipetakan di `ProfilePage`,
-    // `selectedTraining.id` memang adalah ID dari entri `daftar_pelatihan`.
-    if (!selectedTraining?.id) { //
-      alert("Pelatihan tidak ditemukan untuk pengiriman feedback."); //
-      return; //
+
+    if (!selectedTraining?.id) {
+      alert("Pelatihan tidak ditemukan untuk pengiriman feedback.");
+      return;
     }
 
     try {
-      const token = localStorage.getItem("jwt"); //
-      setAuthToken(token); //
+      const token = localStorage.getItem("jwt");
+      setAuthToken(token);
 
-      // Kirim data feedback sesuai dengan yang diharapkan backend
-      await api.post(
-        "/feedback", //
+      console.log("Mengirim feedback untuk daftar_pelatihan_id:", selectedTraining.id);
+      console.log("Data feedback:", {
+        daftar_pelatihan_id: selectedTraining.id,
+        comment: feedbackContent,
+        tempat_kerja: workplace
+      });
+
+      // PERBAIKAN: Gunakan endpoint yang sesuai dengan route Laravel
+      // Route: POST /feedback/{id} - di mana {id} adalah daftar_pelatihan_id
+      const response = await api.post(
+        `/feedback/${selectedTraining.id}`, // Tambahkan ID ke URL
         {
           daftar_pelatihan_id: selectedTraining.id, // ID dari entri daftar_pelatihan
           comment: feedbackContent, // Nama bidang yang benar untuk isi feedback
           tempat_kerja: workplace // Nama bidang yang benar untuk tempat kerja
         }
       );
-      alert("Feedback berhasil dikirim!"); //
-      setIsFeedbackModalOpen(false); //
-      setFeedbackContent(""); //
-      setWorkplace(""); //
-      setRefreshProfile(prev => prev + 1); //
+
+      console.log("Response feedback:", response.data);
+      alert("Feedback berhasil dikirim!");
+      setIsFeedbackModalOpen(false);
+      setFeedbackContent("");
+      setWorkplace("");
+      setRefreshProfile(prev => prev + 1);
+      
     } catch (err) {
-      console.error("Gagal mengirim feedback:", err); //
-      setError(`Gagal mengirim feedback: ${err.response?.data?.message || err.message || 'Terjadi kesalahan tidak dikenal'}`); //
+      console.error("Gagal mengirim feedback:", err);
+      console.error("Error response:", err.response);
+      
+      let errorMessage = "Terjadi kesalahan tidak dikenal";
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.errors) {
+        // Handle validation errors
+        const errors = Object.values(err.response.data.errors).flat();
+        errorMessage = errors.join(", ");
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(`Gagal mengirim feedback: ${errorMessage}`);
+      alert(`Gagal mengirim feedback: ${errorMessage}`);
     }
   };
 
   useEffect(() => {
-    loadUserProfileAndTrainings(); //
-  }, [refreshProfile, loadUserProfileAndTrainings]); //
+    loadUserProfileAndTrainings();
+  }, [refreshProfile, loadUserProfileAndTrainings]);
 
   if (loading) {
-    return <div className="text-center mt-10 text-gray-600">Memuat profil dan pelatihan...</div>; //
+    return <div className="text-center mt-10 text-gray-600">Memuat profil dan pelatihan...</div>;
   }
 
   if (error) {
-    return <div className="text-center mt-10 text-red-500">{error}</div>; //
+    return <div className="text-center mt-10 text-red-500">{error}</div>;
   }
 
   if (!user) {
-    return <div className="text-center mt-10 text-red-500">Data pengguna tidak tersedia.</div>; //
+    return <div className="text-center mt-10 text-red-500">Data pengguna tidak tersedia.</div>;
   }
 
   return (

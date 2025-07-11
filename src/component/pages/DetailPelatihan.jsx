@@ -13,6 +13,8 @@ const DetailPelatihan = () => {
   const [pelatihan, setPelatihan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [kuotaTersisa, setKuotaTersisa] = useState(0);
+  const [jumlahPendaftar, setJumlahPendaftar] = useState(0);
 
   console.log("DetailPelatihan: ID dari useParams:", id);
 
@@ -41,11 +43,15 @@ const DetailPelatihan = () => {
           console.log("Data pelatihan dimuat dari location.state (preload):", location.state);
         }
 
+        // Fetch detail pelatihan
         const response = await fetchData(`/pelatihan/${id}`);
-        // PERBAIKAN PENTING DI SINI: Akses response.data untuk objek pelatihan
-        if (response && response.data) { // Pastikan response.data ada
-          setPelatihan(response.data); // <--- UBAH DI SINI! setPelatihan(response.data)
-          console.log("Data pelatihan dimuat dari API:", response.data); // Log data yang sudah benar
+        
+        if (response && response.data) {
+          setPelatihan(response.data);
+          console.log("Data pelatihan dimuat dari API:", response.data);
+          
+          // Fetch data pendaftar untuk menghitung kuota tersisa
+          await fetchPendaftarData(response.data);
         } else {
           setError("Detail pelatihan tidak ditemukan atau format data tidak valid.");
           setPelatihan(null);
@@ -59,17 +65,65 @@ const DetailPelatihan = () => {
       }
     };
 
+    const fetchPendaftarData = async (pelatihanData) => {
+      try {
+        console.log("Fetching pendaftar data for pelatihan ID:", id);
+        
+        // Fetch semua pendaftar
+        const pendaftarResponse = await fetchData(`/daftar-pelatihan`);
+        
+        let allPendaftar = [];
+        if (pendaftarResponse && Array.isArray(pendaftarResponse.data)) {
+          allPendaftar = pendaftarResponse.data;
+        } else if (pendaftarResponse && pendaftarResponse.data && Array.isArray(pendaftarResponse.data.data)) {
+          allPendaftar = pendaftarResponse.data.data;
+        }
+
+        // Filter pendaftar untuk pelatihan ini
+        const pendaftarPelatihanIni = allPendaftar.filter(pendaftar => {
+          const pelatihanId = pendaftar.pelatihan_id || pendaftar.id_pelatihan;
+          return String(pelatihanId) === String(id);
+        });
+
+        const jumlahPendaftarPelatihan = pendaftarPelatihanIni.length;
+        const kuotaTotal = pelatihanData.jumlah_kuota || 0;
+        const kuotaTersisaHitung = Math.max(0, kuotaTotal - jumlahPendaftarPelatihan);
+
+        setJumlahPendaftar(jumlahPendaftarPelatihan);
+        setKuotaTersisa(kuotaTersisaHitung);
+
+        console.log("Kuota calculation:", {
+          kuotaTotal,
+          jumlahPendaftarPelatihan,
+          kuotaTersisaHitung,
+          pendaftarPelatihanIni
+        });
+
+      } catch (err) {
+        console.error("Gagal memuat data pendaftar:", err);
+        // Jika gagal fetch pendaftar, gunakan kuota penuh
+        setKuotaTersisa(pelatihanData.jumlah_kuota || 0);
+        setJumlahPendaftar(0);
+      }
+    };
+
     fetchPelatihanDetail();
   }, [id, location.state]);
 
   const handleDaftar = () => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
 
-    if (isLoggedIn) {
-      navigate(`/daftar/${id}`);
-    } else {
+    if (!isLoggedIn) {
       alert("Silakan login terlebih dahulu!");
+      return;
     }
+
+    if (kuotaTersisa <= 0) {
+      alert("Maaf, kuota pelatihan sudah penuh!");
+      return;
+    }
+
+    navigate(`/daftar/${id}`);
   };
 
   if (loading) {
@@ -90,18 +144,20 @@ const DetailPelatihan = () => {
 
   return (
     <DetailPelatihanSection
-    id={pelatihan.id}
-    title={pelatihan.nama_pelatihan}
-    imageSrc={imageUrl}
-    description={pelatihan.keterangan_pelatihan}
-    kategori={pelatihan.kategori}
-    instructor={pelatihan.mentor?.nama_mentor || "Tidak tersedia"} // Access mentor name from nested object
-    biaya={pelatihan.biaya || 0}
-    kuota={pelatihan.jumlah_kuota || 0} // Use jumlah_kuota from backend
-    deadline={pelatihan.waktu_pengumpulan} // Pass deadline if you want to use it
-    onDaftar={handleDaftar}
+      id={pelatihan.id}
+      title={pelatihan.nama_pelatihan}
+      imageSrc={imageUrl}
+      description={pelatihan.keterangan_pelatihan}
+      kategori={pelatihan.kategori}
+      instructor={pelatihan.mentor?.nama_mentor || "Tidak tersedia"}
+      biaya={pelatihan.biaya || 0}
+      kuota={pelatihan.jumlah_kuota || 0}
+      kuotaTersisa={kuotaTersisa}
+      jumlahPendaftar={jumlahPendaftar}
+      deadline={pelatihan.waktu_pengumpulan}
+      onDaftar={handleDaftar}
     />
   );
 };
 
-export default DetailPelatihan; 
+export default DetailPelatihan;

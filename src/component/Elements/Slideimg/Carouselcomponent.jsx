@@ -3,6 +3,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ImageSlide from "./ImageSlide"; 
+import { NextArrow, PrevArrow } from "./Arrownavigation";
 
 import { fetchData } from "../../../services/api"; 
 
@@ -19,6 +20,8 @@ const CarouselComponent = () => {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 3000,
+    nextArrow: <NextArrow />,
+    prevArrow: <PrevArrow />,
   };
 
   useEffect(() => {

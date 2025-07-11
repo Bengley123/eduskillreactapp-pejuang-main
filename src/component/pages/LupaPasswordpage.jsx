@@ -1,45 +1,49 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaUser, FaLightbulb, FaDesktop } from 'react-icons/fa';
-import LupaPasswordForm from '../Fragments/LupaPasswordForm';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import api from "../../services/api";
+import { FaUser, FaLightbulb, FaDesktop } from "react-icons/fa";
+import LupaPasswordForm from "../Fragments/LupaPasswordForm";
 
 // Main ForgotPassword Page Component
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
-    if (error) setError(''); // Clear error when user starts typing
+    if (error) setError("");
+    if (successMessage) setSuccessMessage("");
   };
 
-  const handleSubmit = () => {
-    if (!email) {
-      setError('Email harus diisi');
-      return;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Format email tidak valid');
+  const handleSubmit = async () => {
+    // Validasi dasar
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setError("Format email tidak valid");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
+    setSuccessMessage("");
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Panggil endpoint backend '/api/forgot-password'
+      const response = await api.post("/forgot-password", { email });
+      setSuccessMessage(response.data.message);
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Terjadi kesalahan. Silakan coba lagi.";
+      setError(errorMessage);
+    } finally {
       setLoading(false);
-      alert('Tautan reset password telah dikirim ke email Anda!');
-      // Handle success - redirect or show success message
-    }, 2000);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-6xl w-full flex items-center justify-between">
-        
         {/* Left Illustration */}
         <div className="hidden lg:flex flex-col items-center space-y-4 w-1/3">
           <div className="relative">
@@ -60,10 +64,13 @@ export default function ForgotPasswordPage() {
         <div className="w-full lg:w-1/3 max-w-md mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">EduSkill</h1>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                EduSkill
+              </h1>
               <h2 className="text-xl text-blue-600 mb-4">Lupa kata sandi</h2>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Silahkan masukan email untuk menerima tautan perubahan kata sandi
+                Silahkan masukan email untuk menerima tautan perubahan kata
+                sandi
               </p>
             </div>
 
@@ -78,11 +85,17 @@ export default function ForgotPasswordPage() {
 
             <div className="mt-6 text-center">
               <div className="text-sm text-gray-600">
-                <Link to="/login" className="text-blue-600 hover:underline font-medium">
+                <Link
+                  to="/login"
+                  className="text-blue-600 hover:underline font-medium"
+                >
                   Masuk
                 </Link>
                 <span className="mx-2">|</span>
-                <Link to="/register" className="text-blue-600 hover:underline font-medium">
+                <Link
+                  to="/register"
+                  className="text-blue-600 hover:underline font-medium"
+                >
                   Daftar
                 </Link>
               </div>

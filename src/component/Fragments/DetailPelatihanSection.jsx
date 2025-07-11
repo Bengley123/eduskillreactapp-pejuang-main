@@ -47,7 +47,7 @@ const DetailPelatihanSection = ({
         )}
         {kuota !== undefined && (
           <p>
-            <strong>Kuota Tersedia:</strong> {kuota} Peserta 
+            <strong>Kuota Tersedia:</strong> {kuota} Peserta
           </p>
         )}
         {deadline !== undefined && (

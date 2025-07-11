@@ -1,11 +1,140 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaSearch, FaPlus, FaTimes, FaTrashAlt, FaEdit, FaSave, FaExclamationCircle, FaSpinner, FaUserTie } from 'react-icons/fa';
+import { 
+  FaSearch, 
+  FaPlus, 
+  FaTimes, 
+  FaTrashAlt, 
+  FaEdit, 
+  FaSave, 
+  FaExclamationCircle, 
+  FaSpinner, 
+  FaUserTie,
+  FaInfoCircle,
+  FaCheckCircle,
+  FaExclamationTriangle
+} from 'react-icons/fa';
 import Typography from '../Elements/AdminSource/Typhography';
 import Button from '../Elements/Button/index';
 import InputText from '../Elements/Input/Input';
 import Label from '../Elements/Input/Label';
 
 import { fetchData, createData, updateData, deleteData, apiEndpoints } from '../../services/api.js';
+
+// Custom Modal Components
+const AlertModal = ({ show, onClose, type = "info", title, message, children }) => {
+  if (!show) return null;
+
+  const getIcon = () => {
+    switch (type) {
+      case "success":
+        return <FaCheckCircle className="text-green-500 text-4xl" />;
+      case "error":
+        return <FaExclamationTriangle className="text-red-500 text-4xl" />;
+      case "warning":
+        return <FaExclamationTriangle className="text-yellow-500 text-4xl" />;
+      default:
+        return <FaInfoCircle className="text-blue-500 text-4xl" />;
+    }
+  };
+
+  const getBgColor = () => {
+    switch (type) {
+      case "success":
+        return "bg-green-50 border-green-200";
+      case "error":
+        return "bg-red-50 border-red-200";
+      case "warning":
+        return "bg-yellow-50 border-yellow-200";
+      default:
+        return "bg-blue-50 border-blue-200";
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+        <div className={`text-center p-4 rounded-lg ${getBgColor()} border mb-4`}>
+          <div className="flex justify-center mb-3">
+            {getIcon()}
+          </div>
+          {title && (
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+          )}
+          {message && (
+            <p className="text-gray-700">{message}</p>
+          )}
+          {children}
+        </div>
+        <div className="flex justify-center">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ConfirmModal = ({ show, onClose, onConfirm, title, message, confirmText = "Ya", cancelText = "Batal", type = "warning" }) => {
+  if (!show) return null;
+
+  const getIcon = () => {
+    switch (type) {
+      case "danger":
+        return <FaExclamationTriangle className="text-red-500 text-4xl" />;
+      case "success":
+        return <FaCheckCircle className="text-green-500 text-4xl" />;
+      default:
+        return <FaExclamationTriangle className="text-yellow-500 text-4xl" />;
+    }
+  };
+
+  const getConfirmButtonClass = () => {
+    switch (type) {
+      case "danger":
+        return "bg-red-500 hover:bg-red-600 focus:ring-red-500";
+      case "success":
+        return "bg-green-500 hover:bg-green-600 focus:ring-green-500";
+      default:
+        return "bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500";
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-4">
+            {getIcon()}
+          </div>
+          {title && (
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+          )}
+          {message && (
+            <p className="text-gray-600">{message}</p>
+          )}
+        </div>
+        <div className="flex justify-center gap-3">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-6 py-2 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${getConfirmButtonClass()}`}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AdminMentorPage = () => {
   const [showForm, setShowForm] = useState(false);
@@ -30,6 +159,61 @@ const AdminMentorPage = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
+
+  // Custom Modal States
+  const [alertModal, setAlertModal] = useState({
+    show: false,
+    type: "info",
+    title: "",
+    message: "",
+  });
+
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    title: "",
+    message: "",
+    type: "warning",
+    onConfirm: null,
+  });
+
+  // Custom Modal Functions
+  const showAlert = (type, title, message) => {
+    setAlertModal({
+      show: true,
+      type,
+      title,
+      message,
+    });
+  };
+
+  const hideAlert = () => {
+    setAlertModal({
+      show: false,
+      type: "info",
+      title: "",
+      message: "",
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm, type = "warning") => {
+    setConfirmModal({
+      show: true,
+      title,
+      message,
+      type,
+      onConfirm,
+    });
+  };
+
+  const hideConfirm = () => {
+    setConfirmModal({
+      show: false,
+      title: "",
+      message: "",
+      type: "warning",
+      onConfirm: null,
+    });
+  };
 
   // Fetch data mentor
   const fetchMentorData = useCallback(async () => {
@@ -70,15 +254,41 @@ const AdminMentorPage = () => {
             console.warn('API response for mentor data is not in expected format:', response);
         }
       
-      const mappedData = fetchedRawItems.map(item => ({
-        id: item.id,
-        nama_mentor: item.nama_mentor,
-        admin_id: item.admin_id,
-        admin_name: item.admin_profile?.nama || item.adminProfile?.nama || 'Admin tidak diketahui',
-        jumlah_pelatihan: item.pelatihan?.length || 0,
-        created_at: item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : '',
-        updated_at: item.updated_at ? new Date(item.updated_at).toLocaleDateString('id-ID') : '',
-      }));
+      const mappedData = fetchedRawItems.map(item => {
+        console.log("Raw item data:", item); // Debug log
+        
+        // Format tanggal dengan lebih robust
+        const formatDate = (dateString) => {
+          if (!dateString) return '-';
+          
+          try {
+            // Jika sudah dalam format yang bagus (seperti "08 Jul 2025"), langsung return
+            if (typeof dateString === 'string' && dateString.includes(' ')) {
+              return dateString;
+            }
+            
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+              return dateString; // Return original if can't parse
+            }
+            return date.toLocaleDateString('id-ID', {
+              year: 'numeric',
+              month: '2-digit', 
+              day: '2-digit'
+            });
+          } catch (err) {
+            console.warn("Error parsing date:", dateString, err);
+            return dateString || '-';
+          }
+        };
+
+        return {
+          id: item.id,
+          nama_mentor: item.nama_mentor,
+          created_at: formatDate(item.tanggal_ditambahkan || item.created_at),
+          updated_at: formatDate(item.tanggal_diperbarui || item.updated_at || item.tanggal_ditambahkan),
+        };
+      });
       
       setDataMentor(mappedData);
       setTotalPages(currentLastPage);
@@ -117,20 +327,27 @@ const AdminMentorPage = () => {
   };
 
   const handleDelete = async (mentorToDelete) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus mentor "${mentorToDelete.nama_mentor}" ini?`)) {
-      setLoading(true);
-      try {
-        await deleteData(apiEndpoints.mentor, mentorToDelete.id);
-        alert('Mentor berhasil dihapus!');
-        fetchMentorData();
-        setShowDetail(false);
-      } catch (err) {
-        console.error("Failed to delete mentor:", err);
-        alert(`Gagal menghapus mentor: ${err.response?.data?.message || err.message}`);
-      } finally {
-        setLoading(false);
-      }
-    }
+    showConfirm(
+      "Konfirmasi Hapus",
+      `Apakah Anda yakin ingin menghapus mentor "${mentorToDelete.nama_mentor}" ini?`,
+      async () => {
+        setLoading(true);
+        try {
+          await deleteData(apiEndpoints.mentor, mentorToDelete.id);
+          showAlert("success", "Berhasil!", "Mentor berhasil dihapus!");
+          fetchMentorData();
+          setShowDetail(false);
+        } catch (err) {
+          console.error("Failed to delete mentor:", err);
+          showAlert("error", "Gagal Menghapus", 
+            `Gagal menghapus mentor: ${err.response?.data?.message || err.message}`);
+        } finally {
+          setLoading(false);
+        }
+        hideConfirm();
+      },
+      "danger"
+    );
   };
 
   const handleEdit = () => {
@@ -154,7 +371,7 @@ const AdminMentorPage = () => {
 
         const response = await updateData(apiEndpoints.mentor, selectedMentor.id, formData);
         if (response) {
-            alert('Mentor berhasil diperbarui!');
+            showAlert("success", "Berhasil!", "Mentor berhasil diperbarui!");
             fetchMentorData();
             setShowDetail(false);
             setIsEditing(false);
@@ -165,9 +382,10 @@ const AdminMentorPage = () => {
         console.error("Failed to save mentor:", err);
         if (err.response && err.response.status === 422 && err.response.data.errors) {
             setValidationErrors(err.response.data.errors);
-            alert('Validasi gagal. Mohon periksa kembali input Anda.');
+            showAlert("error", "Validasi Gagal", "Mohon periksa kembali input Anda.");
         } else {
-            alert(`Gagal menyimpan perubahan: ${err.response?.data?.message || err.message}`);
+            showAlert("error", "Gagal Menyimpan", 
+              `Gagal menyimpan perubahan: ${err.response?.data?.message || err.message}`);
         }
     } finally {
         setLoading(false);
@@ -182,7 +400,7 @@ const AdminMentorPage = () => {
   const handleSubmit = async () => {
     setValidationErrors({});
     if (!form.nama_mentor) {
-      alert('Mohon lengkapi nama mentor');
+      showAlert("warning", "Data Tidak Lengkap", "Mohon lengkapi nama mentor");
       return;
     }
     setLoading(true);
@@ -192,7 +410,7 @@ const AdminMentorPage = () => {
 
         const response = await createData(apiEndpoints.mentor, formData);
         if (response) {
-            alert('Mentor berhasil ditambahkan!');
+            showAlert("success", "Berhasil!", "Mentor berhasil ditambahkan!");
             fetchMentorData();
             setShowForm(false);
             setForm({
@@ -205,9 +423,10 @@ const AdminMentorPage = () => {
         console.error("Failed to add mentor:", err);
         if (err.response && err.response.status === 422 && err.response.data.errors) {
             setValidationErrors(err.response.data.errors);
-            alert('Validasi gagal. Mohon periksa kembali input Anda.');
+            showAlert("error", "Validasi Gagal", "Mohon periksa kembali input Anda.");
         } else {
-            alert(`Gagal menambahkan mentor: ${err.response?.data?.message || err.message}`);
+            showAlert("error", "Gagal Menambahkan", 
+              `Gagal menambahkan mentor: ${err.response?.data?.message || err.message}`);
         }
     } finally {
         setLoading(false);
@@ -268,12 +487,68 @@ const AdminMentorPage = () => {
 
   return (
     <div className="p-6">
+      {/* Custom Modals */}
+      <AlertModal
+        show={alertModal.show}
+        onClose={hideAlert}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+      />
+
+      <ConfirmModal
+        show={confirmModal.show}
+        onClose={hideConfirm}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+      />
+
       <div className="bg-white p-4 rounded shadow mb-6">
-        <div className="flex justify-between items-center mb-4">
+        {/* Header - Hanya judul */}
+        <div className="mb-4">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <FaUserTie className="text-blue-500" />
             Kelola Data Mentor
           </h1>
+        </div>
+
+        {/* Filter Section - Search di kiri, Button Tambah di kanan, dempet */}
+        <div className="mb-4 flex flex-wrap gap-4 items-center justify-end">
+          {/* Search Bar */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Cari nama mentor..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyPress={handleSearchInputKeyPress}
+              className="block w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+            <button
+              onClick={handleApplySearch}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-500 hover:text-blue-700"
+              title="Cari"
+            >
+              <FaSearch className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Reset Button jika ada pencarian */}
+          {appliedSearchQuery && (
+            <button
+              onClick={handleResetFilter}
+              className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors duration-200"
+            >
+              Reset Filter
+            </button>
+          )}
+
+          {/* Button Tambah Mentor */}
           <button 
             onClick={() => {
               setShowForm(true);
@@ -282,52 +557,10 @@ const AdminMentorPage = () => {
               });
               setValidationErrors({});
             }}
-            className="px-4 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg rounded transition-colors duration-200 flex items-center gap-1"
+            className="px-4 py-2 text-sm bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg rounded transition-colors duration-200 flex items-center gap-2"
           >
             <FaPlus size={12} /> Tambah Mentor
           </button>
-        </div>
-
-        {/* Search Section */}
-        <div className="mb-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-            {/* Search Bar */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaSearch className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Cari nama mentor..."
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onKeyPress={handleSearchInputKeyPress}
-                className="block w-full sm:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
-              <button
-                onClick={handleApplySearch}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-500 hover:text-blue-700"
-                title="Cari"
-              >
-                <FaSearch className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Reset Button dan Info */}
-          <div className="flex items-center gap-3">
-            {appliedSearchQuery && (
-              <button
-                onClick={handleResetFilter}
-                className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors duration-200"
-              >
-                Reset Filter
-              </button>
-            )}
-            <span className="text-sm text-gray-500">
-              {totalItems} mentor ditemukan
-            </span>
-          </div>
         </div>
         
         <div className="overflow-x-auto">
@@ -336,9 +569,8 @@ const AdminMentorPage = () => {
               <tr>
                 <th className="px-4 py-2">No</th>
                 <th className="px-4 py-2">Nama Mentor</th>
-                <th className="px-4 py-2">Admin Pembuat</th>
-                <th className="px-4 py-2">Jumlah Pelatihan</th>
                 <th className="px-4 py-2">Dibuat</th>
+                <th className="px-4 py-2">Diperbarui</th>
                 <th className="px-4 py-2 text-center">Action</th>
               </tr>
             </thead>
@@ -348,9 +580,8 @@ const AdminMentorPage = () => {
                   <tr key={mentor.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                     <td className="px-4 py-2">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
                     <td className="px-4 py-2 font-medium">{mentor.nama_mentor}</td>
-                    <td className="px-4 py-2">{mentor.admin_name}</td>
-                    <td className="px-4 py-2 text-center">{mentor.jumlah_pelatihan}</td>
                     <td className="px-4 py-2">{mentor.created_at}</td>
+                    <td className="px-4 py-2">{mentor.updated_at}</td>
                     <td className="px-4 py-2 text-center">
                       <div className="flex justify-center gap-2">
                         <button 
@@ -385,7 +616,7 @@ const AdminMentorPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
                     <div className="flex flex-col items-center">
                       <FaExclamationCircle className="text-3xl mb-2 text-gray-400" />
                       <p className="text-sm">
@@ -524,16 +755,6 @@ const AdminMentorPage = () => {
                 
                 {!isEditing && (
                   <>
-                    <div>
-                      <Label>Admin Pembuat</Label>
-                      <p className="font-medium">{selectedMentor.admin_name}</p>
-                    </div>
-                    
-                    <div>
-                      <Label>Jumlah Pelatihan</Label>
-                      <p className="font-medium">{selectedMentor.jumlah_pelatihan} pelatihan</p>
-                    </div>
-                    
                     <div>
                       <Label>Dibuat</Label>
                       <p className="font-medium">{selectedMentor.created_at}</p>

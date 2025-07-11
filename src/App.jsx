@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"; // <--- Tambahkan useEffect di sini
+import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import UserLayout from "./component/Layouts/UserLayout";
@@ -17,7 +17,10 @@ import TentangKamiLKPPage from "./component/pages/TentangKamiLKPpage";
 import TentangKamiYayasanPage from "./component/pages/TentangKamiYayasanpage";
 import LupaPasswordPage from "./component/pages/LupaPasswordpage";
 import PelatihanLengkapPage from "./component/pages/PelatihanLengkappage";
+import VerificationResultPage from "./component/pages/VerificationResultpage";
 import BeritaLengkapPage from "./component/pages/BeritaMorepage";
+import AdminKategoriPelatihanPage from "./component/pages/AdminKategoriPelatihanpage";
+import AdminMentorPage from "./component/pages/AdminMentorpage";
 
 import KetuaDashboardPage from "./component/pages/KetuaDashboardpage";
 
@@ -27,21 +30,19 @@ import AdminPelatihanPage from "./component/pages/AdminPelatihanpage";
 import AdminLaporanPage from "./component/pages/AdminLaporanpage";
 import AdminNotifikasiPage from "./component/pages/AdminNotifikasipage";
 import AdminDashboardPage from "./component/pages/AdminDashboardpage";
-import AdminKategoriPelatihanPage from "./component/pages/AdminKategoriPelatihanpage";
-import AdminMentorPage from "./component/pages/AdminMentorpage";
 import ProfilePage from "./component/pages/Profilepage";
 import EditProfilePage from "./component/pages/EditProfilePage";
-//import StatusPendaftaranPage from "./component/pages/StatusPendaftaranpage";
+// import StatusPendaftaranPage from "./component/pages/StatusPendaftaranpage";
 import FeedBackPage from "./component/pages/Feedbackpage";
 import AdminFeedbackPage from "./component/pages/AdminFeedbackpage";
+import ResetPasswordPage from "./component/pages/ResetPasswordpage";
 
-import { setAuthToken } from './services/api'; 
-
+import { setAuthToken } from "./services/api";
 
 function App() {
   // --- BARU: Tambahkan useEffect untuk mengatur token saat aplikasi dimuat ---
   useEffect(() => {
-    const token = localStorage.getItem('jwt'); // Ambil token dari localStorage
+    const token = localStorage.getItem("jwt"); // Ambil token dari localStorage
     if (token) {
       setAuthToken(token); // Set token ke Axios defaults
       console.log("Auth token successfully set from localStorage."); // Pesan debug
@@ -58,11 +59,14 @@ function App() {
         <Route path="/daftar/:id" element={<DaftarPage />} />
         <Route path="/tentangkamiLPK" element={<TentangKamiLPKPage />} />
         <Route path="/tentangkamiLKP" element={<TentangKamiLKPPage />} />
-        <Route path="/tentangkamiYayasan" element={<TentangKamiYayasanPage />} />
+        <Route
+          path="/tentangkamiYayasan"
+          element={<TentangKamiYayasanPage />}
+        />
         <Route path="/pelatihan/:id" element={<DetailPelatihan />} />
         <Route path="/pelatihanlengkap" element={<PelatihanLengkapPage />} />
         <Route path="/berita/:id" element={<DetailBeritaPage />} />
-        <Route path="/beritalengkap" element={<BeritaLengkapPage />} /> 
+        <Route path="/beritalengkap" element={<BeritaLengkapPage />} />
         {/* <Route path="/statusdaftar" element={<StatusPendaftaranPage />} /> */}
         <Route path="/galeri" element={<GaleriPage />} />
         <Route path="/feedback" element={<FeedBackPage />} />
@@ -71,6 +75,12 @@ function App() {
         <Route path="/regis" element={<RegisterPage />} />
         <Route path="/profil" element={<ProfilePage />} />
         <Route path="/editprofil" element={<EditProfilePage />} />
+        <Route
+          path="/tentangkamiYayasan"
+          element={<TentangKamiYayasanPage />}
+        />
+        <Route path="/verify-email" element={<VerificationResultPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Layout untuk Admin */}
@@ -78,15 +88,14 @@ function App() {
         <Route path="/admindashboard" element={<AdminDashboardPage />} />
         <Route path="/adpeserta" element={<AdminPesertaPage />} />
         <Route path="/adkonten" element={<AdminKontenPage />} />
-        <Route path="/adpelatihan" element={<AdminPelatihanPage />} />
         <Route path="/adkategori" element={<AdminKategoriPelatihanPage />} />
         <Route path="/admentor" element={<AdminMentorPage />} />
+        <Route path="/adpelatihan" element={<AdminPelatihanPage />} />
         <Route path="/adlaporan" element={<AdminLaporanPage />} />
         <Route path="/adfeedback" element={<AdminFeedbackPage />} />
         <Route path="/adnotif" element={<AdminNotifikasiPage />} />
       </Route>
 
-      {/* Layout untuk Ketua */}
       <Route element={<KetuaLayout />}>
         <Route path="/ketuadashboard" element={<KetuaDashboardPage />} />
       </Route>

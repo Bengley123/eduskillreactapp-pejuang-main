@@ -1,4 +1,3 @@
-// src/components/Fragments/DaftarPage.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios"; // Tidak perlu axios jika sudah ada api.js
 import InputWithLabel from "../Elements/Input/index";
@@ -51,9 +50,24 @@ const DaftarPage = () => {
   // --- Fungsi Validasi ---
   const validateNik = (nik) => {
     const nikRegex = /^[0-9]{16}$/;
-    if (!nik) { setNikError("NIK tidak boleh kosong."); return false; }
-    if (!nikRegex.test(nik)) { setNikError("NIK harus 16 digit angka."); return false; }
-    setNikError(null); return true;
+    if (!nik) {
+      setNikError("NIK tidak boleh kosong.");
+      return false;
+    }
+    if (nik.length < 16) {
+      setNikError("NIK minimal 16 karakter.");
+      return false;
+    }
+    if (nik.length > 16) {
+      setNikError("NIK maksimal 16 karakter.");
+      return false;
+    }
+    if (!nikRegex.test(nik)) {
+      setNikError("NIK harus 16 digit angka.");
+      return false;
+    }
+    setNikError(null);
+    return true;
   };
 
   const validateNoTelp = (noTelp) => {
@@ -93,16 +107,93 @@ const DaftarPage = () => {
 
   const validateTanggalLahir = (tanggalLahir) => {
     if (!tanggalLahir) { setTanggalLahirError("Tanggal Lahir tidak boleh kosong."); return false; }
-    // Anda bisa tambahkan validasi format tanggal lebih lanjut jika diperlukan
     setTanggalLahirError(null); return true;
   };
 
+  // PERBAIKAN: Validasi file hanya untuk PDF dan batas 5MB
   const validateFile = (file, setErrorFunc, fieldName) => {
-    if (!file) { setErrorFunc(`${fieldName} tidak boleh kosong.`); return false; }
-    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    if (!allowedTypes.includes(file.type)) { setErrorFunc(`Format ${fieldName} tidak valid (JPG, PNG, PDF).`); return false; }
-    if (file.size > 2 * 1024 * 1024) { setErrorFunc(`${fieldName} maksimal 2MB.`); return false; }
-    setErrorFunc(null); return true;
+    if (!file) { 
+      setErrorFunc(`${fieldName} tidak boleh kosong.`); 
+      return false; 
+    }
+    
+    // Hanya menerima PDF
+    if (file.type !== 'application/pdf') { 
+      setErrorFunc(`Format file ${fieldName} tidak valid (harus PDF)`); 
+      return false; 
+    }
+    
+    // Batas ukuran 5MB (bukan 2MB)
+    if (file.size > 5 * 1024 * 1024) { 
+      setErrorFunc(`Ukuran file ${fieldName} melebihi batas (maksimal 5MB)`); 
+      return false; 
+    }
+    
+    setErrorFunc(null); 
+    return true;
+  };
+
+  // Validasi khusus untuk file yang rusak/tidak dapat dibaca
+  const validateFileIntegrity = (file, setErrorFunc, fieldName) => {
+    return new Promise((resolve) => {
+      if (!file) {
+        setErrorFunc(`${fieldName} tidak boleh kosong.`);
+        resolve(false);
+        return;
+      }
+
+      // Cek ekstensi file
+      const fileName = file.name.toLowerCase();
+      if (!fileName.endsWith('.pdf')) {
+        setErrorFunc(`Format file ${fieldName} tidak valid (harus PDF)`);
+        resolve(false);
+        return;
+      }
+
+      // Cek MIME type
+      if (file.type !== 'application/pdf') {
+        setErrorFunc(`File yang di upload tidak sesuai`);
+        resolve(false);
+        return;
+      }
+
+      // Cek ukuran file
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorFunc(`Ukuran file ${fieldName} melebihi batas (maksimal 5MB)`);
+        resolve(false);
+        return;
+      }
+
+      // Cek jika file kosong atau rusak
+      if (file.size === 0) {
+        setErrorFunc(`File ${fieldName} rusak atau tidak dapat dibaca`);
+        resolve(false);
+        return;
+      }
+
+      // Coba baca header PDF untuk memastikan file valid
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const arrayBuffer = e.target.result;
+        const uint8Array = new Uint8Array(arrayBuffer.slice(0, 4));
+        const header = String.fromCharCode.apply(null, uint8Array);
+        
+        if (header !== '%PDF') {
+          setErrorFunc(`File ${fieldName} rusak atau tidak dapat dibaca`);
+          resolve(false);
+        } else {
+          setErrorFunc(null);
+          resolve(true);
+        }
+      };
+      
+      reader.onerror = function() {
+        setErrorFunc(`Gagal mengunggah file`);
+        resolve(false);
+      };
+      
+      reader.readAsArrayBuffer(file.slice(0, 4));
+    });
   };
   // --- Akhir Fungsi Validasi ---
 
@@ -199,7 +290,6 @@ const DaftarPage = () => {
       }
     };
 
-
     loadUserProfile();
     fetchNamaPelatihan();
     fetchPendidikanOptions(); // Panggil fetch pendidikan
@@ -219,15 +309,21 @@ const DaftarPage = () => {
     else if (name === "tanggalLahir") validateTanggalLahir(value); // Validasi tanggal lahir
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const { name, files } = e.target;
     const file = files[0];
     setFormData((prev) => ({ ...prev, [name]: file }));
 
-    if (name === "ktp") validateFile(file, setKtpError, "KTP");
-    else if (name === "kk") validateFile(file, setKkError, "KK");
-    else if (name === "ijazah") validateFile(file, setIjazahError, "Ijazah");
-    else if (name === "photo") validateFile(file, setPhotoError, "Pas Foto"); // Ubah fieldName menjadi Pas Foto
+    // Gunakan validasi file yang diperbaiki
+    if (name === "ktp") {
+      await validateFileIntegrity(file, setKtpError, "KTP");
+    } else if (name === "kk") {
+      await validateFileIntegrity(file, setKkError, "KK");
+    } else if (name === "ijazah") {
+      await validateFileIntegrity(file, setIjazahError, "Ijazah");
+    } else if (name === "photo") {
+      await validateFileIntegrity(file, setPhotoError, "Pas Foto");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -241,15 +337,17 @@ const DaftarPage = () => {
     const isNikValid = validateNik(formData.nik);
     const isPendidikanValid = validatePendidikan(formData.pendidikan);
     const isAlamatValid = validateAlamat(formData.alamat);
-    const isJenisKelaminValid = validateJenisKelamin(formData.jenisKelamin); // Validasi jenis kelamin
-    const isTanggalLahirValid = validateTanggalLahir(formData.tanggalLahir); // Validasi tanggal lahir
-    const isKtpValid = validateFile(formData.ktp, setKtpError, "KTP");
-    const isKkValid = validateFile(formData.kk, setKkError, "KK");
-    const isIjazahValid = validateFile(formData.ijazah, setIjazahError, "Ijazah");
-    const isPhotoValid = validateFile(formData.photo, setPhotoError, "Pas Foto");
+    const isJenisKelaminValid = validateJenisKelamin(formData.jenisKelamin);
+    const isTanggalLahirValid = validateTanggalLahir(formData.tanggalLahir);
+    
+    // Validasi file dengan integrity check
+    const isKtpValid = await validateFileIntegrity(formData.ktp, setKtpError, "KTP");
+    const isKkValid = await validateFileIntegrity(formData.kk, setKkError, "KK");
+    const isIjazahValid = await validateFileIntegrity(formData.ijazah, setIjazahError, "Ijazah");
+    const isPhotoValid = await validateFileIntegrity(formData.photo, setPhotoError, "Pas Foto");
 
     if (!isNamaValid || !isNoTelpValid || !isEmailValid || !isNikValid || !isPendidikanValid || !isAlamatValid ||
-        !isJenisKelaminValid || !isTanggalLahirValid || // Tambahkan validasi jenis kelamin & tanggal lahir
+        !isJenisKelaminValid || !isTanggalLahirValid ||
         !isKtpValid || !isKkValid || !isIjazahValid || !isPhotoValid) {
       setError("Mohon lengkapi semua data dan perbaiki kesalahan validasi.");
       return;
@@ -275,7 +373,6 @@ const DaftarPage = () => {
 
     try {
       const token = localStorage.getItem("jwt");
-      // console.log("handleSubmit: Token JWT yang akan digunakan:", token); // Debugging
       if (!token) {
         console.error("handleSubmit: Token JWT tidak ditemukan di localStorage!");
         setError("Anda belum login atau sesi kadaluarsa. Silakan login kembali.");
@@ -345,14 +442,15 @@ const DaftarPage = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {/* Baris Pertama */}
             <InputWithLabel
-              label="Nama Lengkap"
+              label="NIK"
               type="text"
-              name="nama"
-              placeholder="Masukkan Nama Lengkap"
-              value={formData.nama}
+              name="nik"
+              placeholder="Masukkan NIK (16 digit)"
+              value={formData.nik}
               onChange={handleChange}
-              error={namaError}
+              error={nikError}
             />
             <InputWithLabel
               label="No. Telepon"
@@ -372,15 +470,53 @@ const DaftarPage = () => {
               onChange={handleChange}
               error={emailError}
             />
+            
+            {/* Baris Kedua */}
             <InputWithLabel
-              label="NIK"
+              label="Nama Lengkap"
               type="text"
-              name="nik"
-              placeholder="Masukkan NIK (16 digit)"
-              value={formData.nik}
+              name="nama"
+              placeholder="Masukkan Nama Lengkap"
+              value={formData.nama}
               onChange={handleChange}
-              error={nikError}
+              error={namaError}
             />
+            <InputWithLabel
+              label="Tanggal Lahir"
+              type="date"
+              name="tanggalLahir"
+              value={formData.tanggalLahir}
+              onChange={handleChange}
+              error={tanggalLahirError}
+            />
+            <div className="flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Lengkap</label>
+              <textarea
+                name="alamat"
+                placeholder="Masukkan Alamat Lengkap"
+                value={formData.alamat}
+                onChange={handleChange}
+                rows="2"
+                className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-vertical ${alamatError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
+              />
+              {alamatError && <p className="mt-1 text-sm text-red-600">{alamatError}</p>}
+            </div>
+            
+            {/* Baris Ketiga */}
+            <div>
+              <label className="block font-medium text-gray-700 mb-2">Jenis Kelamin</label>
+              <select
+                name="jenisKelamin"
+                value={formData.jenisKelamin}
+                onChange={handleChange}
+                className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${jenisKelaminError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
+              >
+                <option value="">Pilih Jenis Kelamin</option>
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
+              {jenisKelaminError && <p className="mt-1 text-sm text-red-600">{jenisKelaminError}</p>}
+            </div>
             <div>
               <label className="block font-medium text-gray-700 mb-2">Pendidikan Terakhir</label>
               <select
@@ -396,83 +532,50 @@ const DaftarPage = () => {
               </select>
               {pendidikanError && <p className="mt-1 text-sm text-red-600">{pendidikanError}</p>}
             </div>
-            <InputWithLabel
-              label="Alamat Lengkap"
-              type="text"
-              name="alamat"
-              placeholder="Masukkan Alamat Lengkap"
-              value={formData.alamat}
-              onChange={handleChange}
-              error={alamatError}
-            />
-            {/* --- PERBAIKAN DI SINI: Tambahkan Jenis Kelamin dan Tanggal Lahir --- */}
-            <div>
-              <label className="block font-medium text-gray-700 mb-2">Jenis Kelamin</label>
-              <select
-                name="jenisKelamin"
-                value={formData.jenisKelamin}
-                onChange={handleChange}
-                className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${jenisKelaminError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
-              >
-                <option value="">Pilih Jenis Kelamin</option>
-                <option value="Laki-laki">Laki-laki</option>
-                <option value="Perempuan">Perempuan</option>
-              </select>
-              {jenisKelaminError && <p className="mt-1 text-sm text-red-600">{jenisKelaminError}</p>}
-            </div>
-            <InputWithLabel
-              label="Tanggal Lahir"
-              type="date"
-              name="tanggalLahir"
-              value={formData.tanggalLahir}
-              onChange={handleChange}
-              error={tanggalLahirError}
-            />
-            {/* --- Akhir Perbaikan Jenis Kelamin dan Tanggal Lahir --- */}
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block font-medium text-gray-700 mb-2">Unggah KTP <span className="text-gray-500 text-sm">(JPG, PNG, atau PDF, maks 2MB)</span></label>
+              <label className="block font-medium text-gray-700 mb-2">Unggah KTP <span className="text-gray-500 text-sm">(PDF, maksimal 5MB)</span></label>
               <input
                 type="file"
                 name="ktp"
                 onChange={handleFileChange}
                 className={`w-full border rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold ${ktpError ? 'border-red-500 file:bg-red-100 file:text-red-700' : 'border-gray-300 file:bg-blue-100 file:text-blue-700'} hover:file:bg-blue-200`}
-                accept=".jpg,.jpeg,.png,.pdf"
+                accept=".pdf"
               />
               {ktpError && <p className="mt-1 text-sm text-red-600">{ktpError}</p>}
             </div>
             <div>
-              <label className="block font-medium text-gray-700 mb-2">Unggah KK <span className="text-gray-500 text-sm">(JPG, PNG, atau PDF, maks 2MB)</span></label>
+              <label className="block font-medium text-gray-700 mb-2">Unggah KK <span className="text-gray-500 text-sm">(PDF, maksimal 5MB)</span></label>
               <input
                 type="file"
                 name="kk"
                 onChange={handleFileChange}
                 className={`w-full border rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold ${kkError ? 'border-red-500 file:bg-red-100 file:text-red-700' : 'border-gray-300 file:bg-blue-100 file:text-blue-700'} hover:file:bg-blue-200`}
-                accept=".jpg,.jpeg,.png,.pdf"
+                accept=".pdf"
               />
               {kkError && <p className="mt-1 text-sm text-red-600">{kkError}</p>}
             </div>
             <div>
-              <label className="block font-medium text-gray-700 mb-2">Unggah Ijazah Terakhir <span className="text-gray-500 text-sm">(JPG, PNG, atau PDF, maks 2MB)</span></label>
+              <label className="block font-medium text-gray-700 mb-2">Unggah Ijazah Terakhir <span className="text-gray-500 text-sm">(PDF, maksimal 5MB)</span></label>
               <input
                 type="file"
                 name="ijazah"
                 onChange={handleFileChange}
                 className={`w-full border rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold ${ijazahError ? 'border-red-500 file:bg-red-100 file:text-red-700' : 'border-gray-300 file:bg-blue-100 file:text-blue-700'} hover:file:bg-blue-200`}
-                accept=".jpg,.jpeg,.png,.pdf"
+                accept=".pdf"
               />
               {ijazahError && <p className="mt-1 text-sm text-red-600">{ijazahError}</p>}
             </div>
             <div>
-              <label className="block font-medium text-gray-700 mb-2">Unggah Pas Foto <span className="text-gray-500 text-sm">(JPG, PNG, atau PDF, maks 2MB)</span></label>
+              <label className="block font-medium text-gray-700 mb-2">Unggah Pas Foto <span className="text-gray-500 text-sm">(PDF, maksimal 5MB)</span></label>
               <input
                 type="file"
                 name="photo"
                 onChange={handleFileChange}
                 className={`w-full border rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold ${photoError ? 'border-red-500 file:bg-red-100 file:text-red-700' : 'border-gray-300 file:bg-blue-100 file:text-blue-700'} hover:file:bg-blue-200`}
-                accept=".jpg,.jpeg,.png,.pdf"
+                accept=".pdf"
               />
               {photoError && <p className="mt-1 text-sm text-red-600">{photoError}</p>}
             </div>
