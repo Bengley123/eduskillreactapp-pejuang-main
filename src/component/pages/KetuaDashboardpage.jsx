@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaSignOutAlt, FaUsers, FaChalkboardTeacher } from 'react-icons/fa';
-import Typography from '../Elements/AdminSource/Typhography';
-import StatsGrid from '../Fragments/StatsgridAdmin';
-import DataTable from '../Fragments/DataTableAdmin';
-import { fetchData, setAuthToken } from '../../services/api';
-import { apiEndpoints } from '../../services/api';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  FaUserCircle,
+  FaSignOutAlt,
+  FaUsers,
+  FaChalkboardTeacher,
+} from "react-icons/fa";
+import Typography from "../Elements/AdminSource/Typhography";
+import StatsGrid from "../Fragments/StatsgridAdmin";
+import DataTable from "../Fragments/DataTableAdmin";
+import { fetchData, setAuthToken } from "../../services/api";
+import { apiEndpoints } from "../../services/api";
 
 const KetuaDashboardPage = () => {
   const navigate = useNavigate();
   const [showLogout, setShowLogout] = useState(false);
-  const [adminNotes, setAdminNotes] = useState('Catatan laporan dari admin akan muncul di sini...');
+  const [adminNotes, setAdminNotes] = useState(
+    "Catatan laporan dari admin akan muncul di sini..."
+  );
   const [dashboardStats, setDashboardStats] = useState({
     jumlahPendaftar: 0,
     jumlahPeserta: 0,
@@ -24,198 +31,97 @@ const KetuaDashboardPage = () => {
   const [error, setError] = useState(null);
 
   const handleLogout = () => {
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('user');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('isLoggedIn');
-    window.location.href = '/login';
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("isLoggedIn");
+    window.location.href = "/login";
   };
 
   const fetchDashboardData = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem('jwt');
+      const token = localStorage.getItem("jwt");
       if (!token) {
-        setError('Tidak ada token autentikasi. Silakan login kembali.');
-        navigate('/login');
+        navigate("/login");
         return;
       }
-
       setAuthToken(token);
 
-      let daftarPelatihanData = [];
-      let pesertaData = [];
-      let pelatihanData = [];
-      let feedbackData = [];
-      let laporanAdminData = [];
+      // Lakukan SATU panggilan ke endpoint baru yang aman
+      const response = await fetchData("/ketuadashboard");
 
-      try {
-        const daftarPelatihanResponse = await fetchData(apiEndpoints.daftarPelatihan);
-        daftarPelatihanData = daftarPelatihanResponse?.data || [];
-      } catch (err) {
-        console.warn('Failed to fetch daftar pelatihan:', err);
-        if (err.response?.status === 401) {
-          setError('Session expired. Silakan login kembali.');
-          navigate('/login');
-          return;
-        }
-      }
+      if (response) {
+        // Atur statistik dari response
+        setDashboardStats(response.stats);
 
-      try {
-        const pesertaResponse = await fetchData(apiEndpoints.peserta);
-        pesertaData = pesertaResponse?.data || [];
-      } catch (err) {
-        console.warn('Failed to fetch peserta:', err);
-        if (err.response?.status === 401) {
-          setError('Session expired. Silakan login kembali.');
-          navigate('/login');
-          return;
-        }
-      }
-
-      try {
-        const pelatihanResponse = await fetchData(apiEndpoints.pelatihan);
-        pelatihanData = pelatihanResponse?.data?.data || pelatihanResponse?.data || [];
-      } catch (err) {
-        console.warn('Failed to fetch pelatihan:', err);
-        if (err.response?.status === 401) {
-          setError('Session expired. Silakan login kembali.');
-          navigate('/login');
-          return;
-        }
-      }
-
-      try {
-        const feedbackResponse = await fetchData(apiEndpoints.feedback);
-        feedbackData = feedbackResponse?.data || [];
-      } catch (err) {
-        console.warn('Failed to fetch feedback:', err);
-        if (err.response?.status === 401) {
-          setError('Session expired. Silakan login kembali.');
-          navigate('/login');
-          return;
-        }
-      }
-
-      try {
-        const laporanAdminResponse = await fetchData(apiEndpoints.laporanAdmin);
-        laporanAdminData = laporanAdminResponse?.data || [];
-      } catch (err) {
-        console.warn('Failed to fetch laporan admin:', err);
-        if (err.response?.status === 401) {
-          setError('Session expired. Silakan login kembali.');
-          navigate('/login');
-          return;
-        }
-      }
-
-      const jumlahPendaftar = Array.isArray(daftarPelatihanData) ? daftarPelatihanData.length : 0;
-      const jumlahPeserta = Array.isArray(pesertaData) ? pesertaData.length : 0;
-      const totalPelatihan = Array.isArray(pelatihanData) ? pelatihanData.length : 0;
-
-      const alumniFromFeedback = Array.isArray(feedbackData) 
-        ? feedbackData.filter(feedback => feedback.peserta_id || feedback.peserta)
-        : [];
-
-      setDashboardStats({
-        jumlahPendaftar,
-        jumlahPeserta,
-        totalPelatihan,
-        jumlahAlumni: alumniFromFeedback.length,
-      });
-
-      const processedPelatihanData = Array.isArray(pelatihanData) 
-        ? pelatihanData.map(pelatihan => {
-            let kategoriName = 'N/A';
-            if (pelatihan.kategori) {
-              if (typeof pelatihan.kategori === 'object') {
-                kategoriName = pelatihan.kategori.nama_kategori || pelatihan.kategori.nama || 'N/A';
-              } else {
-                kategoriName = pelatihan.kategori;
-              }
-            } else if (pelatihan.nama_kategori) {
-              kategoriName = pelatihan.nama_kategori;
-            }
-
-            return {
-              id: pelatihan.id || pelatihan.id_pelatihan || 'N/A',
-              nama: pelatihan.nama || pelatihan.nama_pelatihan || 'N/A',
-              waktuPengumpulan: pelatihan.deadline_berkas || pelatihan.waktu_pengumpulan || pelatihan.batas_berkas || pelatihan.deadline || 'N/A',
-              kategori: kategoriName,
-              status: pelatihan.status_pelatihan || pelatihan.status || 'Belum Dimulai'
+        // Proses dan atur data untuk tabel-tabel
+        const processedPelatihan = response.tables.pelatihan.map((p) => {
+          let formattedDeadline = "N/A";
+          // Cek jika ada tanggalnya
+          if (p.waktu_pengumpulan) {
+            // Opsi untuk format tanggal dan waktu
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
             };
-          })
-        : [];
-
-      setPelatihanData(processedPelatihanData);
-
-      const alumniWorkplaceData = [];
-      if (Array.isArray(alumniFromFeedback) && alumniFromFeedback.length > 0) {
-        alumniFromFeedback.forEach((feedback, index) => {
-          const tempatKerja = feedback.tempat_kerja || 'Belum Mengisi Tempat Kerja';
-          let namaAlumni = `Alumni ${index + 1}`;
-          
-          if (feedback.peserta && typeof feedback.peserta === 'object') {
-            if (feedback.peserta.user && feedback.peserta.user.name) {
-              namaAlumni = feedback.peserta.user.name;
-            } else if (feedback.peserta.nama) {
-              namaAlumni = feedback.peserta.nama;
-            } else if (feedback.peserta.nama_peserta) {
-              namaAlumni = feedback.peserta.nama_peserta;
-            }
-          } else if (feedback.peserta_id && Array.isArray(pesertaData)) {
-            const peserta = pesertaData.find(p => 
-              p.id === feedback.peserta_id || 
-              p.id_peserta === feedback.peserta_id
+            // Buat objek Date dan format ke dalam Bahasa Indonesia
+            formattedDeadline = new Date(p.waktu_pengumpulan).toLocaleString(
+              "id-ID",
+              options
             );
-            if (peserta) {
-              namaAlumni = peserta.nama || peserta.nama_peserta || peserta.name || `Alumni ${index + 1}`;
-            }
           }
 
-          alumniWorkplaceData.push({
-            id: index + 1,
-            nama: namaAlumni,
-            tempatKerja: tempatKerja
-          });
+          return {
+            id: p.id,
+            nama: p.nama_pelatihan || "N/A",
+            kategori: p.kategori ? p.kategori.nama_kategori : "N/A",
+            status: p.status_pelatihan || "Belum Dimulai",
+            waktuPengumpulan: formattedDeadline, // <-- Gunakan tanggal yang sudah diformat
+          };
         });
+
+        const processedTempatKerja = response.tables.tempatKerja.map((f) => ({
+          id: f.id,
+          nama: f.peserta?.user?.name || "Alumni",
+          tempatKerja: f.tempat_kerja || "Belum Mengisi",
+        }));
+
+        const processedLaporanAdmin = response.tables.laporanAdmin.map((l) => ({
+          id: l.id,
+          adminName: l.admin?.user?.name || "N/A",
+          laporanDeskripsi: l.laporan_deskripsi || "Tidak ada deskripsi",
+          createdAt: new Date(l.created_at).toLocaleDateString("id-ID"),
+          laporanFile: l.laporan_file ? (
+            <a
+              href={`${import.meta.env.VITE_API_URL}/api/documents-view/${
+                l.laporan_file
+              }`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              Lihat File
+            </a>
+          ) : (
+            "Tidak ada file"
+          ),
+        }));
+
+        setPelatihanData(processedPelatihan);
+        setTempatKerjaData(processedTempatKerja);
+        setLaporanAdminData(processedLaporanAdmin);
       }
-
-      setTempatKerjaData(alumniWorkplaceData);
-
-      const processedLaporanAdminData = Array.isArray(laporanAdminData) 
-        ? laporanAdminData.map(laporan => ({
-            id: laporan.id || 'N/A',
-            adminName: laporan.admin?.name || laporan.admin?.nama || 'N/A',
-            laporanDeskripsi: laporan.laporan_deskripsi || 'Tidak ada deskripsi',
-            laporanFile: laporan.laporan_file 
-              ? <a href={`${API_BASE_URL}/documents/${laporan.laporan_file}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Download</a>
-              : 'Tidak ada file',
-            createdAt: laporan.created_at ? new Date(laporan.created_at).toLocaleDateString('id-ID') : 'N/A'
-          }))
-        : [];
-
-      setLaporanAdminData(processedLaporanAdminData);
-
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      if (error.response?.status === 401) {
-        setError('Session expired. Silakan login kembali.');
-        navigate('/login');
-      } else {
-        setError('Gagal memuat data. Periksa koneksi atau hubungi admin.');
+    } catch (err) {
+      console.error("Gagal mengambil data dasbor ketua:", err);
+      setError("Gagal memuat data dasbor. Periksa koneksi Anda.");
+      if (err.response?.status === 401) {
+        navigate("/login");
       }
-      setDashboardStats({
-        jumlahPendaftar: 0,
-        jumlahPeserta: 0,
-        totalPelatihan: 0,
-        jumlahAlumni: 0,
-      });
-      setPelatihanData([]);
-      setTempatKerjaData([]);
-      setLaporanAdminData([]);
     } finally {
       setLoading(false);
     }
@@ -263,33 +169,53 @@ const KetuaDashboardPage = () => {
   };
 
   const stats = [
-    { title: 'Jumlah Pendaftar', value: dashboardStats.jumlahPendaftar, icon: FaUsers, iconColor: 'blue-500' },
-    { title: 'Jumlah Peserta', value: dashboardStats.jumlahPeserta, icon: FaUsers, iconColor: 'green-500' },
-    { title: 'Total Pelatihan', value: dashboardStats.totalPelatihan, icon: FaChalkboardTeacher, iconColor: 'purple-500' },
-    { title: 'Jumlah Alumni', value: dashboardStats.jumlahAlumni, icon: FaUsers, iconColor: 'orange-500' },
+    {
+      title: "Jumlah Pendaftar",
+      value: dashboardStats.jumlahPendaftar,
+      icon: FaUsers,
+      iconColor: "blue-500",
+    },
+    {
+      title: "Jumlah Peserta",
+      value: dashboardStats.jumlahPeserta,
+      icon: FaUsers,
+      iconColor: "green-500",
+    },
+    {
+      title: "Total Pelatihan",
+      value: dashboardStats.totalPelatihan,
+      icon: FaChalkboardTeacher,
+      iconColor: "purple-500",
+    },
+    {
+      title: "Jumlah Alumni",
+      value: dashboardStats.jumlahAlumni,
+      icon: FaUsers,
+      iconColor: "orange-500",
+    },
   ];
 
   const pelatihanColumns = [
-    { key: 'nama', header: 'Nama Pelatihan' },
-    { key: 'kategori', header: 'Kategori' },
-    { key: 'waktuPengumpulan', header: 'Deadline Berkas' },
-    { 
-      key: 'status', 
-      header: 'Status',
-      render: (status) => getTrainingStatusBadge(status)
+    { key: "nama", header: "Nama Pelatihan" },
+    { key: "kategori", header: "Kategori" },
+    { key: "waktuPengumpulan", header: "Deadline Berkas" },
+    {
+      key: "status",
+      header: "Status",
+      render: (status) => getTrainingStatusBadge(status),
     },
   ];
 
   const tempatKerjaColumns = [
-    { key: 'nama', header: 'Nama Alumni' },
-    { key: 'tempatKerja', header: 'Tempat Bekerja' },
+    { key: "nama", header: "Nama Alumni" },
+    { key: "tempatKerja", header: "Tempat Bekerja" },
   ];
 
   const laporanAdminColumns = [
-    { key: 'adminName', header: 'Nama Admin' },
-    { key: 'laporanDeskripsi', header: 'Deskripsi Laporan' },
-    { key: 'laporanFile', header: 'File Laporan' },
-    { key: 'createdAt', header: 'Tanggal Dibuat' },
+    { key: "adminName", header: "Nama Admin" },
+    { key: "laporanDeskripsi", header: "Deskripsi Laporan" },
+    { key: "laporanFile", header: "File Laporan" },
+    { key: "createdAt", header: "Tanggal Dibuat" },
   ];
 
   return (
@@ -331,23 +257,23 @@ const KetuaDashboardPage = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <DataTable 
+          <DataTable
             title="Pelatihan Yang Tersedia"
             columns={pelatihanColumns}
             data={pelatihanData}
             loading={loading}
             className="lg:col-span-2"
           />
-          
-          <DataTable 
+
+          <DataTable
             title="Tempat Bekerja Alumni (Yang Telah Memberikan Feedback)"
             columns={tempatKerjaColumns}
             data={tempatKerjaData}
             loading={loading}
             className="lg:col-span-2"
           />
-          
-          <DataTable 
+
+          <DataTable
             title="Laporan Admin"
             columns={laporanAdminColumns}
             data={laporanAdminData}
@@ -357,7 +283,9 @@ const KetuaDashboardPage = () => {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Catatan Laporan dari Admin</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            Catatan Laporan dari Admin
+          </h3>
           <textarea
             value={adminNotes}
             readOnly
