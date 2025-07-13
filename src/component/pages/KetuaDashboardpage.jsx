@@ -9,7 +9,7 @@ import {
 import Typography from "../Elements/AdminSource/Typhography";
 import StatsGrid from "../Fragments/StatsgridAdmin";
 import DataTable from "../Fragments/DataTableAdmin";
-import { fetchData, setAuthToken } from "../../services/api";
+import api, { fetchData, setAuthToken } from '../../services/api';
 import { apiEndpoints } from "../../services/api";
 
 const KetuaDashboardPage = () => {
@@ -29,6 +29,33 @@ const KetuaDashboardPage = () => {
   const [laporanAdminData, setLaporanAdminData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const handleViewDocument = async (endpoint) => {
+    if (!endpoint) {
+        console.error("Endpoint dokumen tidak valid.");
+        return;
+    }
+    try {
+        // 'api.get' akan secara otomatis menggabungkan baseURL dengan endpoint ini
+        // dan menyertakan header otentikasi.
+        const response = await api.get(endpoint, {
+            responseType: 'blob',
+        });
+
+        const fileURL = URL.createObjectURL(response.data);
+        window.open(fileURL, '_blank');
+
+    } catch (err) {
+        console.error('Gagal melihat dokumen:', err);
+        if (err.response?.status === 401) {
+            setError('Sesi Anda telah berakhir. Silakan login kembali.');
+            navigate('/login');
+        } else {
+            setError('Gagal memuat dokumen.');
+        }
+    }
+};
+
 
   const handleLogout = () => {
     localStorage.removeItem("jwt");
@@ -91,26 +118,30 @@ const KetuaDashboardPage = () => {
           tempatKerja: f.tempat_kerja || "Belum Mengisi",
         }));
 
-        const processedLaporanAdmin = response.tables.laporanAdmin.map((l) => ({
-          id: l.id,
-          adminName: l.admin?.user?.name || "N/A",
-          laporanDeskripsi: l.laporan_deskripsi || "Tidak ada deskripsi",
-          createdAt: new Date(l.created_at).toLocaleDateString("id-ID"),
-          laporanFile: l.laporan_file ? (
-            <a
-              href={`${import.meta.env.VITE_API_URL}/api/documents-view/${
-                l.laporan_file
-              }`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              Lihat File
-            </a>
-          ) : (
-            "Tidak ada file"
-          ),
-        }));
+        const processedLaporanAdmin = response.tables.laporanAdmin.map(l => {
+            // Buat hanya endpoint-nya saja
+            const endpoint = l.laporan_file 
+                ? `/documents-view/${l.laporan_file}` 
+                : null;
+
+            return {
+                id: l.id,
+                adminName: l.admin?.user?.name || 'N/A',
+                laporanDeskripsi: l.laporan_deskripsi,
+                createdAt: new Date(l.created_at).toLocaleDateString('id-ID'),
+                // Ubah onClick untuk mengirim hanya endpoint
+                laporanFile: endpoint
+                    ? (
+                        <button 
+                            onClick={() => handleViewDocument(endpoint)} 
+                            className="text-blue-600 hover:underline font-medium"
+                        >
+                            Lihat File
+                        </button>
+                    )
+                    : 'Tidak ada file'
+            };
+        });
 
         setPelatihanData(processedPelatihan);
         setTempatKerjaData(processedTempatKerja);

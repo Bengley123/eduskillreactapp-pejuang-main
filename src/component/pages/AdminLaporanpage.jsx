@@ -1,69 +1,130 @@
 import React, { useState, useEffect } from "react";
-import {
-  createData,
-  fetchData,
-  apiEndpoints,
-  setAuthToken,
-} from "../../services/api";
+import FileUpload from "../Moleculs/AdminSource/FileUpload";
 import { useNavigate } from "react-router-dom";
+import { setAuthToken } from "../../services/api";
 
-export default function LaporanAdminPage() {
-  const [deskripsi, setDeskripsi] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+export default function UploadLaporanPage() {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    peserta: "",
+    lulusanKerja: "",
+    pendaftar: "",
+    pelatihanAktif: "",
+    informasiLain: "",
+    file: null,
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("jwt");
-    if (token) {
-      setAuthToken(token);
-      // Fetch existing report to pre-fill the textarea
-      const fetchMyReport = async () => {
-        try {
-          const response = await fetchData(apiEndpoints.myLaporan);
-          if (response && response.laporan_deskripsi) {
-            setDeskripsi(response.laporan_deskripsi);
-          }
-        } catch (err) {
-          // It's okay if it fails (e.g., 404 Not Found), means no report exists yet.
-          console.log("No existing report found, starting fresh.");
-        }
-      };
-      fetchMyReport();
-    } else {
-      navigate("/login");
-    }
+    const checkAuth = () => {
+      const storedToken = localStorage.getItem("jwt");
+
+      if (!storedToken) {
+        console.log(
+          "UploadLaporanPage: Tidak ada token, mengarahkan ke login."
+        );
+        navigate("/login");
+        return;
+      }
+
+      setAuthToken(storedToken);
+    };
+
+    checkAuth();
   }, [navigate]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFormData((prev) => ({ ...prev, file: selectedFile }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    if (!deskripsi.trim()) {
-      alert("Deskripsi laporan tidak boleh kosong.");
-      setLoading(false);
-      return;
-    }
+    setIsLoading(true);
 
     try {
-      const payload = {
-        laporan_deskripsi: deskripsi,
-      };
+      const token = localStorage.getItem("jwt");
 
-      // Using the new endpoint from api.js
-      await createData(apiEndpoints.myLaporan, payload);
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
-      alert("Laporan berhasil disimpan!");
-    } catch (err) {
-      console.error("Failed to submit report:", err);
-      setError(
-        err.response?.data?.message ||
-          "Gagal menyimpan laporan. Silakan coba lagi."
+      const submitData = new FormData();
+      submitData.append("peserta", formData.peserta);
+      submitData.append("lulusanKerja", formData.lulusanKerja);
+      submitData.append("pendaftar", formData.pendaftar);
+      submitData.append("pelatihanAktif", formData.pelatihanAktif);
+      submitData.append("laporan_deskripsi", formData.informasiLain);
+
+      if (formData.file) {
+        submitData.append("laporan_file", formData.file);
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/my-laporan-admin`,
+        {
+          method: "POST",
+          body: submitData,
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+            // Don't set Content-Type header when using FormData
+          },
+        }
       );
-      alert(`Error: ${err.response?.data?.message || err.message}`);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Success:", result);
+        alert("Laporan berhasil disubmit!");
+
+        // Reset form
+        setFormData({
+          peserta: "",
+          lulusanKerja: "",
+          pendaftar: "",
+          pelatihanAktif: "",
+          informasiLain: "",
+          file: null,
+        });
+      } else if (response.status === 401) {
+        console.log("Token expired or invalid, redirecting to login");
+        localStorage.removeItem("jwt");
+        localStorage.removeItem("user");
+        navigate("/login");
+      } else if (response.status === 422) {
+        const errorData = await response.json();
+        console.log("Validation errors:", errorData);
+
+        // Show validation errors to user
+        if (errorData.errors) {
+          let errorMessage = "Validation errors:\n";
+          Object.keys(errorData.errors).forEach((key) => {
+            errorMessage += `${key}: ${errorData.errors[key].join(", ")}\n`;
+          });
+          alert(errorMessage);
+        } else {
+          alert("Validation failed. Please check your input.");
+        }
+      } else {
+        const errorData = await response.json().catch(() => null);
+        console.log("Error response:", errorData);
+        throw new Error("Failed to submit laporan");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Gagal mengirim laporan. Silakan coba lagi.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -71,37 +132,45 @@ export default function LaporanAdminPage() {
     <div className="min-h-screen bg-gray-100 py-10 px-4">
       <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Buat atau Perbarui Laporan
+          Upload Laporan Perkembangan
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Kolom Informasi Penting Lainnya */}
           <div>
-            <label
-              htmlFor="laporan_deskripsi"
-              className="block font-medium text-gray-700 mb-1"
-            >
-              Deskripsi Laporan
+            <label className="block font-medium text-gray-700 mb-1">
+              Informasi Penting Lainnya
             </label>
             <textarea
-              id="laporan_deskripsi"
-              name="laporan_deskripsi"
-              value={deskripsi}
-              onChange={(e) => setDeskripsi(e.target.value)}
-              rows="8"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md resize-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Tuliskan laporan perkembangan Anda di sini..."
+              name="informasiLain"
+              value={formData.informasiLain}
+              onChange={handleChange}
+              rows="4"
+              className="w-full px-4 py-2 border rounded resize-none"
+              placeholder="Tuliskan informasi tambahan yang perlu dilaporkan"
             ></textarea>
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {/* Upload File */}
+          <FileUpload
+            label="Upload Dokumen Pendukung"
+            currentFile={formData.file?.name || null}
+            onFileChange={handleFileChange}
+            accept=".pdf,.doc,.docx"
+          />
 
+          {/* Tombol Submit */}
           <div className="text-right pt-4">
             <button
               type="submit"
-              disabled={loading}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed"
+              disabled={isLoading}
+              className={`px-6 py-2 rounded transition ${
+                isLoading
+                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
             >
-              {loading ? "Menyimpan..." : "Submit Laporan"}
+              {isLoading ? "Mengirim..." : "Submit Laporan"}
             </button>
           </div>
         </form>
