@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaPlus,
@@ -21,12 +22,13 @@ import Button from "../Elements/Button/index";
 import InputText from "../Elements/Input/Input";
 import Label from "../Elements/Input/Label";
 
-import {
+import api, {
   fetchData,
   createData,
   updateData,
   deleteData,
   apiEndpoints,
+  setAuthToken,
 } from "../../services/api.js";
 
 // Custom Modal Components (Tidak ada perubahan di sini)
@@ -241,6 +243,19 @@ const AdminPelatihanPage = () => {
   const [isDocumentListModalOpen, setDocumentListModalOpen] = useState(false);
   const [currentPelamarDocs, setCurrentPelamarDocs] = useState({});
 
+  const navigate = useNavigate(); 
+
+  useEffect(() => {
+        // We get the token using the key "jwt", just like in your PesertaPage
+        const token = localStorage.getItem("jwt");
+        if (token) {
+            setAuthToken(token);
+        } else {
+            console.error("Auth token not found, redirecting to login.");
+            navigate("/login");
+        }
+    }, [navigate]);
+
   // Custom Modal Functions
   const showAlert = (type, title, message) => {
     setAlertModal({
@@ -279,6 +294,34 @@ const AdminPelatihanPage = () => {
       onConfirm: null,
     });
   };
+
+  const handleViewDocument = async (documentUrl) => {
+    if (!documentUrl) {
+        showAlert("error", "Gagal", "URL Dokumen tidak ditemukan.");
+        return;
+    }
+
+    try {
+        // ▼▼▼ USE 'api', NOT 'axios' ▼▼▼
+        // 'api' is your pre-configured instance that already has the JWT token.
+        const response = await api.get(documentUrl, {
+            responseType: 'blob',
+        });
+
+        // The rest of the function is correct
+        const fileURL = URL.createObjectURL(response.data);
+        window.open(fileURL, '_blank');
+
+    } catch (error) {
+        console.error("Error viewing document:", error);
+        if (error.response && error.response.status === 401) {
+            showAlert("error", "Akses Ditolak", "Sesi Anda mungkin telah berakhir. Silakan login kembali.");
+            navigate('/login');
+        } else {
+            showAlert("error", "Gagal Memuat", "Tidak dapat memuat dokumen.");
+        }
+    }
+};
 
   // Fungsi untuk handle upload gambar
   const handleImageUpload = (e) => {
@@ -2375,98 +2418,77 @@ const AdminPelatihanPage = () => {
         )}
 
         {isDocumentListModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[9999]">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
-              <div className="flex justify-between items-center mb-6 border-b pb-3">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Dokumen Pelamar
-                </h3>
-                <button
-                  onClick={() => setDocumentListModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <FaTimes size={20} />
-                </button>
-              </div>
-              <div className="space-y-4">
-                {/* KTP */}
-                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                  <span className="font-medium text-gray-700">Foto KTP</span>
-                  {currentPelamarDocs.ktp ? (
-                    <a
-                      href={currentPelamarDocs.ktp}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
-                    >
-                      Lihat
-                    </a>
-                  ) : (
-                    <span className="text-sm text-gray-400">Tidak Ada</span>
-                  )}
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[9999]">
+                    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
+                        <div className="flex justify-between items-center mb-6 border-b pb-3">
+                            <h3 className="text-xl font-semibold text-gray-800">Dokumen Pelamar</h3>
+                            <button
+                                onClick={() => setDocumentListModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <FaTimes size={20} />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            {/* KTP - Changed from <a> to <button> */}
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                <span className="font-medium text-gray-700">Foto KTP</span>
+                                {currentPelamarDocs.ktp ? (
+                                    <button onClick={() => handleViewDocument(currentPelamarDocs.ktp)} className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors">
+                                        Lihat
+                                    </button>
+                                ) : (
+                                    <span className="text-sm text-gray-400">Tidak Ada</span>
+                                )}
+                            </div>
+
+                            {/* KK - Changed from <a> to <button> */}
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                <span className="font-medium text-gray-700">Kartu Keluarga (KK)</span>
+                                {currentPelamarDocs.kk ? (
+                                    <button onClick={() => handleViewDocument(currentPelamarDocs.kk)} className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors">
+                                        Lihat
+                                    </button>
+                                ) : (
+                                    <span className="text-sm text-gray-400">Tidak Ada</span>
+                                )}
+                            </div>
+
+                            {/* Ijazah - Changed from <a> to <button> */}
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                <span className="font-medium text-gray-700">Ijazah</span>
+                                {currentPelamarDocs.ijazah ? (
+                                    <button onClick={() => handleViewDocument(currentPelamarDocs.ijazah)} className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors">
+                                        Lihat
+                                    </button>
+                                ) : (
+                                    <span className="text-sm text-gray-400">Tidak Ada</span>
+                                )}
+                            </div>
+
+                            {/* Foto - Changed from <a> to <button> */}
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                <span className="font-medium text-gray-700">Pas Foto</span>
+                                {currentPelamarDocs.foto ? (
+                                    <button onClick={() => handleViewDocument(currentPelamarDocs.foto)} className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors">
+                                        Lihat
+                                    </button>
+                                ) : (
+                                    <span className="text-sm text-gray-400">Tidak Ada</span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex justify-end mt-6">
+                            <button
+                                onClick={() => setDocumentListModalOpen(false)}
+                                className="px-5 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                {/* KK */}
-                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                  <span className="font-medium text-gray-700">
-                    Kartu Keluarga (KK)
-                  </span>
-                  {currentPelamarDocs.kk ? (
-                    <a
-                      href={currentPelamarDocs.kk}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
-                    >
-                      Lihat
-                    </a>
-                  ) : (
-                    <span className="text-sm text-gray-400">Tidak Ada</span>
-                  )}
-                </div>
-                {/* Ijazah */}
-                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                  <span className="font-medium text-gray-700">Ijazah</span>
-                  {currentPelamarDocs.ijazah ? (
-                    <a
-                      href={currentPelamarDocs.ijazah}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
-                    >
-                      Lihat
-                    </a>
-                  ) : (
-                    <span className="text-sm text-gray-400">Tidak Ada</span>
-                  )}
-                </div>
-                {/* Foto */}
-                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                  <span className="font-medium text-gray-700">Pas Foto</span>
-                  {currentPelamarDocs.foto ? (
-                    <a
-                      href={currentPelamarDocs.foto}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
-                    >
-                      Lihat
-                    </a>
-                  ) : (
-                    <span className="text-sm text-gray-400">Tidak Ada</span>
-                  )}
-                </div>
-              </div>
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={() => setDocumentListModalOpen(false)}
-                  className="px-5 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
-                >
-                  Tutup
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+            )}
       </div>
     </div>
   );
