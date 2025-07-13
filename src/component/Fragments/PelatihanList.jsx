@@ -1,6 +1,5 @@
 // src/components/Fragments/PelatihanList.jsx
 import React, { useEffect, useState } from "react";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import CardPelatihan from "./CardPelatihan";
 import { fetchData } from "../../services/api";
 
@@ -97,7 +96,7 @@ const PelatihanList = () => {
             description={item.keterangan_pelatihan}
             image={
               item.gambar
-                ? `http://127.0.0.1:8000/storage/${item.gambar}`
+                ? `http://127.0.0.1:8000/storage/gambar_pelatihan/${item.gambar}`
                 : null
             }
             kategori={item.kategori}

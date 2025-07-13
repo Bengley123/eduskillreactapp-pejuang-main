@@ -547,7 +547,7 @@ const AdminPelatihanPage = () => {
       const mappedData = fetchedRawItems.map((item) => {
         // Construct the full and correct image URL if foto_pelatihan exists
         const imageUrl = item.foto_pelatihan
-          ? `${import.meta.env.VITE_API_URL}api/storage/gambar_pelatihan/${
+          ? `${import.meta.env.VITE_API_URL}${
               item.foto_pelatihan
             }`
           : null;
@@ -557,7 +557,7 @@ const AdminPelatihanPage = () => {
           nama: item.nama_pelatihan,
           keterangan: item.keterangan_pelatihan,
           kategori_id: item.kategori_id || "",
-          kategori: item.kategori?.nama_kategori || "N/A",
+          kategori: item.kategori || "N/A",
           biaya: item.biaya,
           jumlah_kuota: item.jumlah_kuota,
           jumlah_peserta: item.jumlah_peserta || 0,
