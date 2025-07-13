@@ -30,7 +30,14 @@ import {
 } from "../../services/api.js";
 
 // Custom Modal Components (Tidak ada perubahan di sini)
-const AlertModal = ({ show, onClose, type = "info", title, message, children }) => {
+const AlertModal = ({
+  show,
+  onClose,
+  type = "info",
+  title,
+  message,
+  children,
+}) => {
   if (!show) return null;
 
   const getIcon = () => {
@@ -62,16 +69,16 @@ const AlertModal = ({ show, onClose, type = "info", title, message, children }) 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
-        <div className={`text-center p-4 rounded-lg ${getBgColor()} border mb-4`}>
-          <div className="flex justify-center mb-3">
-            {getIcon()}
-          </div>
+        <div
+          className={`text-center p-4 rounded-lg ${getBgColor()} border mb-4`}
+        >
+          <div className="flex justify-center mb-3">{getIcon()}</div>
           {title && (
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {title}
+            </h3>
           )}
-          {message && (
-            <p className="text-gray-700">{message}</p>
-          )}
+          {message && <p className="text-gray-700">{message}</p>}
           {children}
         </div>
         <div className="flex justify-center">
@@ -87,7 +94,16 @@ const AlertModal = ({ show, onClose, type = "info", title, message, children }) 
   );
 };
 
-const ConfirmModal = ({ show, onClose, onConfirm, title, message, confirmText = "Ya", cancelText = "Batal", type = "warning" }) => {
+const ConfirmModal = ({
+  show,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = "Ya",
+  cancelText = "Batal",
+  type = "warning",
+}) => {
   if (!show) return null;
 
   const getIcon = () => {
@@ -116,15 +132,13 @@ const ConfirmModal = ({ show, onClose, onConfirm, title, message, confirmText = 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
         <div className="text-center mb-6">
-          <div className="flex justify-center mb-4">
-            {getIcon()}
-          </div>
+          <div className="flex justify-center mb-4">{getIcon()}</div>
           {title && (
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {title}
+            </h3>
           )}
-          {message && (
-            <p className="text-gray-600">{message}</p>
-          )}
+          {message && <p className="text-gray-600">{message}</p>}
         </div>
         <div className="flex justify-center gap-3">
           <button
@@ -185,7 +199,6 @@ const AdminPelatihanPage = () => {
   const [documentPreviewUrl, setDocumentPreviewUrl] = useState("");
   const [documentOwnerName, setDocumentOwnerName] = useState("");
 
-
   // Custom Modal States
   const [alertModal, setAlertModal] = useState({
     show: false,
@@ -224,6 +237,9 @@ const AdminPelatihanPage = () => {
   const [kategoriOptions, setKategoriOptions] = useState([]);
   const [loadingKategoriOptions, setLoadingKategoriOptions] = useState(true);
   const [kategoriOptionsError, setKategoriOptionsError] = useState(null);
+
+  const [isDocumentListModalOpen, setDocumentListModalOpen] = useState(false);
+  const [currentPelamarDocs, setCurrentPelamarDocs] = useState({});
 
   // Custom Modal Functions
   const showAlert = (type, title, message) => {
@@ -272,12 +288,20 @@ const AdminPelatihanPage = () => {
       const maxSize = 5 * 1024 * 1024; // 5MB
 
       if (!validTypes.includes(file.type)) {
-        showAlert("error", "Format File Tidak Valid", "Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau GIF.");
+        showAlert(
+          "error",
+          "Format File Tidak Valid",
+          "Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau GIF."
+        );
         return;
       }
 
       if (file.size > maxSize) {
-        showAlert("error", "Ukuran File Terlalu Besar", "Ukuran file terlalu besar. Maksimal 5MB.");
+        showAlert(
+          "error",
+          "Ukuran File Terlalu Besar",
+          "Ukuran file terlalu besar. Maksimal 5MB."
+        );
         return;
       }
 
@@ -299,12 +323,20 @@ const AdminPelatihanPage = () => {
       const maxSize = 5 * 1024 * 1024; // 5MB
 
       if (!validTypes.includes(file.type)) {
-        showAlert("error", "Format File Tidak Valid", "Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau GIF.");
+        showAlert(
+          "error",
+          "Format File Tidak Valid",
+          "Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau GIF."
+        );
         return;
       }
 
       if (file.size > maxSize) {
-        showAlert("error", "Ukuran File Terlalu Besar", "Ukuran file terlalu besar. Maksimal 5MB.");
+        showAlert(
+          "error",
+          "Ukuran File Terlalu Besar",
+          "Ukuran file terlalu besar. Maksimal 5MB."
+        );
         return;
       }
 
@@ -469,7 +501,7 @@ const AdminPelatihanPage = () => {
       const mappedData = fetchedRawItems.map((item) => {
         // Construct the full and correct image URL if foto_pelatihan exists
         const imageUrl = item.foto_pelatihan
-          ? `${import.meta.env.VITE_API_URL}/storage/gambar_pelatihan/${
+          ? `${import.meta.env.VITE_API_URL}api/storage/gambar_pelatihan/${
               item.foto_pelatihan
             }`
           : null;
@@ -572,31 +604,36 @@ const AdminPelatihanPage = () => {
       let fetchedPelamar = [];
       if (response && Array.isArray(response.data)) {
         fetchedPelamar = response.data;
-      } else if (
-        response &&
-        response.data &&
-        Array.isArray(response.data.data)
-      ) {
+      } else if (response?.data?.data) {
         fetchedPelamar = response.data.data;
       }
 
+      // Add this console.log to see what the API is actually sending!
+      console.log("Raw API response for pelamar:", fetchedPelamar);
+
       const mappedPelamar = fetchedPelamar.map((item) => {
-        const namaPelamar = item.user?.name || item.peserta?.user?.name || "N/A";
-        
-        // --- PERBAIKAN LOGIKA DI SINI ---
-        // Mencari nama file dokumen di beberapa kemungkinan nama field agar lebih fleksibel
-        // AND ensuring the file name exists and has a proper extension
-        const dokumenFile = item.peserta?.dokumen_pendaftaran || item.peserta?.dokumen || item.dokumen_pendaftaran || item.dokumen || null;
+        const namaPelamar =
+          item.user?.name || item.peserta?.user?.name || "N/A";
 
-        // Constructing the document URL using the provided base URL and the retrieved filename
-        // IMPORTANT: Ensure your backend serves files from this exact pattern and sets correct MIME types
-        const dokumenUrl = dokumenFile
-          ? `${import.meta.env.VITE_API_URL}/api/documents/${dokumenFile}`
-          : null;
+        const documentApiUrl = `${
+          import.meta.env.VITE_API_URL
+        }/api/documents-view/`;
 
-        // Log the generated URL to console for debugging
-        console.log(`Generated Document URL for ${namaPelamar}:`, dokumenUrl);
+        const getFilename = (fullPath) => {
+          if (!fullPath) {
+            return null;
+          }
+          return fullPath.split("/").pop();
+        };
 
+        const dokumen = {
+          ktp: item.ktp ? `${documentApiUrl}${getFilename(item.ktp)}` : null,
+          kk: item.kk ? `${documentApiUrl}${getFilename(item.kk)}` : null,
+          ijazah: item.ijazah
+            ? `${documentApiUrl}${getFilename(item.ijazah)}`
+            : null,
+          foto: item.foto ? `${documentApiUrl}${getFilename(item.foto)}` : null,
+        };
 
         return {
           id: item.id,
@@ -607,7 +644,7 @@ const AdminPelatihanPage = () => {
           tanggalDaftar: item.created_at
             ? new Date(item.created_at).toLocaleDateString("id-ID")
             : "N/A",
-          dokumen_url: dokumenUrl, // Adding the document URL to the object
+          dokumen: dokumen, // We now have an object with all doc URLs
           originalRegistration: item,
         };
       });
@@ -640,10 +677,13 @@ const AdminPelatihanPage = () => {
         setShowDocumentModal(true);
       }
     } else {
-      showAlert("info", "Tidak Ada Dokumen", "Pelamar ini tidak mengunggah dokumen pendaftaran.");
+      showAlert(
+        "info",
+        "Tidak Ada Dokumen",
+        "Pelamar ini tidak mengunggah dokumen pendaftaran."
+      );
     }
   };
-
 
   const handleSaveStatus = async () => {
     if (!selectedPelamar || !selectedPelatihanId || !newStatus) return;
@@ -661,7 +701,11 @@ const AdminPelatihanPage = () => {
       );
 
       if (response) {
-        showAlert("success", "Berhasil!", "Status pelamar berhasil diperbarui!");
+        showAlert(
+          "success",
+          "Berhasil!",
+          "Status pelamar berhasil diperbarui!"
+        );
         // Re-fetch pelamar list for the current training to update status visually
         handleViewPelamar({
           id: selectedPelatihanId,
@@ -671,14 +715,19 @@ const AdminPelatihanPage = () => {
         setSelectedPelamar(null);
         setNewStatus("");
         // Also refresh the main training data to update 'jumlah_peserta' if applicable
-        fetchPelatihanData(); 
+        fetchPelatihanData();
       } else {
         throw new Error("Respon API tidak valid.");
       }
     } catch (err) {
       console.error("Gagal memperbarui status pelamar:", err);
-      showAlert("error", "Gagal Memperbarui Status", 
-        `Gagal memperbarui status: ${err.response?.data?.message || err.message}`);
+      showAlert(
+        "error",
+        "Gagal Memperbarui Status",
+        `Gagal memperbarui status: ${
+          err.response?.data?.message || err.message
+        }`
+      );
     } finally {
       setSavingStatus(false);
     }
@@ -697,8 +746,13 @@ const AdminPelatihanPage = () => {
           setShowDetail(false);
         } catch (err) {
           console.error("Failed to delete pelatihan:", err);
-          showAlert("error", "Gagal Menghapus", 
-            `Gagal menghapus pelatihan: ${err.response?.data?.message || err.message}`);
+          showAlert(
+            "error",
+            "Gagal Menghapus",
+            `Gagal menghapus pelatihan: ${
+              err.response?.data?.message || err.message
+            }`
+          );
         } finally {
           setLoading(false);
         }
@@ -772,10 +826,19 @@ const AdminPelatihanPage = () => {
         err.response.data.errors
       ) {
         setValidationErrors(err.response.data.errors);
-        showAlert("error", "Validasi Gagal", "Mohon periksa kembali input Anda.");
+        showAlert(
+          "error",
+          "Validasi Gagal",
+          "Mohon periksa kembali input Anda."
+        );
       } else {
-        showAlert("error", "Gagal Menyimpan", 
-          `Gagal menyimpan perubahan: ${err.response?.data?.message || err.message}`);
+        showAlert(
+          "error",
+          "Gagal Menyimpan",
+          `Gagal menyimpan perubahan: ${
+            err.response?.data?.message || err.message
+          }`
+        );
       }
     } finally {
       setLoading(false);
@@ -798,7 +861,11 @@ const AdminPelatihanPage = () => {
       !form.waktu_pengumpulan ||
       !form.mentor_id
     ) {
-      showAlert("warning", "Data Tidak Lengkap", "Mohon lengkapi semua field yang wajib diisi");
+      showAlert(
+        "warning",
+        "Data Tidak Lengkap",
+        "Mohon lengkapi semua field yang wajib diisi"
+      );
       return;
     }
     setLoading(true);
@@ -845,10 +912,19 @@ const AdminPelatihanPage = () => {
         err.response.data.errors
       ) {
         setValidationErrors(err.response.data.errors);
-        showAlert("error", "Validasi Gagal", "Mohon periksa kembali input Anda.");
+        showAlert(
+          "error",
+          "Validasi Gagal",
+          "Mohon periksa kembali input Anda."
+        );
       } else {
-        showAlert("error", "Gagal Menambahkan", 
-          `Gagal menambahkan pelatihan: ${err.response?.data?.message || err.message}`);
+        showAlert(
+          "error",
+          "Gagal Menambahkan",
+          `Gagal menambahkan pelatihan: ${
+            err.response?.data?.message || err.message
+          }`
+        );
       }
     } finally {
       setLoading(false);
@@ -872,22 +948,34 @@ const AdminPelatihanPage = () => {
             formData
           );
           if (response) {
-            showAlert("success", "Berhasil!", "Pelatihan berhasil dipublikasikan!");
+            showAlert(
+              "success",
+              "Berhasil!",
+              "Pelatihan berhasil dipublikasikan!"
+            );
             fetchPelatihanData();
             if (selectedPelatihan && selectedPelatihan.id === pelatihan.id) {
               setSelectedPelatihan((prev) => ({
                 ...prev,
                 postStatus: "Published",
               }));
-              setEditedPelatihan((prev) => ({ ...prev, postStatus: "Published" }));
+              setEditedPelatihan((prev) => ({
+                ...prev,
+                postStatus: "Published",
+              }));
             }
           } else {
             throw new Error("Respon API tidak valid.");
           }
         } catch (err) {
           console.error("Failed to publish draft:", err);
-          showAlert("error", "Gagal Mempublikasi", 
-            `Gagal mempublikasikan pelatihan: ${err.response?.data?.message || err.message}`);
+          showAlert(
+            "error",
+            "Gagal Mempublikasi",
+            `Gagal mempublikasikan pelatihan: ${
+              err.response?.data?.message || err.message
+            }`
+          );
         } finally {
           setLoading(false);
         }
@@ -2019,7 +2107,10 @@ const AdminPelatihanPage = () => {
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
             style={{ zIndex: 9000 }}
           >
-            <div className="bg-white rounded-lg shadow-lg p-3 w-full max-w-5xl mx-auto flex flex-col" style={{maxHeight: '90vh'}}>
+            <div
+              className="bg-white rounded-lg shadow-lg p-3 w-full max-w-5xl mx-auto flex flex-col"
+              style={{ maxHeight: "90vh" }}
+            >
               <div className="flex justify-between items-center mb-2 p-2 border-b">
                 <h3 className="text-lg font-semibold">
                   Daftar Pelamar - {selectedPelatihanNama}
@@ -2089,14 +2180,30 @@ const AdminPelatihanPage = () => {
                           <td className="px-4 py-3 whitespace-nowrap text-center">
                             <div className="flex items-center justify-center gap-4">
                               <button
-                                onClick={() => handlePreviewDokumen(pelamar)}
+                                onClick={() => {
+                                  setCurrentPelamarDocs(pelamar.dokumen); // Set the docs for the modal
+                                  setDocumentListModalOpen(true); // Open the modal
+                                }}
                                 className={`transition-colors ${
-                                  !pelamar.dokumen_url 
-                                    ? 'text-gray-400 cursor-not-allowed' 
-                                    : 'text-blue-500 hover:text-blue-700'
+                                  // Check if at least one document URL exists
+                                  Object.values(pelamar.dokumen).some(
+                                    (doc) => doc
+                                  )
+                                    ? "text-blue-500 hover:text-blue-700"
+                                    : "text-gray-400 cursor-not-allowed"
                                 }`}
-                                title={pelamar.dokumen_url ? "Lihat Dokumen" : "Dokumen tidak tersedia"}
-                                disabled={!pelamar.dokumen_url}
+                                title={
+                                  Object.values(pelamar.dokumen).some(
+                                    (doc) => doc
+                                  )
+                                    ? "Lihat Dokumen"
+                                    : "Dokumen tidak tersedia"
+                                }
+                                disabled={
+                                  !Object.values(pelamar.dokumen).some(
+                                    (doc) => doc
+                                  )
+                                }
                               >
                                 <FaEye size={16} />
                               </button>
@@ -2134,14 +2241,15 @@ const AdminPelatihanPage = () => {
             </div>
           </div>
         )}
-        
+
         {/* Modal untuk Preview Dokumen */}
         {showDocumentModal && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[9999]">
             <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl h-[90vh] flex flex-col">
               <div className="flex justify-between items-center p-4 border-b">
                 <h3 className="text-lg font-semibold">
-                  Preview Dokumen: <span className="font-normal">{documentOwnerName}</span>
+                  Preview Dokumen:{" "}
+                  <span className="font-normal">{documentOwnerName}</span>
                 </h3>
                 <button
                   onClick={() => setShowDocumentModal(false)}
@@ -2156,13 +2264,22 @@ const AdminPelatihanPage = () => {
                   className="w-full h-full border-2 border-gray-300 rounded"
                   title={`Preview Dokumen ${documentOwnerName}`}
                 >
-                  <p>Browser Anda tidak mendukung pratinjau PDF. Anda bisa <a href={documentPreviewUrl} target="_blank" rel="noopener noreferrer">mengunduhnya di sini</a>.</p>
+                  <p>
+                    Browser Anda tidak mendukung pratinjau PDF. Anda bisa{" "}
+                    <a
+                      href={documentPreviewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      mengunduhnya di sini
+                    </a>
+                    .
+                  </p>
                 </iframe>
               </div>
             </div>
           </div>
         )}
-
 
         {/* Popup Status Pelamar */}
         {showStatusPopup && selectedPelamar && (
@@ -2251,6 +2368,100 @@ const AdminPelatihanPage = () => {
                       <FaCheck size={12} /> Simpan
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isDocumentListModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[9999]">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
+              <div className="flex justify-between items-center mb-6 border-b pb-3">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Dokumen Pelamar
+                </h3>
+                <button
+                  onClick={() => setDocumentListModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <FaTimes size={20} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                {/* KTP */}
+                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                  <span className="font-medium text-gray-700">Foto KTP</span>
+                  {currentPelamarDocs.ktp ? (
+                    <a
+                      href={currentPelamarDocs.ktp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
+                    >
+                      Lihat
+                    </a>
+                  ) : (
+                    <span className="text-sm text-gray-400">Tidak Ada</span>
+                  )}
+                </div>
+                {/* KK */}
+                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                  <span className="font-medium text-gray-700">
+                    Kartu Keluarga (KK)
+                  </span>
+                  {currentPelamarDocs.kk ? (
+                    <a
+                      href={currentPelamarDocs.kk}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
+                    >
+                      Lihat
+                    </a>
+                  ) : (
+                    <span className="text-sm text-gray-400">Tidak Ada</span>
+                  )}
+                </div>
+                {/* Ijazah */}
+                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                  <span className="font-medium text-gray-700">Ijazah</span>
+                  {currentPelamarDocs.ijazah ? (
+                    <a
+                      href={currentPelamarDocs.ijazah}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
+                    >
+                      Lihat
+                    </a>
+                  ) : (
+                    <span className="text-sm text-gray-400">Tidak Ada</span>
+                  )}
+                </div>
+                {/* Foto */}
+                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                  <span className="font-medium text-gray-700">Pas Foto</span>
+                  {currentPelamarDocs.foto ? (
+                    <a
+                      href={currentPelamarDocs.foto}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
+                    >
+                      Lihat
+                    </a>
+                  ) : (
+                    <span className="text-sm text-gray-400">Tidak Ada</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setDocumentListModalOpen(false)}
+                  className="px-5 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
+                >
+                  Tutup
                 </button>
               </div>
             </div>
