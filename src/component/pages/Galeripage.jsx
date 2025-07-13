@@ -36,7 +36,7 @@ const Galeripage = () => {
           src: item.file_foto 
             ? (item.file_foto.startsWith('http') 
                 ? item.file_foto 
-                : `http://127.0.0.1:8000/storage/galeri_kegiatan/${item.file_foto}`)
+                : `http://127.0.0.1:8000/storage/${item.file_foto}`)
             : null,
           alt: item.judul_foto || 'Kegiatan',
           title: item.judul_foto || 'Kegiatan',

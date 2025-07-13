@@ -147,7 +147,7 @@ const BeritaSection = () => {
         ))}
       </div>
 
-      {news.length > 3 && (
+      {/* {news.length > 3 && (
         <div className="flex justify-center mt-6">
           <button
             onClick={() => setShowAll(!showAll)}
@@ -166,7 +166,7 @@ const BeritaSection = () => {
             )}
           </button>
         </div>
-      )}
+      )} */}
     </section>
   );
 };

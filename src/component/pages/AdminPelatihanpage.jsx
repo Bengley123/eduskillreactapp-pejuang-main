@@ -29,7 +29,7 @@ import {
   apiEndpoints,
 } from "../../services/api.js";
 
-// Custom Modal Components
+// Custom Modal Components (Tidak ada perubahan di sini)
 const AlertModal = ({ show, onClose, type = "info", title, message, children }) => {
   if (!show) return null;
 
@@ -180,6 +180,11 @@ const AdminPelatihanPage = () => {
   const [selectedEditImage, setSelectedEditImage] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImageSrc, setModalImageSrc] = useState("");
+
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [documentPreviewUrl, setDocumentPreviewUrl] = useState("");
+  const [documentOwnerName, setDocumentOwnerName] = useState("");
+
 
   // Custom Modal States
   const [alertModal, setAlertModal] = useState({
@@ -551,6 +556,9 @@ const AdminPelatihanPage = () => {
     setEditImagePreview(null);
   };
 
+  // =================================================================
+  // ▼▼▼ FUNGSI handleViewPelamar YANG SUDAH DIPERBAIKI ▼▼▼
+  // =================================================================
   const handleViewPelamar = async (pelatihan) => {
     setLoadingPelamar(true);
     setSelectedPelamarList([]);
@@ -572,17 +580,37 @@ const AdminPelatihanPage = () => {
         fetchedPelamar = response.data.data;
       }
 
-      const mappedPelamar = fetchedPelamar.map((item) => ({
-        id: item.id,
-        nama: item.user?.name || item.peserta?.user?.name || "N/A",
-        email: item.user?.email || item.peserta?.user?.email || "N/A",
-        telepon: item.peserta?.nomor_telp || "N/A",
-        status: item.status,
-        tanggalDaftar: item.created_at
-          ? new Date(item.created_at).toLocaleDateString("id-ID")
-          : "N/A",
-        originalRegistration: item,
-      }));
+      const mappedPelamar = fetchedPelamar.map((item) => {
+        const namaPelamar = item.user?.name || item.peserta?.user?.name || "N/A";
+        
+        // --- PERBAIKAN LOGIKA DI SINI ---
+        // Mencari nama file dokumen di beberapa kemungkinan nama field agar lebih fleksibel
+        // AND ensuring the file name exists and has a proper extension
+        const dokumenFile = item.peserta?.dokumen_pendaftaran || item.peserta?.dokumen || item.dokumen_pendaftaran || item.dokumen || null;
+
+        // Constructing the document URL using the provided base URL and the retrieved filename
+        // IMPORTANT: Ensure your backend serves files from this exact pattern and sets correct MIME types
+        const dokumenUrl = dokumenFile
+          ? `${import.meta.env.VITE_API_URL}/api/documents/${dokumenFile}`
+          : null;
+
+        // Log the generated URL to console for debugging
+        console.log(`Generated Document URL for ${namaPelamar}:`, dokumenUrl);
+
+
+        return {
+          id: item.id,
+          nama: namaPelamar,
+          email: item.user?.email || item.peserta?.user?.email || "N/A",
+          telepon: item.peserta?.nomor_telp || "N/A",
+          status: item.status,
+          tanggalDaftar: item.created_at
+            ? new Date(item.created_at).toLocaleDateString("id-ID")
+            : "N/A",
+          dokumen_url: dokumenUrl, // Adding the document URL to the object
+          originalRegistration: item,
+        };
+      });
       setSelectedPelamarList(mappedPelamar);
     } catch (err) {
       console.error("Failed to fetch pelamar list:", err);
@@ -592,6 +620,30 @@ const AdminPelatihanPage = () => {
       setLoadingPelamar(false);
     }
   };
+  // =================================================================
+  // ▲▲▲ AKHIR DARI FUNGSI YANG DIPERBAIKI ▲▲▲
+  // =================================================================
+
+  const handlePreviewDokumen = (pelamar) => {
+    if (pelamar.dokumen_url) {
+      // Check if the URL potentially indicates an image to open in image modal
+      // This is a basic check, you might need more robust file type detection
+      const isImage = /\.(jpg|jpeg|png|gif)$/i.test(pelamar.dokumen_url);
+
+      if (isImage) {
+        setModalImageSrc(pelamar.dokumen_url);
+        setShowImageModal(true);
+      } else {
+        // Assume it's a PDF or other document type that can be embedded in an iframe
+        setDocumentPreviewUrl(pelamar.dokumen_url);
+        setDocumentOwnerName(pelamar.nama);
+        setShowDocumentModal(true);
+      }
+    } else {
+      showAlert("info", "Tidak Ada Dokumen", "Pelamar ini tidak mengunggah dokumen pendaftaran.");
+    }
+  };
+
 
   const handleSaveStatus = async () => {
     if (!selectedPelamar || !selectedPelatihanId || !newStatus) return;
@@ -610,6 +662,7 @@ const AdminPelatihanPage = () => {
 
       if (response) {
         showAlert("success", "Berhasil!", "Status pelamar berhasil diperbarui!");
+        // Re-fetch pelamar list for the current training to update status visually
         handleViewPelamar({
           id: selectedPelatihanId,
           nama: selectedPelatihanNama,
@@ -617,7 +670,8 @@ const AdminPelatihanPage = () => {
         setShowStatusPopup(false);
         setSelectedPelamar(null);
         setNewStatus("");
-        fetchPelatihanData();
+        // Also refresh the main training data to update 'jumlah_peserta' if applicable
+        fetchPelatihanData(); 
       } else {
         throw new Error("Respon API tidak valid.");
       }
@@ -1965,8 +2019,8 @@ const AdminPelatihanPage = () => {
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
             style={{ zIndex: 9000 }}
           >
-            <div className="bg-white rounded-lg shadow-lg p-3 w-full max-w-4xl mx-auto">
-              <div className="flex justify-between items-center mb-2">
+            <div className="bg-white rounded-lg shadow-lg p-3 w-full max-w-5xl mx-auto flex flex-col" style={{maxHeight: '90vh'}}>
+              <div className="flex justify-between items-center mb-2 p-2 border-b">
                 <h3 className="text-lg font-semibold">
                   Daftar Pelamar - {selectedPelatihanNama}
                 </h3>
@@ -1974,7 +2028,7 @@ const AdminPelatihanPage = () => {
                   onClick={() => setShowPelamarModal(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  <FaTimes size={14} />
+                  <FaTimes size={16} />
                 </button>
               </div>
 
@@ -1984,56 +2038,76 @@ const AdminPelatihanPage = () => {
                   <p className="text-gray-500 mt-2">Memuat daftar pelamar...</p>
                 </div>
               ) : selectedPelamarList.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="overflow-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-100">
+                    <thead className="bg-gray-100 sticky top-0">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-12">
+                          No
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                           Nama
                         </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                           Email
                         </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                           Telepon
                         </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                           Tanggal Daftar
                         </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
                           Aksi
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {selectedPelamarList.map((pelamar) => (
+                      {selectedPelamarList.map((pelamar, idx) => (
                         <tr key={pelamar.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 whitespace-nowrap">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                            {idx + 1}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {pelamar.nama}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                             {pelamar.email}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                             {pelamar.telepon}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                             {pelamar.tanggalDaftar}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
+                          <td className="px-4 py-3 whitespace-nowrap">
                             {getStatusBadge(pelamar.status)}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-center">
-                            <button
-                              onClick={() => handleChangeStatus(pelamar)}
-                              className="text-blue-500 hover:text-blue-700 transition-colors"
-                              title="Ubah Status"
-                            >
-                              <FaEdit size={16} />
-                            </button>
+                          <td className="px-4 py-3 whitespace-nowrap text-center">
+                            <div className="flex items-center justify-center gap-4">
+                              <button
+                                onClick={() => handlePreviewDokumen(pelamar)}
+                                className={`transition-colors ${
+                                  !pelamar.dokumen_url 
+                                    ? 'text-gray-400 cursor-not-allowed' 
+                                    : 'text-blue-500 hover:text-blue-700'
+                                }`}
+                                title={pelamar.dokumen_url ? "Lihat Dokumen" : "Dokumen tidak tersedia"}
+                                disabled={!pelamar.dokumen_url}
+                              >
+                                <FaEye size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleChangeStatus(pelamar)}
+                                className="text-yellow-500 hover:text-yellow-700 transition-colors"
+                                title="Ubah Status"
+                              >
+                                <FaEdit size={16} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -2049,7 +2123,7 @@ const AdminPelatihanPage = () => {
                 </div>
               )}
 
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-end mt-auto pt-3 border-t">
                 <button
                   onClick={() => setShowPelamarModal(false)}
                   className="bg-gray-300 hover:bg-gray-400 px-3 py-1.5 rounded text-sm"
@@ -2060,6 +2134,35 @@ const AdminPelatihanPage = () => {
             </div>
           </div>
         )}
+        
+        {/* Modal untuk Preview Dokumen */}
+        {showDocumentModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[9999]">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl h-[90vh] flex flex-col">
+              <div className="flex justify-between items-center p-4 border-b">
+                <h3 className="text-lg font-semibold">
+                  Preview Dokumen: <span className="font-normal">{documentOwnerName}</span>
+                </h3>
+                <button
+                  onClick={() => setShowDocumentModal(false)}
+                  className="text-gray-500 hover:text-red-600 transition-colors"
+                >
+                  <FaTimes size={22} />
+                </button>
+              </div>
+              <div className="flex-grow p-2 bg-gray-200">
+                <iframe
+                  src={documentPreviewUrl}
+                  className="w-full h-full border-2 border-gray-300 rounded"
+                  title={`Preview Dokumen ${documentOwnerName}`}
+                >
+                  <p>Browser Anda tidak mendukung pratinjau PDF. Anda bisa <a href={documentPreviewUrl} target="_blank" rel="noopener noreferrer">mengunduhnya di sini</a>.</p>
+                </iframe>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* Popup Status Pelamar */}
         {showStatusPopup && selectedPelamar && (

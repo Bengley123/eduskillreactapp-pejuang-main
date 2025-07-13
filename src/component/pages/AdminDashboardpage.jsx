@@ -61,8 +61,9 @@ const AdminDashboardPage = () => {
 
       try {
         console.log('Fetching peserta...');
-        const pesertaResponse = await fetchData(apiEndpoints.peserta);
-        pesertaData = pesertaResponse?.data || [];
+        // ✅ Gunakan filter yang sama seperti di PesertaPage.js
+        const pesertaResponse = await fetchData(`${apiEndpoints.peserta}?registration_status=diterima`);
+        pesertaData = pesertaResponse?.data?.data || pesertaResponse?.data || [];
         console.log('Peserta Response:', pesertaResponse);
       } catch (err) {
         console.warn('Failed to fetch peserta:', err);
@@ -103,7 +104,11 @@ const AdminDashboardPage = () => {
 
       // Calculate statistics
       const jumlahPendaftar = Array.isArray(daftarPelatihanData) ? daftarPelatihanData.length : 0;
-      const jumlahPeserta = Array.isArray(pesertaData) ? pesertaData.length : 0;
+      
+      // ✅ PERBAIKAN: Karena data peserta sudah difilter dari backend (hanya yang diterima)
+      // Kita langsung hitung jumlah peserta yang dikembalikan
+      const jumlahPesertaDiterima = Array.isArray(pesertaData) ? pesertaData.length : 0;
+      
       const totalPelatihan = Array.isArray(pelatihanData) ? pelatihanData.length : 0;
 
       // Calculate alumni based on feedback data
@@ -111,16 +116,18 @@ const AdminDashboardPage = () => {
         ? feedbackData.filter(feedback => feedback.peserta_id || feedback.peserta)
         : [];
       
-      console.log('=== DEBUG ALUMNI CALCULATION ===');
-      console.log('Total Peserta:', pesertaData.length);
+      console.log('=== DEBUG CALCULATION ===');
+      console.log('Total Pendaftar (semua pendaftaran):', jumlahPendaftar);
+      console.log('Total Peserta (yang memiliki status diterima - dari backend filter):', jumlahPesertaDiterima);
+      console.log('Total Pelatihan:', totalPelatihan);
       console.log('Total Feedback:', feedbackData.length);
       console.log('Alumni from feedback count:', alumniFromFeedback.length);
       console.log('====================================');
 
-      // Set statistics
+      // Set statistics - gunakan jumlahPesertaDiterima agar konsisten dengan halaman Peserta
       setDashboardStats({
         jumlahPendaftar,
-        jumlahPeserta,
+        jumlahPeserta: jumlahPesertaDiterima, // ✅ Gunakan peserta yang diterima saja
         totalPelatihan,
         jumlahAlumni: alumniFromFeedback.length,
       });
@@ -152,7 +159,7 @@ const AdminDashboardPage = () => {
 
       setPelatihanData(processedPelatihanData);
 
-      // Process Alumni Workplace Data
+      // Process Alumni Workplace Data - hanya yang sudah memberikan feedback
       const alumniWorkplaceData = [];
       
       if (Array.isArray(alumniFromFeedback) && alumniFromFeedback.length > 0) {
@@ -169,13 +176,18 @@ const AdminDashboardPage = () => {
               namaAlumni = feedback.peserta.nama_peserta;
             }
           } else if (feedback.peserta_id && Array.isArray(pesertaData)) {
+            // Cari di peserta data yang sudah difilter (hanya yang diterima)
             const peserta = pesertaData.find(p => 
               p.id === feedback.peserta_id || 
               p.id_peserta === feedback.peserta_id
             );
             
             if (peserta) {
-              namaAlumni = peserta.nama || peserta.nama_peserta || peserta.name || `Alumni ${index + 1}`;
+              if (peserta.user && peserta.user.name) {
+                namaAlumni = peserta.user.name;
+              } else {
+                namaAlumni = peserta.nama || peserta.nama_peserta || peserta.name || `Alumni ${index + 1}`;
+              }
             }
           }
 

@@ -104,25 +104,6 @@ const PelatihanList = () => {
           />
         ))}
       </div>
-
-      {filtered.length > 3 && (
-        <div className="text-center mt-6">
-          <button
-            onClick={() => setShowAll(!showAll)}
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors font-medium"
-          >
-            {showAll ? (
-              <>
-                <FaChevronUp className="mr-2" /> Lihat Lebih Sedikit
-              </>
-            ) : (
-              <>
-                <FaChevronDown className="mr-2" /> Lihat Lebih Banyak
-              </>
-            )}
-          </button>
-        </div>
-      )}
     </div>
   );
 };

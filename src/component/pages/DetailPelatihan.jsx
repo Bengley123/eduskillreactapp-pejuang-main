@@ -139,7 +139,7 @@ const DetailPelatihan = () => {
   }
 
   const imageUrl = pelatihan.gambar
-    ? `http://127.0.0.1:8000/storage/${pelatihan.gambar}`
+    ? `http://127.0.0.1:8000/storage/gambar_pelatihan/${pelatihan.gambar}`
     : ImgCard;
 
   return (

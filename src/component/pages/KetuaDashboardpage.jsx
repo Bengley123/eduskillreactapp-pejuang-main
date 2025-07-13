@@ -19,6 +19,7 @@ const KetuaDashboardPage = () => {
   });
   const [pelatihanData, setPelatihanData] = useState([]);
   const [tempatKerjaData, setTempatKerjaData] = useState([]);
+  const [laporanAdminData, setLaporanAdminData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -48,6 +49,7 @@ const KetuaDashboardPage = () => {
       let pesertaData = [];
       let pelatihanData = [];
       let feedbackData = [];
+      let laporanAdminData = [];
 
       try {
         const daftarPelatihanResponse = await fetchData(apiEndpoints.daftarPelatihan);
@@ -90,6 +92,18 @@ const KetuaDashboardPage = () => {
         feedbackData = feedbackResponse?.data || [];
       } catch (err) {
         console.warn('Failed to fetch feedback:', err);
+        if (err.response?.status === 401) {
+          setError('Session expired. Silakan login kembali.');
+          navigate('/login');
+          return;
+        }
+      }
+
+      try {
+        const laporanAdminResponse = await fetchData(apiEndpoints.laporanAdmin);
+        laporanAdminData = laporanAdminResponse?.data || [];
+      } catch (err) {
+        console.warn('Failed to fetch laporan admin:', err);
         if (err.response?.status === 401) {
           setError('Session expired. Silakan login kembali.');
           navigate('/login');
@@ -171,6 +185,20 @@ const KetuaDashboardPage = () => {
 
       setTempatKerjaData(alumniWorkplaceData);
 
+      const processedLaporanAdminData = Array.isArray(laporanAdminData) 
+        ? laporanAdminData.map(laporan => ({
+            id: laporan.id || 'N/A',
+            adminName: laporan.admin?.name || laporan.admin?.nama || 'N/A',
+            laporanDeskripsi: laporan.laporan_deskripsi || 'Tidak ada deskripsi',
+            laporanFile: laporan.laporan_file 
+              ? <a href={`${API_BASE_URL}/documents/${laporan.laporan_file}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Download</a>
+              : 'Tidak ada file',
+            createdAt: laporan.created_at ? new Date(laporan.created_at).toLocaleDateString('id-ID') : 'N/A'
+          }))
+        : [];
+
+      setLaporanAdminData(processedLaporanAdminData);
+
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       if (error.response?.status === 401) {
@@ -187,6 +215,7 @@ const KetuaDashboardPage = () => {
       });
       setPelatihanData([]);
       setTempatKerjaData([]);
+      setLaporanAdminData([]);
     } finally {
       setLoading(false);
     }
@@ -256,6 +285,13 @@ const KetuaDashboardPage = () => {
     { key: 'tempatKerja', header: 'Tempat Bekerja' },
   ];
 
+  const laporanAdminColumns = [
+    { key: 'adminName', header: 'Nama Admin' },
+    { key: 'laporanDeskripsi', header: 'Deskripsi Laporan' },
+    { key: 'laporanFile', header: 'File Laporan' },
+    { key: 'createdAt', header: 'Tanggal Dibuat' },
+  ];
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-gray-100">
       {/* Header */}
@@ -307,6 +343,14 @@ const KetuaDashboardPage = () => {
             title="Tempat Bekerja Alumni (Yang Telah Memberikan Feedback)"
             columns={tempatKerjaColumns}
             data={tempatKerjaData}
+            loading={loading}
+            className="lg:col-span-2"
+          />
+          
+          <DataTable 
+            title="Laporan Admin"
+            columns={laporanAdminColumns}
+            data={laporanAdminData}
             loading={loading}
             className="lg:col-span-2"
           />
