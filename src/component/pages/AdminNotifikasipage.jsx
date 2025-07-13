@@ -1,22 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { FaPlus, FaBell, FaTimes, FaUsers, FaUser, FaEdit, FaTrash, FaCheckCircle, FaExclamationCircle, FaQuestionCircle, FaClock, FaEye, FaInfoCircle } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import {
+  FaPlus,
+  FaBell,
+  FaTimes,
+  FaUsers,
+  FaUser,
+  FaEdit,
+  FaTrash,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaQuestionCircle,
+  FaClock,
+  FaEye,
+  FaInfoCircle,
+} from "react-icons/fa";
 
-// Custom Modal Components dengan desain konsisten
-const AlertModal = ({ isOpen, onClose, title, message, type = 'info' }) => {
+// Custom Modal Components with consistent design
+const AlertModal = ({ isOpen, onClose, title, message, type = "info" }) => {
   if (!isOpen) return null;
 
   const iconMap = {
     success: <FaCheckCircle className="text-green-500" size={24} />,
     error: <FaExclamationCircle className="text-red-500" size={24} />,
     warning: <FaExclamationCircle className="text-yellow-500" size={24} />,
-    info: <FaInfoCircle className="text-blue-500" size={24} />
+    info: <FaInfoCircle className="text-blue-500" size={24} />,
   };
 
   const colorMap = {
-    success: 'text-green-600',
-    error: 'text-red-600',
-    warning: 'text-yellow-600',
-    info: 'text-blue-600'
+    success: "text-green-600",
+    error: "text-red-600",
+    warning: "text-yellow-600",
+    info: "text-blue-600",
   };
 
   return (
@@ -24,11 +38,11 @@ const AlertModal = ({ isOpen, onClose, title, message, type = 'info' }) => {
       <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
         <div className="p-6">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 mt-1">
-              {iconMap[type]}
-            </div>
+            <div className="flex-shrink-0 mt-1">{iconMap[type]}</div>
             <div className="flex-1">
-              <h3 className={`text-lg font-semibold ${colorMap[type]} mb-2`}>{title}</h3>
+              <h3 className={`text-lg font-semibold ${colorMap[type]} mb-2`}>
+                {title}
+              </h3>
               <p className="text-gray-600 text-sm">{message}</p>
             </div>
           </div>
@@ -58,7 +72,9 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
               <FaQuestionCircle className="text-yellow-500" size={24} />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {title}
+              </h3>
               <p className="text-gray-600 text-sm">{message}</p>
             </div>
           </div>
@@ -94,7 +110,9 @@ const DetailPengumumanModal = ({ isOpen, onClose, pengumuman }) => {
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Detail Pengumuman</h2>
+            <h2 className="text-xl font-bold text-gray-900">
+              Detail Pengumuman
+            </h2>
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
@@ -105,38 +123,58 @@ const DetailPengumumanModal = ({ isOpen, onClose, pengumuman }) => {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
-              <div className="p-3 bg-gray-50 rounded-lg text-gray-900">{pengumuman.judul}</div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Judul
+              </label>
+              <div className="p-3 bg-gray-50 rounded-lg text-gray-900">
+                {pengumuman.judul}
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Pesan</label>
-              <div className="p-3 bg-gray-50 rounded-lg text-gray-900 whitespace-pre-wrap">{pengumuman.pesan}</div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Pesan
+              </label>
+              <div className="p-3 bg-gray-50 rounded-lg text-gray-900 whitespace-pre-wrap">
+                {pengumuman.pesan}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pengirim</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pengirim
+                </label>
                 <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-2 text-gray-900">
                   <FaUser size={14} className="text-gray-500" />
-                  <span>{pengumuman.pengirim || 'Admin'}</span>
+                  <span>{pengumuman.pengirim || "Admin"}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Kirim</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tanggal Kirim
+                </label>
                 <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-2 text-gray-900">
                   <FaClock size={14} className="text-gray-500" />
-                  <span>{new Date(pengumuman.created_at).toLocaleString('id-ID')}</span>
+                  <span>
+                    {new Date(pengumuman.created_at).toLocaleString("id-ID")}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Target Penerima</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Target Penerima
+              </label>
               <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-2 text-gray-900">
                 <FaUsers size={14} className="text-gray-500" />
-                <span>{pengumuman.target_count ? `${pengumuman.target_count} Peserta` : 'Semua Peserta'}</span>
+                <span>
+                  {pengumuman.target_count
+                    ? `${pengumuman.target_count} Peserta`
+                    : "Semua Peserta"}
+                </span>
               </div>
             </div>
           </div>
@@ -168,21 +206,21 @@ const storage = {
     try {
       localStorage.setItem(key, value);
     } catch {
-      console.log('localStorage not available');
+      console.log("localStorage not available");
     }
-  }
+  },
 };
 
-// ⭐ Fungsi API dengan Auth Token yang proper
+// API request function with Auth Token
 const apiRequest = async (endpoint, options = {}) => {
-  const token = storage.getItem('jwt');
-  
+  const token = storage.getItem("jwt");
+
   const defaultOptions = {
     headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    }
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
   };
 
   const finalOptions = {
@@ -190,21 +228,23 @@ const apiRequest = async (endpoint, options = {}) => {
     ...options,
     headers: {
       ...defaultOptions.headers,
-      ...options.headers
-    }
+      ...options.headers,
+    },
   };
 
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api${endpoint}`, finalOptions);
-    
+    const response = await fetch(
+      `http://127.0.0.1:8000/api${endpoint}`,
+      finalOptions
+    );
+
     if (!response.ok) {
       if (response.status === 401) {
-        // Handle unauthorized
-        throw new Error('Session expired');
+        throw new Error("Session expired");
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error(`API Error for ${endpoint}:`, error);
@@ -214,25 +254,25 @@ const apiRequest = async (endpoint, options = {}) => {
 
 const notifikasiAPI = {
   sendAnnouncementToAll: async (data) => {
-    return await apiRequest('/notifikasi-pengumuman', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    return await apiRequest("/notifikasi-pengumuman", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   },
   getPengumuman: async () => {
-    return await apiRequest('/pengumuman');
+    return await apiRequest("/pengumuman");
   },
   updatePengumuman: async (id, data) => {
     return await apiRequest(`/pengumuman/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   },
   deletePengumuman: async (id) => {
     return await apiRequest(`/pengumuman/${id}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
-  }
+  },
 };
 
 const fetchData = async (endpoint) => {
@@ -241,36 +281,37 @@ const fetchData = async (endpoint) => {
 
 const AdminNotifikasiPage = () => {
   const [pesertaList, setPesertaList] = useState([]);
+  const [totalPeserta, setTotalPeserta] = useState(0); // <-- 1. ADDED STATE for total count
   const [pengumumanList, setPengumumanList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState({
-    judul: '',
-    pesan: '',
-    pengirim: 'Admin',
-    excluded_peserta_ids: []
+    judul: "",
+    pesan: "",
+    pengirim: "Admin",
+    excluded_peserta_ids: [],
   });
 
   // Alert Modal State
   const [alertModal, setAlertModal] = useState({
     isOpen: false,
-    title: '',
-    message: '',
-    type: 'info'
+    title: "",
+    message: "",
+    type: "info",
   });
 
   // Confirm Modal State
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: () => {}
+    title: "",
+    message: "",
+    onConfirm: () => {},
   });
 
   // Detail Modal State
   const [detailModal, setDetailModal] = useState({
     isOpen: false,
-    pengumuman: null
+    pengumuman: null,
   });
 
   // Edit Mode State
@@ -283,52 +324,72 @@ const AdminNotifikasiPage = () => {
   }, []);
 
   const fetchPesertaList = async () => {
+    setIsLoading(true);
     try {
-      console.log('Fetching peserta list from /peserta...');
-      const response = await fetchData('/peserta');
-      
+      console.log("Fetching peserta list from /peserta...");
+      const response = await fetchData("/peserta");
+
+      // <-- 2. MODIFIED LOGIC to handle paginated response
       if (response && response.data) {
-        setPesertaList(response.data);
-        console.log('Peserta loaded:', response.data.length);
+        setPesertaList(response.data); // This is the list for the current page
+        setTotalPeserta(response.total); // This is the TOTAL count from the paginator
+        console.log(
+          "Peserta loaded:",
+          response.data.length,
+          "Total in DB:",
+          response.total
+        );
       } else {
-        console.warn('No peserta data received');
+        console.warn("No peserta data received");
         setPesertaList([]);
+        setTotalPeserta(0);
       }
     } catch (error) {
-      console.error('Error fetching peserta:', error);
-      if (error.message.includes('Session expired')) {
-        showAlert('Sesi Berakhir', 'Sesi Anda telah berakhir. Silakan login kembali.', 'error');
+      console.error("Error fetching peserta:", error);
+      if (error.message.includes("Session expired")) {
+        showAlert(
+          "Sesi Berakhir",
+          "Sesi Anda telah berakhir. Silakan login kembali.",
+          "error"
+        );
         setTimeout(() => {
-          window.location.href = '/login';
+          window.location.href = "/login";
         }, 2000);
       } else {
-        showAlert('Gagal Memuat Data', 'Gagal memuat daftar peserta. Sistem pengumuman masih bisa digunakan.', 'warning');
+        showAlert(
+          "Gagal Memuat Data",
+          "Gagal memuat daftar peserta. Sistem pengumuman masih bisa digunakan.",
+          "warning"
+        );
       }
       setPesertaList([]);
+      setTotalPeserta(0);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fetchPengumumanList = async () => {
     try {
       const response = await notifikasiAPI.getPengumuman();
-      
+
       if (response && response.data) {
         setPengumumanList(response.data);
       } else {
         setPengumumanList([]);
       }
     } catch (error) {
-      console.error('Error fetching pengumuman:', error);
+      console.error("Error fetching pengumuman:", error);
       setPengumumanList([]);
     }
   };
 
-  const showAlert = (title, message, type = 'info') => {
+  const showAlert = (title, message, type = "info") => {
     setAlertModal({
       isOpen: true,
       title,
       message,
-      type
+      type,
     });
   };
 
@@ -337,20 +398,24 @@ const AdminNotifikasiPage = () => {
       isOpen: true,
       title,
       message,
-      onConfirm
+      onConfirm,
     });
   };
 
   const handleSubmit = async () => {
     if (!notification.judul || !notification.pesan) {
-      showAlert('Peringatan', 'Mohon lengkapi judul dan pesan pengumuman', 'warning');
+      showAlert(
+        "Peringatan",
+        "Mohon lengkapi judul dan pesan pengumuman",
+        "warning"
+      );
       return;
     }
 
-    if (pesertaList.length === 0 && notification.excluded_peserta_ids.length === 0) {
+    if (totalPeserta === 0 && notification.excluded_peserta_ids.length === 0) {
       showConfirm(
-        'Konfirmasi Pengiriman',
-        'Data peserta tidak tersedia. Pengumuman akan dikirim ke semua peserta di sistem. Lanjutkan?',
+        "Konfirmasi Pengiriman",
+        "Data peserta tidak tersedia. Pengumuman akan dikirim ke semua peserta di sistem. Lanjutkan?",
         () => sendNotification()
       );
     } else {
@@ -362,46 +427,50 @@ const AdminNotifikasiPage = () => {
     setIsLoading(true);
     try {
       if (editMode && editId) {
-        // Update pengumuman
         await notifikasiAPI.updatePengumuman(editId, {
           judul: notification.judul,
           pesan: notification.pesan,
-          pengirim: notification.pengirim
+          pengirim: notification.pengirim,
         });
-        showAlert('Berhasil', 'Pengumuman berhasil diperbarui!', 'success');
+        showAlert("Berhasil", "Pengumuman berhasil diperbarui!", "success");
       } else {
-        // Kirim pengumuman baru
-        const result = await notifikasiAPI.sendAnnouncementToAll({
+        await notifikasiAPI.sendAnnouncementToAll({
           judul: notification.judul,
           pesan: notification.pesan,
           pengirim: notification.pengirim,
-          excluded_peserta_ids: notification.excluded_peserta_ids
+          excluded_peserta_ids: notification.excluded_peserta_ids,
         });
-        showAlert('Berhasil', 'Pengumuman berhasil dikirim!', 'success');
+        showAlert("Berhasil", "Pengumuman berhasil dikirim!", "success");
       }
-      
-      // Reset form
+
       setNotification({
-        judul: '',
-        pesan: '',
-        pengirim: 'Admin',
-        excluded_peserta_ids: []
+        judul: "",
+        pesan: "",
+        pengirim: "Admin",
+        excluded_peserta_ids: [],
       });
       setIsModalOpen(false);
       setEditMode(false);
       setEditId(null);
-      
-      // Refresh pengumuman list
+
       fetchPengumumanList();
     } catch (error) {
-      console.error('Error sending notification:', error);
-      if (error.message.includes('Session expired')) {
-        showAlert('Sesi Berakhir', 'Sesi Anda telah berakhir. Silakan login kembali.', 'error');
+      console.error("Error sending notification:", error);
+      if (error.message.includes("Session expired")) {
+        showAlert(
+          "Sesi Berakhir",
+          "Sesi Anda telah berakhir. Silakan login kembali.",
+          "error"
+        );
         setTimeout(() => {
-          window.location.href = '/login';
+          window.location.href = "/login";
         }, 2000);
       } else {
-        showAlert('Gagal', 'Gagal mengirim pengumuman. Silakan coba lagi.', 'error');
+        showAlert(
+          "Gagal",
+          "Gagal mengirim pengumuman. Silakan coba lagi.",
+          "error"
+        );
       }
     } finally {
       setIsLoading(false);
@@ -412,8 +481,8 @@ const AdminNotifikasiPage = () => {
     setNotification({
       judul: pengumuman.judul,
       pesan: pengumuman.pesan,
-      pengirim: pengumuman.pengirim || 'Admin',
-      excluded_peserta_ids: []
+      pengirim: pengumuman.pengirim || "Admin",
+      excluded_peserta_ids: [],
     });
     setEditMode(true);
     setEditId(pengumuman.id);
@@ -422,47 +491,50 @@ const AdminNotifikasiPage = () => {
 
   const handleDelete = (id) => {
     showConfirm(
-      'Hapus Pengumuman',
-      'Apakah Anda yakin ingin menghapus pengumuman ini? Tindakan ini tidak dapat dibatalkan.',
+      "Hapus Pengumuman",
+      "Apakah Anda yakin ingin menghapus pengumuman ini? Tindakan ini tidak dapat dibatalkan.",
       async () => {
         try {
           await notifikasiAPI.deletePengumuman(id);
-          showAlert('Berhasil', 'Pengumuman berhasil dihapus', 'success');
+          showAlert("Berhasil", "Pengumuman berhasil dihapus", "success");
           fetchPengumumanList();
         } catch (error) {
-          console.error('Error deleting pengumuman:', error);
-          showAlert('Gagal', 'Gagal menghapus pengumuman', 'error');
+          console.error("Error deleting pengumuman:", error);
+          showAlert("Gagal", "Gagal menghapus pengumuman", "error");
         }
       }
     );
   };
 
   const toggleExcludePeserta = (pesertaId) => {
-    setNotification(prev => ({
+    setNotification((prev) => ({
       ...prev,
       excluded_peserta_ids: prev.excluded_peserta_ids.includes(pesertaId)
-        ? prev.excluded_peserta_ids.filter(id => id !== pesertaId)
-        : [...prev.excluded_peserta_ids, pesertaId]
+        ? prev.excluded_peserta_ids.filter((id) => id !== pesertaId)
+        : [...prev.excluded_peserta_ids, pesertaId],
     }));
   };
 
-  const targetCount = pesertaList.length > 0 
-    ? pesertaList.length - notification.excluded_peserta_ids.length 
-    : 'Semua';
+  const targetCount =
+    totalPeserta > 0
+      ? totalPeserta - notification.excluded_peserta_ids.length
+      : "Semua";
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Kelola Pengumuman</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Kelola Pengumuman
+          </h1>
           <button
             onClick={() => {
               setNotification({
-                judul: '',
-                pesan: '',
-                pengirim: 'Admin',
-                excluded_peserta_ids: []
+                judul: "",
+                pesan: "",
+                pengirim: "Admin",
+                excluded_peserta_ids: [],
               });
               setEditMode(false);
               setEditId(null);
@@ -483,17 +555,20 @@ const AdminNotifikasiPage = () => {
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">Sistem Pengumuman</h3>
-              <p className="text-gray-600 text-sm">Kirim pengumuman penting kepada peserta</p>
+              <p className="text-gray-600 text-sm">
+                Kirim pengumuman penting kepada peserta
+              </p>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">
-                {pesertaList.length > 0 ? pesertaList.length : '⚠️'}
+                {/* <-- 3. UPDATED DISPLAY to use totalPeserta state */}
+                {isLoading ? "..." : totalPeserta > 0 ? totalPeserta : "⚠️"}
               </div>
               <div className="text-sm text-gray-600">
-                {pesertaList.length > 0 ? 'Total Peserta' : 'Data Peserta N/A'}
+                {totalPeserta > 0 ? "Total Peserta" : "Data Peserta N/A"}
               </div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -532,7 +607,7 @@ const AdminNotifikasiPage = () => {
           <div className="p-4 border-b border-gray-200">
             <h3 className="font-semibold text-gray-900">Daftar Pengumuman</h3>
           </div>
-          
+
           {pengumumanList.length === 0 ? (
             <div className="p-8 text-center">
               <FaBell className="text-gray-300 text-5xl mx-auto mb-4" />
@@ -541,34 +616,48 @@ const AdminNotifikasiPage = () => {
           ) : (
             <div className="divide-y divide-gray-200">
               {pengumumanList.map((pengumuman) => (
-                <div key={pengumuman.id} className="p-4 hover:bg-gray-50 transition-colors">
+                <div
+                  key={pengumuman.id}
+                  className="p-4 hover:bg-gray-50 transition-colors"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 mb-1">{pengumuman.judul}</h4>
-                      <p className="text-gray-600 text-sm mb-2" style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}>{pengumuman.pesan}</p>
+                      <h4 className="font-semibold text-gray-900 mb-1">
+                        {pengumuman.judul}
+                      </h4>
+                      <p
+                        className="text-gray-600 text-sm mb-2"
+                        style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {pengumuman.pesan}
+                      </p>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           <FaUser size={12} />
-                          {pengumuman.pengirim || 'Admin'}
+                          {pengumuman.pengirim || "Admin"}
                         </span>
                         <span className="flex items-center gap-1">
                           <FaClock size={12} />
-                          {new Date(pengumuman.created_at).toLocaleDateString('id-ID')}
+                          {new Date(pengumuman.created_at).toLocaleDateString(
+                            "id-ID"
+                          )}
                         </span>
                         <span className="flex items-center gap-1">
                           <FaUsers size={12} />
-                          {pengumuman.target_count || 'Semua'} Peserta
+                          {pengumuman.target_count || "Semua"} Peserta
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 ml-4">
                       <button
-                        onClick={() => setDetailModal({ isOpen: true, pengumuman })}
+                        onClick={() =>
+                          setDetailModal({ isOpen: true, pengumuman })
+                        }
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="Lihat Detail"
                       >
@@ -603,7 +692,7 @@ const AdminNotifikasiPage = () => {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-bold text-gray-900">
-                    {editMode ? 'Edit Pengumuman' : 'Kirim Pengumuman'}
+                    {editMode ? "Edit Pengumuman" : "Kirim Pengumuman"}
                   </h2>
                   <button
                     onClick={() => setIsModalOpen(false)}
@@ -622,12 +711,17 @@ const AdminNotifikasiPage = () => {
                     <input
                       type="text"
                       value={notification.judul}
-                      onChange={(e) => setNotification({...notification, judul: e.target.value})}
+                      onChange={(e) =>
+                        setNotification({
+                          ...notification,
+                          judul: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Masukkan judul pengumuman"
                     />
                   </div>
-                  
+
                   {/* Pesan */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -635,7 +729,12 @@ const AdminNotifikasiPage = () => {
                     </label>
                     <textarea
                       value={notification.pesan}
-                      onChange={(e) => setNotification({...notification, pesan: e.target.value})}
+                      onChange={(e) =>
+                        setNotification({
+                          ...notification,
+                          pesan: e.target.value,
+                        })
+                      }
                       rows={5}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Masukkan isi pengumuman"
@@ -659,38 +758,52 @@ const AdminNotifikasiPage = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Kecualikan Peserta (Opsional)
                       </label>
-                      
+
                       {pesertaList.length === 0 ? (
                         <div className="border border-gray-300 rounded-lg p-4 bg-yellow-50">
                           <div className="flex items-center gap-2 text-yellow-800">
                             <span>⚠️</span>
-                            <span className="text-sm font-medium">Data peserta tidak tersedia</span>
+                            <span className="text-sm font-medium">
+                              Data peserta tidak tersedia di halaman ini
+                            </span>
                           </div>
                           <p className="text-sm text-yellow-700 mt-1">
-                            Pengumuman akan dikirim ke semua peserta di sistem. 
-                            Pastikan Anda login sebagai Admin untuk melihat daftar peserta.
+                            Pengumuman akan dikirim ke semua{" "}
+                            <strong>{totalPeserta}</strong> peserta di sistem.
+                            Gunakan filter di halaman daftar peserta jika ingin
+                            mengirim ke grup spesifik.
                           </p>
                         </div>
                       ) : (
                         <>
                           <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3 bg-gray-50">
                             {pesertaList.map((peserta) => (
-                              <label key={peserta.id} className="flex items-center mb-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                              <label
+                                key={peserta.id}
+                                className="flex items-center mb-2 cursor-pointer hover:bg-gray-100 p-1 rounded"
+                              >
                                 <input
                                   type="checkbox"
-                                  checked={notification.excluded_peserta_ids.includes(peserta.id)}
-                                  onChange={() => toggleExcludePeserta(peserta.id)}
+                                  checked={notification.excluded_peserta_ids.includes(
+                                    peserta.id
+                                  )}
+                                  onChange={() =>
+                                    toggleExcludePeserta(peserta.id)
+                                  }
                                   className="mr-2"
                                 />
                                 <span className="text-sm">
-                                  {peserta.user?.name || peserta.nama_lengkap || `Peserta ${peserta.id}`}
+                                  {peserta.user?.name ||
+                                    peserta.nama_lengkap ||
+                                    `Peserta ${peserta.id}`}
                                 </span>
                               </label>
                             ))}
                           </div>
                           <div className="mt-2 flex justify-between text-sm">
                             <span className="text-gray-600">
-                              {notification.excluded_peserta_ids.length} peserta dikecualikan
+                              {notification.excluded_peserta_ids.length} peserta
+                              dikecualikan
                             </span>
                             <span className="text-blue-600 font-medium">
                               {targetCount} peserta akan menerima pengumuman
@@ -701,7 +814,7 @@ const AdminNotifikasiPage = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
                   <button
                     onClick={() => setIsModalOpen(false)}
@@ -712,7 +825,9 @@ const AdminNotifikasiPage = () => {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    disabled={isLoading || (!notification.judul || !notification.pesan)}
+                    disabled={
+                      isLoading || !notification.judul || !notification.pesan
+                    }
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {isLoading ? (
@@ -723,11 +838,11 @@ const AdminNotifikasiPage = () => {
                     ) : (
                       <>
                         <FaBell size={14} />
-                        {editMode ? 'Update Pengumuman' : (
-                          pesertaList.length > 0 
-                            ? `Kirim ke ${targetCount} Peserta`
-                            : 'Kirim Pengumuman'
-                        )}
+                        {editMode
+                          ? "Update Pengumuman"
+                          : totalPeserta > 0
+                          ? `Kirim ke ${targetCount} Peserta`
+                          : "Kirim Pengumuman"}
                       </>
                     )}
                   </button>
