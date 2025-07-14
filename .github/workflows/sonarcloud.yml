@@ -22,11 +22,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # Gunakan versi Node yang sesuai dengan proyek Anda
+          node-version: '20' # Gunakan versi Node yang sesuai dengan proyek Anda
           cache: 'npm'
 
+      - name: Verify Node version
+        run: node -v
+
+      - name: Clean npm cache
+        run: npm cache clean --force
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Install optional dependencies
+        run: npm install --no-save --no-audit --no-fund --omit=dev
 
       - name: Run tests and generate coverage
         # Langkah ini WAJIB untuk menghasilkan laporan LCOV sebelum analisis
@@ -35,5 +44,6 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
+          NODE_ENV: production
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token ini disediakan otomatis oleh GitHub
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}      # Token yang kita simpan di Langkah 2
