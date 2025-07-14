@@ -113,28 +113,46 @@ jobs:
 
       - name: Debug SonarCloud configuration
         run: |
+          echo "=== DEBUGGING SONARCLOUD SETUP ==="
+          echo "Repository: ${{ github.repository }}"
+          echo "Repository owner: ${{ github.repository_owner }}"
+          
           echo "Checking SONAR_TOKEN..."
           if [ -z "$SONAR_TOKEN" ]; then
             echo "❌ SONAR_TOKEN is empty!"
-            echo "Please add SONAR_TOKEN to GitHub repository secrets"
             exit 1
           else
-            echo "✅ SONAR_TOKEN is set"
+            echo "✅ SONAR_TOKEN is set (length: ${#SONAR_TOKEN})"
           fi
           
           echo "Checking sonar-project.properties..."
           if [ -f "sonar-project.properties" ]; then
             echo "✅ sonar-project.properties found"
+            echo "--- Content ---"
             cat sonar-project.properties
+            echo "--- End Content ---"
           else
             echo "❌ sonar-project.properties not found!"
-            exit 1
+            echo "Creating default sonar-project.properties..."
+            cat > sonar-project.properties << EOF
+          sonar.projectKey=${{ github.repository_owner }}_eduskillreactapp-pejuang-main
+          sonar.organization=${{ github.repository_owner }}
+          sonar.projectName=EduSkill React App
+          sonar.projectVersion=1.0
+          sonar.sources=src
+          sonar.exclusions=**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx,**/node_modules/**,**/coverage/**,**/dist/**,**/build/**
+          sonar.tests=src
+          sonar.test.inclusions=**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx
+          sonar.javascript.lcov.reportPaths=coverage/lcov.info
+          sonar.coverage.exclusions=**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx,**/test/**,**/coverage/**
+          sonar.javascript.file.suffixes=.js,.jsx
+          EOF
           fi
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
