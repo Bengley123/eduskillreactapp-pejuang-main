@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import NavLink from "./Navlink";
+import NavLink from "./NavLink";
 import { FaBell } from "react-icons/fa";
 
 const NavMenu = ({ isLoggedIn }) => {
