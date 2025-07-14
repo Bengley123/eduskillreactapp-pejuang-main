@@ -7,5 +7,17 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-  },
+    setupFiles: './src/test/setup.js',
+    coverage: {
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.test.{js,jsx}',
+        '**/*.spec.{js,jsx}',
+        '**/vite.config.js'
+      ]
+    }
+  }
 })
