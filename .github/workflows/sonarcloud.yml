@@ -22,11 +22,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # Gunakan versi Node yang sesuai dengan proyek Anda
+          node-version: '20' # Gunakan versi Node yang sesuai dengan proyek Anda
           cache: 'npm'
 
+      - name: Verify Node version
+        run: node -v
+
+      - name: Clean npm cache
+        run: npm cache clean --force
+
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: Rebuild dependencies
+        run: npm rebuild
 
       - name: Run tests and generate coverage
         # Langkah ini WAJIB untuk menghasilkan laporan LCOV sebelum analisis
