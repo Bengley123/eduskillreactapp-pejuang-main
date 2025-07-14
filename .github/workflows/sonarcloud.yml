@@ -42,9 +42,7 @@ jobs:
         run: echo "bin=$(npm bin)" >> $GITHUB_OUTPUT
 
       - name: Add npm bin directory to PATH
-        uses: actions/add-to-path@v3
-        with:
-          path: ${{ steps.npm-bin.outputs.bin }}
+        run: echo "${{ steps.npm-bin.outputs.bin }}" >> $GITHUB_PATH
 
       - name: Run tests and generate coverage
         # Langkah ini WAJIB untuk menghasilkan laporan LCOV sebelum analisis
