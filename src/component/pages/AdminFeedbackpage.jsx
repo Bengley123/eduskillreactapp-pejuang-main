@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import Button from "../Elements/Button/index";
 import Typography from "../Elements/AdminSource/Typhography";
 import DetailModal from "../Fragments/DetailModal";
 import { 
@@ -63,12 +64,12 @@ const AlertModal = ({ show, onClose, type = "info", title, message, children }) 
           {children}
         </div>
         <div className="flex justify-center">
-          <button
+          <Button
             onClick={onClose}
             className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             OK
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -557,12 +558,12 @@ const FeedbackPage = () => {
           Terjadi Kesalahan
         </Typography>
         <p>{error}</p>
-        <button 
+        <Button 
           onClick={fetchFeedbackData} 
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Coba Lagi
-        </button>
+        </Button>
       </div>
     );
   }
