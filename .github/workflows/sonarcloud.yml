@@ -37,9 +37,15 @@ jobs:
       - name: Install optional dependencies
         run: npm install --no-save --no-audit --no-fund --omit=dev
 
+      - name: Check if vitest exists
+        run: ls -l node_modules/.bin
+
+      - name: Make vitest executable
+        run: chmod +x node_modules/.bin/vitest
+
       - name: Run tests and generate coverage
         # Langkah ini WAJIB untuk menghasilkan laporan LCOV sebelum analisis
-        run: npm test
+        run: node_modules/.bin/vitest --coverage
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
