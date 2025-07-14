@@ -37,9 +37,14 @@ jobs:
       - name: Install optional dependencies
         run: npm install --no-save --no-audit --no-fund --omit=dev
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Get npm bin directory
         id: npm-bin
-        run: echo "bin=$(npm bin)" >> $GITHUB_OUTPUT
+        run: |
+          BIN_DIR=$(npm bin -g)
+          echo "bin=$BIN_DIR" >> $GITHUB_OUTPUT
 
       - name: Add npm bin directory to PATH
         run: echo "${{ steps.npm-bin.outputs.bin }}" >> $GITHUB_PATH
