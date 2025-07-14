@@ -21,19 +21,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+
+      - name: Clean npm cache
+        run: npm cache clean --force
+
+      - name: Delete node_modules and package-lock.json
+        run: |
+          rm -rf node_modules
+          rm -f package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      - name: Install coverage reporter
-        run: npm install --save-dev @vitest/coverage-v8
+      - name: Install coverage dependencies
+        run: |
+          npm install --save-dev @vitest/coverage-v8
+          npm install --save-dev @testing-library/jest-dom
+
+      - name: Verify vitest installation
+        run: ls -la node_modules/.bin/vitest
 
       - name: Run tests with coverage
         run: npm run test:coverage
 
       - name: List coverage files
-        run: ls -la coverage/
+        run: |
+          ls -la coverage/ || echo "Coverage folder not found"
+          cat coverage/lcov.info || echo "LCOV file not found"
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
