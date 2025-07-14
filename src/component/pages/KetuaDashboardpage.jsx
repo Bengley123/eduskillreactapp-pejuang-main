@@ -312,19 +312,6 @@ const KetuaDashboardPage = () => {
             className="lg:col-span-2"
           />
         </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">
-            Catatan Laporan dari Admin
-          </h3>
-          <textarea
-            value={adminNotes}
-            readOnly
-            placeholder="Masukkan catatan laporan dari admin..."
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            rows="4"
-          />
-        </div>
       </main>
     </div>
   );
