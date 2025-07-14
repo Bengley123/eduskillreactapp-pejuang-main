@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import CardPelatihan from "./CardPelatihan";
 import { fetchData } from "../../services/api";
 
-const PelatihanList = () => { 
+const PelatihanList = () => {
   const [pelatihan, setPelatihan] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -94,11 +94,13 @@ const PelatihanList = () => {
             id={item.id}
             title={item.nama_pelatihan}
             description={item.keterangan_pelatihan}
+            // ▼▼▼ APPLY THE SAME FIX HERE ▼▼▼
             image={
-              item.gambar
-                ? `http://127.0.0.1:8000/storage/gambar_pelatihan/${item.gambar}`
+              item.foto_pelatihan
+                ? `${import.meta.env.VITE_API_URL}${item.foto_pelatihan}`
                 : null
             }
+            // ▲▲▲ END OF FIX ▲▲▲
             kategori={item.kategori}
           />
         ))}

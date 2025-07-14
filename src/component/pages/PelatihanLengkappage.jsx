@@ -85,11 +85,13 @@ const PelatihanPage = () => {
               id={item.id}
               title={item.nama_pelatihan}
               description={item.keterangan_pelatihan}
+              // ▼▼▼ THIS IS THE FIX ▼▼▼
               image={
-                item.gambar
-                  ? `http://127.0.0.1:8000/storage/gambar_pelatihan/${item.gambar}`
+                item.foto_pelatihan
+                  ? `${import.meta.env.VITE_API_URL}${item.foto_pelatihan}`
                   : null
               }
+              // ▲▲▲ END OF FIX ▲▲▲
               kategori={item.kategori}
             />
           ))}
