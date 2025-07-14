@@ -37,15 +37,6 @@ jobs:
       - name: Install optional dependencies
         run: npm install --no-save --no-audit --no-fund --omit=dev
 
-      - name: Get npm bin directory
-        id: npm-bin
-        run: |
-          BIN_DIR=$(npm bin)
-          echo "bin=$BIN_DIR" >> $GITHUB_OUTPUT
-
-      - name: Add npm bin directory to PATH
-        run: echo "${{ steps.npm-bin.outputs.bin }}" >> $GITHUB_PATH
-
       - name: Run tests and generate coverage
         # Langkah ini WAJIB untuk menghasilkan laporan LCOV sebelum analisis
         run: npm test
