@@ -2451,7 +2451,7 @@ const InformasiKontakEditor = ({
           >
             Informasi Organisasi
           </button>
-          <button
+          {/* <button
             onClick={() => setActiveTab("resources")}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
               activeTab === "resources"
@@ -2460,7 +2460,7 @@ const InformasiKontakEditor = ({
             }`}
           >
             Menu Resources
-          </button>
+          </button> */}
           <button
             onClick={() => setActiveTab("social")}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
