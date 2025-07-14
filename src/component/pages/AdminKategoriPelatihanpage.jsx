@@ -1,26 +1,39 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  FaSearch, 
-  FaPlus, 
-  FaTimes, 
-  FaTrashAlt, 
-  FaEdit, 
-  FaSave, 
-  FaExclamationCircle, 
-  FaSpinner, 
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  FaSearch,
+  FaPlus,
+  FaTimes,
+  FaTrashAlt,
+  FaEdit,
+  FaSave,
+  FaExclamationCircle,
+  FaSpinner,
   FaTag,
   FaInfoCircle,
   FaCheckCircle,
-  FaExclamationTriangle
-} from 'react-icons/fa';
-import Typography from '../Elements/AdminSource/Typhography';
-import Button from '../Elements/Button/index';
-import InputText from '../Elements/Input/Input';
-import Label from '../Elements/Input/Label';
-import { fetchData, createData, updateData, deleteData, apiEndpoints } from '../../services/api.js';
+  FaExclamationTriangle,
+} from "react-icons/fa";
+import Typography from "../Elements/AdminSource/Typhography";
+import Button from "../Elements/Button/index";
+import InputText from "../Elements/Input/Input";
+import Label from "../Elements/Input/Label";
+import {
+  fetchData,
+  createData,
+  updateData,
+  deleteData,
+  apiEndpoints,
+} from "../../services/api.js";
 
 // Custom Modal Components
-const AlertModal = ({ show, onClose, type = "info", title, message, children }) => {
+const AlertModal = ({
+  show,
+  onClose,
+  type = "info",
+  title,
+  message,
+  children,
+}) => {
   if (!show) return null;
 
   const getIcon = () => {
@@ -52,16 +65,16 @@ const AlertModal = ({ show, onClose, type = "info", title, message, children }) 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
-        <div className={`text-center p-4 rounded-lg ${getBgColor()} border mb-4`}>
-          <div className="flex justify-center mb-3">
-            {getIcon()}
-          </div>
+        <div
+          className={`text-center p-4 rounded-lg ${getBgColor()} border mb-4`}
+        >
+          <div className="flex justify-center mb-3">{getIcon()}</div>
           {title && (
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {title}
+            </h3>
           )}
-          {message && (
-            <p className="text-gray-700">{message}</p>
-          )}
+          {message && <p className="text-gray-700">{message}</p>}
           {children}
         </div>
         <div className="flex justify-center">
@@ -77,7 +90,16 @@ const AlertModal = ({ show, onClose, type = "info", title, message, children }) 
   );
 };
 
-const ConfirmModal = ({ show, onClose, onConfirm, title, message, confirmText = "Ya", cancelText = "Batal", type = "warning" }) => {
+const ConfirmModal = ({
+  show,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = "Ya",
+  cancelText = "Batal",
+  type = "warning",
+}) => {
   if (!show) return null;
 
   const getIcon = () => {
@@ -106,15 +128,13 @@ const ConfirmModal = ({ show, onClose, onConfirm, title, message, confirmText = 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
         <div className="text-center mb-6">
-          <div className="flex justify-center mb-4">
-            {getIcon()}
-          </div>
+          <div className="flex justify-center mb-4">{getIcon()}</div>
           {title && (
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {title}
+            </h3>
           )}
-          {message && (
-            <p className="text-gray-600">{message}</p>
-          )}
+          {message && <p className="text-gray-600">{message}</p>}
         </div>
         <div className="flex justify-center gap-3">
           <button
@@ -152,15 +172,15 @@ const AdminKategoriPage = () => {
   const [showDetail, setShowDetail] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [form, setForm] = useState({ 
-    nama_kategori: '', 
-    deskripsi: '',
-    status: 'aktif'
+  const [form, setForm] = useState({
+    nama_kategori: "",
+    deskripsi: "",
+    status: "aktif",
   });
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('Semua');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("Semua");
 
   // Custom Modal States
   const [alertModal, setAlertModal] = useState({
@@ -217,97 +237,72 @@ const AdminKategoriPage = () => {
     });
   };
 
-  // Fetch data kategori
+  
+
   const fetchKategoriData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams({
         page: currentPage,
-        per_page: itemsPerPage
+        per_page: itemsPerPage,
       });
 
       if (appliedSearchQuery) {
-        params.append('search', appliedSearchQuery);
+        params.append("search", appliedSearchQuery);
       }
-      if (statusFilter !== 'Semua') {
-        params.append('status', statusFilter);
+      // Note: Your backend doesn't seem to use this 'status' filter.
+      // I've left the logic here in case you add it later.
+      if (statusFilter !== "Semua") {
+        params.append("status", statusFilter);
       }
 
       const endpoint = `${apiEndpoints.kategori}?${params.toString()}`;
       console.log("Fetching Kategori Data from endpoint:", endpoint);
+
+      // 'response' will be { data: [...], links: {...}, meta: {...} }
       const response = await fetchData(endpoint);
       console.log("API Response for Kategori:", response);
 
-      let fetchedRawItems = [];
-      let currentTotal = 0;
-      let currentLastPage = 1;
-      let currentCurrentPage = 1;
+      // ▼▼▼ CORRECTED LOGIC ▼▼▼
+      // Check for the correct response structure
+      if (response && response.data && response.meta) {
+        const fetchedRawItems = response.data;
+        const meta = response.meta;
 
-      // Handle both direct array and paginated response
-      if (response && Array.isArray(response.data)) {
-        fetchedRawItems = response.data;
-        currentTotal = response.total || response.data.length;
-        currentLastPage = response.last_page || 1;
-        currentCurrentPage = response.current_page || 1;
-      } else if (response && response.data && Array.isArray(response.data.data)) {
-        fetchedRawItems = response.data.data;
-        currentTotal = response.data.total || response.data.data.length;
-        currentLastPage = response.data.last_page || 1;
-        currentCurrentPage = response.data.current_page || 1;
-      } else {
-        throw new Error('Unexpected API response format');
-      }
-
-      const mappedData = fetchedRawItems.map(item => {
-        console.log("Raw kategori item data:", item); // Debug log
-        
-        // Format tanggal dengan lebih robust
-        const formatDate = (dateString) => {
-          if (!dateString) return '-';
-          
-          try {
-            // Jika sudah dalam format yang bagus (seperti "08 Jul 2025"), langsung return
-            if (typeof dateString === 'string' && dateString.includes(' ')) {
-              return dateString;
-            }
-            
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) {
-              return dateString; // Return original if can't parse
-            }
-            return date.toLocaleDateString('id-ID', {
-              year: 'numeric',
-              month: '2-digit', 
-              day: '2-digit'
-            });
-          } catch (err) {
-            console.warn("Error parsing date:", dateString, err);
-            return dateString || '-';
-          }
-        };
-
-        return {
+        const mappedData = fetchedRawItems.map((item) => ({
           id: item.id,
-          nama_kategori: item.nama_kategori || '',
-          deskripsi: item.deskripsi || '',
-          status: item.status || 'aktif',
-          jumlah_pelatihan: item.jumlah_pelatihan || item.pelatihan_count || 0,
-          created_at: formatDate(item.tanggal_ditambahkan || item.created_at),
-          updated_at: formatDate(item.tanggal_diperbarui || item.updated_at || item.tanggal_ditambahkan),
-        };
-      });
+          nama_kategori: item.nama_kategori || "",
+          deskripsi: item.deskripsi || "",
+          status: item.status || "aktif",
+          jumlah_pelatihan: item.pelatihan_count || 0, // Laravel withCount creates 'field_count'
+          created_at: new Date(item.created_at).toLocaleDateString("id-ID"),
+          updated_at: new Date(item.updated_at).toLocaleDateString("id-ID"),
+        }));
 
-      setDataKategori(mappedData);
-      setTotalPages(currentLastPage);
-      setTotalItems(currentTotal);
-      setCurrentPage(currentCurrentPage);
-
+        setDataKategori(mappedData);
+        // Set state from the 'meta' object
+        setTotalPages(meta.last_page || 1);
+        setTotalItems(meta.total || 0);
+        setCurrentPage(meta.current_page || 1);
+      } else {
+        console.warn(
+          "API response for kategori data is not in the expected format:",
+          response
+        );
+        // Reset state if data is invalid
+        setDataKategori([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
+      // ▲▲▲ END OF CORRECTED LOGIC ▲▲▲
     } catch (err) {
       console.error("Failed to fetch kategori:", err);
-      setError(err.message === 'Network Error' 
-        ? 'Network Error: Pastikan backend Laravel berjalan dan CORS dikonfigurasi dengan benar.'
-        : `Failed to load kategori data: ${err.message}`);
+      setError(
+        err.message === "Network Error"
+          ? "Network Error: Pastikan backend Laravel berjalan."
+          : `Failed to load kategori data: ${err.message}`
+      );
       setDataKategori([]);
       setTotalPages(1);
       setTotalItems(0);
@@ -343,7 +338,11 @@ const AdminKategoriPage = () => {
         } catch (err) {
           console.error("Failed to delete kategori:", err);
           const errorMessage = err.response?.data?.message || err.message;
-          showAlert("error", "Gagal Menghapus", `Gagal menghapus kategori: ${errorMessage}`);
+          showAlert(
+            "error",
+            "Gagal Menghapus",
+            `Gagal menghapus kategori: ${errorMessage}`
+          );
         } finally {
           setLoading(false);
         }
@@ -369,10 +368,14 @@ const AdminKategoriPage = () => {
     setValidationErrors({});
     try {
       const formData = new FormData();
-      formData.append('_method', 'PUT');
-      formData.append('nama_kategori', editedKategori.nama_kategori);
+      formData.append("_method", "PUT");
+      formData.append("nama_kategori", editedKategori.nama_kategori);
 
-      const response = await updateData(apiEndpoints.kategori, selectedKategori.id, formData);
+      const response = await updateData(
+        apiEndpoints.kategori,
+        selectedKategori.id,
+        formData
+      );
       if (response) {
         showAlert("success", "Berhasil!", "Kategori berhasil diperbarui!");
         fetchKategoriData();
@@ -383,10 +386,19 @@ const AdminKategoriPage = () => {
       console.error("Failed to save kategori:", err);
       if (err.response?.status === 422 && err.response.data.errors) {
         setValidationErrors(err.response.data.errors);
-        showAlert("error", "Validasi Gagal", "Mohon periksa kembali input Anda.");
+        showAlert(
+          "error",
+          "Validasi Gagal",
+          "Mohon periksa kembali input Anda."
+        );
       } else {
-        showAlert("error", "Gagal Menyimpan", 
-          `Gagal menyimpan perubahan: ${err.response?.data?.message || err.message}`);
+        showAlert(
+          "error",
+          "Gagal Menyimpan",
+          `Gagal menyimpan perubahan: ${
+            err.response?.data?.message || err.message
+          }`
+        );
       }
     } finally {
       setLoading(false);
@@ -394,23 +406,27 @@ const AdminKategoriPage = () => {
   };
 
   const handleInputChange = (field, value) => {
-    setEditedKategori(prev => ({ ...prev, [field]: value }));
-    setValidationErrors(prev => ({ ...prev, [field]: undefined }));
+    setEditedKategori((prev) => ({ ...prev, [field]: value }));
+    setValidationErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const handleSubmit = async () => {
     setValidationErrors({});
     if (!form.nama_kategori) {
-      setValidationErrors({ nama_kategori: ['Nama kategori wajib diisi'] });
-      showAlert("warning", "Data Tidak Lengkap", "Mohon lengkapi nama kategori");
+      setValidationErrors({ nama_kategori: ["Nama kategori wajib diisi"] });
+      showAlert(
+        "warning",
+        "Data Tidak Lengkap",
+        "Mohon lengkapi nama kategori"
+      );
       return;
     }
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.append('nama_kategori', form.nama_kategori);
-      formData.append('deskripsi', form.deskripsi || '');
-      formData.append('status', form.status);
+      formData.append("nama_kategori", form.nama_kategori);
+      formData.append("deskripsi", form.deskripsi || "");
+      formData.append("status", form.status);
 
       const response = await createData(apiEndpoints.kategori, formData);
       if (response) {
@@ -418,19 +434,28 @@ const AdminKategoriPage = () => {
         fetchKategoriData();
         setShowForm(false);
         setForm({
-          nama_kategori: '',
-          deskripsi: '',
-          status: 'aktif'
+          nama_kategori: "",
+          deskripsi: "",
+          status: "aktif",
         });
       }
     } catch (err) {
       console.error("Failed to add kategori:", err);
       if (err.response?.status === 422 && err.response.data.errors) {
         setValidationErrors(err.response.data.errors);
-        showAlert("error", "Validasi Gagal", "Mohon periksa kembali input Anda.");
+        showAlert(
+          "error",
+          "Validasi Gagal",
+          "Mohon periksa kembali input Anda."
+        );
       } else {
-        showAlert("error", "Gagal Menambahkan", 
-          `Gagal menambahkan kategori: ${err.response?.data?.message || err.message}`);
+        showAlert(
+          "error",
+          "Gagal Menambahkan",
+          `Gagal menambahkan kategori: ${
+            err.response?.data?.message || err.message
+          }`
+        );
       }
     } finally {
       setLoading(false);
@@ -442,11 +467,11 @@ const AdminKategoriPage = () => {
   };
 
   const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
   const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   const handleSearchChange = (value) => {
@@ -459,7 +484,7 @@ const AdminKategoriPage = () => {
   };
 
   const handleSearchInputKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleApplySearch();
     }
   };
@@ -470,20 +495,32 @@ const AdminKategoriPage = () => {
   };
 
   const handleResetFilter = () => {
-    setSearchQuery('');
-    setAppliedSearchQuery('');
-    setStatusFilter('Semua');
+    setSearchQuery("");
+    setAppliedSearchQuery("");
+    setStatusFilter("Semua");
     setCurrentPage(1);
   };
 
   const getStatusBadge = (status) => {
-    switch(status) {
-      case 'aktif':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Aktif</span>;
-      case 'nonaktif':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Nonaktif</span>;
+    switch (status) {
+      case "aktif":
+        return (
+          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+            Aktif
+          </span>
+        );
+      case "nonaktif":
+        return (
+          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+            Nonaktif
+          </span>
+        );
       default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{status}</span>;
+        return (
+          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+            {status}
+          </span>
+        );
     }
   };
 
@@ -491,7 +528,9 @@ const AdminKategoriPage = () => {
     return (
       <div className="p-6 text-center">
         <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto" />
-        <Typography variant="h2" className="mt-4 text-gray-700">Memuat data kategori...</Typography>
+        <Typography variant="h2" className="mt-4 text-gray-700">
+          Memuat data kategori...
+        </Typography>
       </div>
     );
   }
@@ -499,9 +538,13 @@ const AdminKategoriPage = () => {
   if (error) {
     return (
       <div className="p-6 text-center text-red-500">
-        <Typography variant="h2" className="mb-6">Terjadi Kesalahan</Typography>
+        <Typography variant="h2" className="mb-6">
+          Terjadi Kesalahan
+        </Typography>
         <p>{error}</p>
-        <Button onClick={fetchKategoriData} variant="primary" className="mt-4">Coba Lagi</Button>
+        <Button onClick={fetchKategoriData} variant="primary" className="mt-4">
+          Coba Lagi
+        </Button>
       </div>
     );
   }
@@ -539,7 +582,9 @@ const AdminKategoriPage = () => {
         <div className="mb-4 flex flex-wrap gap-4 items-center justify-end">
           {/* Filter Status */}
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 whitespace-nowrap">Filter Status:</label>
+            <label className="text-sm text-gray-600 whitespace-nowrap">
+              Filter Status:
+            </label>
             <select
               value={statusFilter}
               onChange={(e) => handleStatusFilterChange(e.target.value)}
@@ -574,7 +619,7 @@ const AdminKategoriPage = () => {
           </div>
 
           {/* Reset Button jika ada filter */}
-          {(appliedSearchQuery || statusFilter !== 'Semua') && (
+          {(appliedSearchQuery || statusFilter !== "Semua") && (
             <button
               onClick={handleResetFilter}
               className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors duration-200"
@@ -584,13 +629,13 @@ const AdminKategoriPage = () => {
           )}
 
           {/* Button Tambah Kategori */}
-          <button 
+          <button
             onClick={() => {
               setShowForm(true);
               setForm({
-                nama_kategori: '', 
-                deskripsi: '',
-                status: 'aktif'
+                nama_kategori: "",
+                deskripsi: "",
+                status: "aktif",
               });
               setValidationErrors({});
             }}
@@ -614,21 +659,28 @@ const AdminKategoriPage = () => {
             <tbody>
               {dataKategori.length > 0 ? (
                 dataKategori.map((kategori, idx) => (
-                  <tr key={kategori.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="px-4 py-2">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                    <td className="px-4 py-2 font-medium">{kategori.nama_kategori}</td>
+                  <tr
+                    key={kategori.id}
+                    className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="px-4 py-2">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
+                    </td>
+                    <td className="px-4 py-2 font-medium">
+                      {kategori.nama_kategori}
+                    </td>
                     <td className="px-4 py-2">{kategori.created_at}</td>
                     <td className="px-4 py-2">{kategori.updated_at}</td>
                     <td className="px-4 py-2 text-center">
                       <div className="flex justify-center gap-2">
-                        <button 
+                        <button
                           onClick={() => handleViewDetail(kategori)}
                           className="text-gray-600 hover:text-blue-500 transition-colors"
                           title="Lihat Detail"
                         >
                           <FaSearch />
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
                             setSelectedKategori(kategori);
                             setEditedKategori(kategori);
@@ -640,7 +692,7 @@ const AdminKategoriPage = () => {
                         >
                           <FaEdit />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(kategori)}
                           className="text-gray-600 hover:text-red-500 transition-colors"
                           title="Hapus"
@@ -653,14 +705,16 @@ const AdminKategoriPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                  <td
+                    colSpan="5"
+                    className="px-4 py-8 text-center text-gray-500"
+                  >
                     <div className="flex flex-col items-center">
                       <FaExclamationCircle className="text-3xl mb-2 text-gray-400" />
                       <p className="text-sm">
-                        {appliedSearchQuery || statusFilter !== 'Semua'
-                          ? 'Tidak ada kategori yang sesuai dengan pencarian atau filter'
-                          : 'Belum ada data kategori'
-                        }
+                        {appliedSearchQuery || statusFilter !== "Semua"
+                          ? "Tidak ada kategori yang sesuai dengan pencarian atau filter"
+                          : "Belum ada data kategori"}
                       </p>
                     </div>
                   </td>
@@ -673,7 +727,12 @@ const AdminKategoriPage = () => {
         {totalItems > 0 && (
           <div className="flex justify-between items-center mt-4">
             <div className="text-sm text-gray-600">
-              Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, (currentPage - 1) * itemsPerPage + dataKategori.length)} dari {totalItems} data
+              Menampilkan {(currentPage - 1) * itemsPerPage + 1} -{" "}
+              {Math.min(
+                currentPage * itemsPerPage,
+                (currentPage - 1) * itemsPerPage + dataKategori.length
+              )}{" "}
+              dari {totalItems} data
             </div>
             <div className="flex justify-center space-x-2">
               <button
@@ -687,7 +746,11 @@ const AdminKategoriPage = () => {
                 <button
                   key={i}
                   onClick={() => handlePageChange(i + 1)}
-                  className={`px-3 py-2 border rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+                  className={`px-3 py-2 border rounded ${
+                    currentPage === i + 1
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 hover:bg-gray-300"
+                  }`}
                 >
                   {i + 1}
                 </button>
@@ -708,7 +771,7 @@ const AdminKategoriPage = () => {
             <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md mx-auto">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold">Tambah Kategori</h3>
-                <button 
+                <button
                   onClick={() => setShowForm(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -719,42 +782,60 @@ const AdminKategoriPage = () => {
                 <div>
                   <Label htmlFor="nama_kategori">Nama Kategori</Label>
                   <InputText
-                    type="text" 
+                    type="text"
                     id="nama_kategori"
                     name="nama_kategori"
                     value={form.nama_kategori}
-                    onChange={(e) => setForm({...form, nama_kategori: e.target.value})}
+                    onChange={(e) =>
+                      setForm({ ...form, nama_kategori: e.target.value })
+                    }
                     required
                     placeholder="Contoh: Digital Marketing"
                   />
-                  {validationErrors.nama_kategori && <p className="text-red-500 text-xs mt-1">{validationErrors.nama_kategori[0]}</p>}
+                  {validationErrors.nama_kategori && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.nama_kategori[0]}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="deskripsi">Deskripsi</Label>
-                  <textarea 
+                  <textarea
                     id="deskripsi"
                     name="deskripsi"
                     value={form.deskripsi}
-                    onChange={(e) => setForm({...form, deskripsi: e.target.value})}
+                    onChange={(e) =>
+                      setForm({ ...form, deskripsi: e.target.value })
+                    }
                     className="w-full p-2 border rounded mt-1 text-sm"
                     rows="3"
                     placeholder="Deskripsi kategori (opsional)"
                   />
-                  {validationErrors.deskripsi && <p className="text-red-500 text-xs mt-1">{validationErrors.deskripsi[0]}</p>}
+                  {validationErrors.deskripsi && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.deskripsi[0]}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <select 
+                  <select
                     id="status"
                     name="status"
                     value={form.status}
-                    onChange={(e) => setForm({...form, status: e.target.value})}
+                    onChange={(e) =>
+                      setForm({ ...form, status: e.target.value })
+                    }
                     className="w-full p-2 border rounded mt-1 text-sm"
                   >
                     <option value="aktif">Aktif</option>
                     <option value="nonaktif">Nonaktif</option>
                   </select>
-                  {validationErrors.status && <p className="text-red-500 text-xs mt-1">{validationErrors.status[0]}</p>}
+                  {validationErrors.status && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.status[0]}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
@@ -781,9 +862,9 @@ const AdminKategoriPage = () => {
             <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md mx-auto">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold">
-                  {isEditing ? 'Edit Kategori' : 'Detail Kategori'}
+                  {isEditing ? "Edit Kategori" : "Detail Kategori"}
                 </h3>
-                <button 
+                <button
                   onClick={() => setShowDetail(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -795,21 +876,31 @@ const AdminKategoriPage = () => {
                   <Label>Nama Kategori</Label>
                   {isEditing ? (
                     <InputText
-                      type="text" 
+                      type="text"
                       value={editedKategori.nama_kategori}
-                      onChange={(e) => handleInputChange('nama_kategori', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("nama_kategori", e.target.value)
+                      }
                     />
                   ) : (
-                    <p className="font-medium">{selectedKategori.nama_kategori}</p>
+                    <p className="font-medium">
+                      {selectedKategori.nama_kategori}
+                    </p>
                   )}
-                  {validationErrors.nama_kategori && <p className="text-red-500 text-xs mt-1">{validationErrors.nama_kategori[0]}</p>}
+                  {validationErrors.nama_kategori && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.nama_kategori[0]}
+                    </p>
+                  )}
                 </div>
-                
+
                 {!isEditing && (
                   <>
                     <div>
                       <Label>Deskripsi</Label>
-                      <p className="font-medium">{selectedKategori.deskripsi || '-'}</p>
+                      <p className="font-medium">
+                        {selectedKategori.deskripsi || "-"}
+                      </p>
                     </div>
                     <div>
                       <Label>Status</Label>
@@ -819,15 +910,21 @@ const AdminKategoriPage = () => {
                     </div>
                     <div>
                       <Label>Jumlah Pelatihan</Label>
-                      <p className="font-medium">{selectedKategori.jumlah_pelatihan} pelatihan</p>
+                      <p className="font-medium">
+                        {selectedKategori.jumlah_pelatihan} pelatihan
+                      </p>
                     </div>
                     <div>
                       <Label>Dibuat</Label>
-                      <p className="font-medium">{selectedKategori.created_at}</p>
+                      <p className="font-medium">
+                        {selectedKategori.created_at}
+                      </p>
                     </div>
                     <div>
                       <Label>Diperbarui</Label>
-                      <p className="font-medium">{selectedKategori.updated_at}</p>
+                      <p className="font-medium">
+                        {selectedKategori.updated_at}
+                      </p>
                     </div>
                   </>
                 )}
@@ -842,7 +939,7 @@ const AdminKategoriPage = () => {
                       Batal
                     </button>
                     <button
-                      onClick={handleSaveEdit}  
+                      onClick={handleSaveEdit}
                       className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded inline-flex items-center gap-1 text-sm"
                     >
                       <FaSave size={12} /> Simpan

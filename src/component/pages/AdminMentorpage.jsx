@@ -1,27 +1,40 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  FaSearch, 
-  FaPlus, 
-  FaTimes, 
-  FaTrashAlt, 
-  FaEdit, 
-  FaSave, 
-  FaExclamationCircle, 
-  FaSpinner, 
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  FaSearch,
+  FaPlus,
+  FaTimes,
+  FaTrashAlt,
+  FaEdit,
+  FaSave,
+  FaExclamationCircle,
+  FaSpinner,
   FaUserTie,
   FaInfoCircle,
   FaCheckCircle,
-  FaExclamationTriangle
-} from 'react-icons/fa';
-import Typography from '../Elements/AdminSource/Typhography';
-import Button from '../Elements/Button/index';
-import InputText from '../Elements/Input/Input';
-import Label from '../Elements/Input/Label';
+  FaExclamationTriangle,
+} from "react-icons/fa";
+import Typography from "../Elements/AdminSource/Typhography";
+import Button from "../Elements/Button/index";
+import InputText from "../Elements/Input/Input";
+import Label from "../Elements/Input/Label";
 
-import { fetchData, createData, updateData, deleteData, apiEndpoints } from '../../services/api.js';
+import {
+  fetchData,
+  createData,
+  updateData,
+  deleteData,
+  apiEndpoints,
+} from "../../services/api.js";
 
 // Custom Modal Components
-const AlertModal = ({ show, onClose, type = "info", title, message, children }) => {
+const AlertModal = ({
+  show,
+  onClose,
+  type = "info",
+  title,
+  message,
+  children,
+}) => {
   if (!show) return null;
 
   const getIcon = () => {
@@ -53,16 +66,16 @@ const AlertModal = ({ show, onClose, type = "info", title, message, children }) 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
-        <div className={`text-center p-4 rounded-lg ${getBgColor()} border mb-4`}>
-          <div className="flex justify-center mb-3">
-            {getIcon()}
-          </div>
+        <div
+          className={`text-center p-4 rounded-lg ${getBgColor()} border mb-4`}
+        >
+          <div className="flex justify-center mb-3">{getIcon()}</div>
           {title && (
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {title}
+            </h3>
           )}
-          {message && (
-            <p className="text-gray-700">{message}</p>
-          )}
+          {message && <p className="text-gray-700">{message}</p>}
           {children}
         </div>
         <div className="flex justify-center">
@@ -78,7 +91,16 @@ const AlertModal = ({ show, onClose, type = "info", title, message, children }) 
   );
 };
 
-const ConfirmModal = ({ show, onClose, onConfirm, title, message, confirmText = "Ya", cancelText = "Batal", type = "warning" }) => {
+const ConfirmModal = ({
+  show,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = "Ya",
+  cancelText = "Batal",
+  type = "warning",
+}) => {
   if (!show) return null;
 
   const getIcon = () => {
@@ -107,15 +129,13 @@ const ConfirmModal = ({ show, onClose, onConfirm, title, message, confirmText = 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
         <div className="text-center mb-6">
-          <div className="flex justify-center mb-4">
-            {getIcon()}
-          </div>
+          <div className="flex justify-center mb-4">{getIcon()}</div>
           {title && (
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {title}
+            </h3>
           )}
-          {message && (
-            <p className="text-gray-600">{message}</p>
-          )}
+          {message && <p className="text-gray-600">{message}</p>}
         </div>
         <div className="flex justify-center gap-3">
           <button
@@ -153,12 +173,12 @@ const AdminMentorPage = () => {
   const [showDetail, setShowDetail] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [form, setForm] = useState({ 
-    nama_mentor: ''
+  const [form, setForm] = useState({
+    nama_mentor: "",
   });
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
 
   // Custom Modal States
   const [alertModal, setAlertModal] = useState({
@@ -215,70 +235,84 @@ const AdminMentorPage = () => {
     });
   };
 
-  // Fetch data mentor
   const fetchMentorData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-        // Buat parameter query string
-        const params = new URLSearchParams({
-            page: currentPage,
-            per_page: itemsPerPage
-        });
+      // Buat parameter query string
+      const params = new URLSearchParams({
+        page: currentPage,
+        per_page: itemsPerPage,
+      });
 
-        if (appliedSearchQuery) {
-            params.append('search', appliedSearchQuery);
-        }
+      if (appliedSearchQuery) {
+        params.append("search", appliedSearchQuery);
+      }
 
-        const endpoint = `${apiEndpoints.mentor}?${params.toString()}`;
-        console.log("Fetching Mentor Data from endpoint:", endpoint);
-        const response = await fetchData(endpoint);
-        console.log("API Raw Response for Mentor:", response); 
+      const endpoint = `${apiEndpoints.mentor}?${params.toString()}`;
+      console.log("Fetching Mentor Data from endpoint:", endpoint);
+      const response = await fetchData(endpoint);
+      console.log("API Raw Response for Mentor:", response);
+      console.log("=== FULL API RESPONSE DEBUG ===");
+      console.log("Response type:", typeof response);
+      console.log("Response keys:", Object.keys(response || {}));
+      console.log("Response.data:", response?.data);
+      console.log("Response.total:", response?.total);
+      console.log("Response.last_page:", response?.last_page);
+      console.log("Response.current_page:", response?.current_page);
+      console.log("=== END DEBUG ===");
 
-        let fetchedRawItems = [];
-        let currentTotal = 0;
-        let currentLastPage = 1;
-        let currentCurrentPage = 1;
+      let fetchedRawItems = [];
+      let currentTotal = 0;
+      let currentLastPage = 1;
+      let currentCurrentPage = 1;
 
-        if (response && Array.isArray(response.data)) {
-            fetchedRawItems = response.data;
-            currentTotal = response.total || response.data.length;
-            currentLastPage = response.last_page || 1;
-            currentCurrentPage = response.current_page || 1;
-        } else if (response && response.data && Array.isArray(response.data.data)) {
-            fetchedRawItems = response.data.data;
-            currentTotal = response.data.total || response.data.data.length;
-            currentLastPage = response.data.last_page || 1;
-            currentCurrentPage = response.data.current_page || 1;
-        } else {
-            console.warn('API response for mentor data is not in expected format:', response);
-        }
-      
-      const mappedData = fetchedRawItems.map(item => {
-        console.log("Raw item data:", item); // Debug log
-        
+      // Handle Laravel pagination response format
+      if (response && response.data && Array.isArray(response.data)) {
+        // Direct Laravel pagination response
+        fetchedRawItems = response.data;
+        currentTotal = response.total || 0;
+        currentLastPage = response.last_page || 1;
+        currentCurrentPage = response.current_page || 1;
+      } else if (response && Array.isArray(response)) {
+        // If response is directly an array (non-paginated)
+        fetchedRawItems = response;
+        currentTotal = response.length;
+        currentLastPage = 1;
+        currentCurrentPage = 1;
+      } else {
+        console.warn(
+          "API response for mentor data is not in expected format:",
+          response
+        );
+        fetchedRawItems = [];
+      }
+
+      const mappedData = fetchedRawItems.map((item) => {
+        console.log("Raw item data:", item);
+
         // Format tanggal dengan lebih robust
         const formatDate = (dateString) => {
-          if (!dateString) return '-';
-          
+          if (!dateString) return "-";
+
           try {
-            // Jika sudah dalam format yang bagus (seperti "08 Jul 2025"), langsung return
-            if (typeof dateString === 'string' && dateString.includes(' ')) {
+            // Jika sudah dalam format yang bagus, langsung return
+            if (typeof dateString === "string" && dateString.includes(" ")) {
               return dateString;
             }
-            
+
             const date = new Date(dateString);
             if (isNaN(date.getTime())) {
-              return dateString; // Return original if can't parse
+              return dateString;
             }
-            return date.toLocaleDateString('id-ID', {
-              year: 'numeric',
-              month: '2-digit', 
-              day: '2-digit'
+            return date.toLocaleDateString("id-ID", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
             });
           } catch (err) {
             console.warn("Error parsing date:", dateString, err);
-            return dateString || '-';
+            return dateString || "-";
           }
         };
 
@@ -286,21 +320,30 @@ const AdminMentorPage = () => {
           id: item.id,
           nama_mentor: item.nama_mentor,
           created_at: formatDate(item.tanggal_ditambahkan || item.created_at),
-          updated_at: formatDate(item.tanggal_diperbarui || item.updated_at || item.tanggal_ditambahkan),
+          updated_at: formatDate(
+            item.tanggal_diperbarui ||
+              item.updated_at ||
+              item.tanggal_ditambahkan
+          ),
         };
       });
-      
+
       setDataMentor(mappedData);
       setTotalPages(currentLastPage);
       setTotalItems(currentTotal);
       setCurrentPage(currentCurrentPage);
-
     } catch (err) {
       console.error("Failed to fetch mentor:", err);
-      if (err.code === 'ERR_NETWORK') {
-        setError('Network Error: Pastikan backend Laravel berjalan dan CORS dikonfigurasi dengan benar.');
+      if (err.code === "ERR_NETWORK") {
+        setError(
+          "Network Error: Pastikan backend Laravel berjalan dan CORS dikonfigurasi dengan benar."
+        );
       } else if (err.response) {
-        setError(`Failed to load mentor data: ${err.response.status} - ${err.response.statusText || 'Unknown Error'}`);
+        setError(
+          `Failed to load mentor data: ${err.response.status} - ${
+            err.response.statusText || "Unknown Error"
+          }`
+        );
         console.error("API Response Error:", err.response.data);
       } else {
         setError("Failed to load mentor data.");
@@ -339,8 +382,13 @@ const AdminMentorPage = () => {
           setShowDetail(false);
         } catch (err) {
           console.error("Failed to delete mentor:", err);
-          showAlert("error", "Gagal Menghapus", 
-            `Gagal menghapus mentor: ${err.response?.data?.message || err.message}`);
+          showAlert(
+            "error",
+            "Gagal Menghapus",
+            `Gagal menghapus mentor: ${
+              err.response?.data?.message || err.message
+            }`
+          );
         } finally {
           setLoading(false);
         }
@@ -365,36 +413,53 @@ const AdminMentorPage = () => {
     setLoading(true);
     setValidationErrors({});
     try {
-        const formData = new FormData();
-        formData.append('_method', 'PUT'); 
-        formData.append('nama_mentor', editedMentor.nama_mentor); 
+      const formData = new FormData();
+      formData.append("_method", "PUT");
+      formData.append("nama_mentor", editedMentor.nama_mentor);
 
-        const response = await updateData(apiEndpoints.mentor, selectedMentor.id, formData);
-        if (response) {
-            showAlert("success", "Berhasil!", "Mentor berhasil diperbarui!");
-            fetchMentorData();
-            setShowDetail(false);
-            setIsEditing(false);
-        } else {
-            throw new Error("Respon update kosong atau tidak valid.");
-        }
+      const response = await updateData(
+        apiEndpoints.mentor,
+        selectedMentor.id,
+        formData
+      );
+      if (response) {
+        showAlert("success", "Berhasil!", "Mentor berhasil diperbarui!");
+        fetchMentorData();
+        setShowDetail(false);
+        setIsEditing(false);
+      } else {
+        throw new Error("Respon update kosong atau tidak valid.");
+      }
     } catch (err) {
-        console.error("Failed to save mentor:", err);
-        if (err.response && err.response.status === 422 && err.response.data.errors) {
-            setValidationErrors(err.response.data.errors);
-            showAlert("error", "Validasi Gagal", "Mohon periksa kembali input Anda.");
-        } else {
-            showAlert("error", "Gagal Menyimpan", 
-              `Gagal menyimpan perubahan: ${err.response?.data?.message || err.message}`);
-        }
+      console.error("Failed to save mentor:", err);
+      if (
+        err.response &&
+        err.response.status === 422 &&
+        err.response.data.errors
+      ) {
+        setValidationErrors(err.response.data.errors);
+        showAlert(
+          "error",
+          "Validasi Gagal",
+          "Mohon periksa kembali input Anda."
+        );
+      } else {
+        showAlert(
+          "error",
+          "Gagal Menyimpan",
+          `Gagal menyimpan perubahan: ${
+            err.response?.data?.message || err.message
+          }`
+        );
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setEditedMentor(prev => ({...prev, [field]: value}));
-    setValidationErrors(prev => ({ ...prev, [field]: undefined }));
+    setEditedMentor((prev) => ({ ...prev, [field]: value }));
+    setValidationErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const handleSubmit = async () => {
@@ -405,31 +470,44 @@ const AdminMentorPage = () => {
     }
     setLoading(true);
     try {
-        const formData = new FormData();
-        formData.append('nama_mentor', form.nama_mentor); 
+      const formData = new FormData();
+      formData.append("nama_mentor", form.nama_mentor);
 
-        const response = await createData(apiEndpoints.mentor, formData);
-        if (response) {
-            showAlert("success", "Berhasil!", "Mentor berhasil ditambahkan!");
-            fetchMentorData();
-            setShowForm(false);
-            setForm({
-              nama_mentor: ''
-            });
-        } else {
-            throw new Error("Respon API tidak valid.");
-        }
+      const response = await createData(apiEndpoints.mentor, formData);
+      if (response) {
+        showAlert("success", "Berhasil!", "Mentor berhasil ditambahkan!");
+        fetchMentorData();
+        setShowForm(false);
+        setForm({
+          nama_mentor: "",
+        });
+      } else {
+        throw new Error("Respon API tidak valid.");
+      }
     } catch (err) {
-        console.error("Failed to add mentor:", err);
-        if (err.response && err.response.status === 422 && err.response.data.errors) {
-            setValidationErrors(err.response.data.errors);
-            showAlert("error", "Validasi Gagal", "Mohon periksa kembali input Anda.");
-        } else {
-            showAlert("error", "Gagal Menambahkan", 
-              `Gagal menambahkan mentor: ${err.response?.data?.message || err.message}`);
-        }
+      console.error("Failed to add mentor:", err);
+      if (
+        err.response &&
+        err.response.status === 422 &&
+        err.response.data.errors
+      ) {
+        setValidationErrors(err.response.data.errors);
+        showAlert(
+          "error",
+          "Validasi Gagal",
+          "Mohon periksa kembali input Anda."
+        );
+      } else {
+        showAlert(
+          "error",
+          "Gagal Menambahkan",
+          `Gagal menambahkan mentor: ${
+            err.response?.data?.message || err.message
+          }`
+        );
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -438,11 +516,11 @@ const AdminMentorPage = () => {
   };
 
   const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
   const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   const handleSearchChange = (value) => {
@@ -455,14 +533,14 @@ const AdminMentorPage = () => {
   };
 
   const handleSearchInputKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleApplySearch();
     }
   };
 
   const handleResetFilter = () => {
-    setSearchQuery('');
-    setAppliedSearchQuery('');
+    setSearchQuery("");
+    setAppliedSearchQuery("");
     setCurrentPage(1);
   };
 
@@ -470,7 +548,9 @@ const AdminMentorPage = () => {
     return (
       <div className="p-6 text-center">
         <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto" />
-        <Typography variant="h2" className="mt-4 text-gray-700">Memuat data mentor...</Typography>
+        <Typography variant="h2" className="mt-4 text-gray-700">
+          Memuat data mentor...
+        </Typography>
       </div>
     );
   }
@@ -478,9 +558,13 @@ const AdminMentorPage = () => {
   if (error) {
     return (
       <div className="p-6 text-center text-red-500">
-        <Typography variant="h2" className="mb-6">Terjadi Kesalahan</Typography>
+        <Typography variant="h2" className="mb-6">
+          Terjadi Kesalahan
+        </Typography>
         <p>{error}</p>
-        <Button onClick={fetchMentorData} variant="primary" className="mt-4">Coba Lagi</Button>
+        <Button onClick={fetchMentorData} variant="primary" className="mt-4">
+          Coba Lagi
+        </Button>
       </div>
     );
   }
@@ -549,11 +633,11 @@ const AdminMentorPage = () => {
           )}
 
           {/* Button Tambah Mentor */}
-          <button 
+          <button
             onClick={() => {
               setShowForm(true);
               setForm({
-                nama_mentor: ''
+                nama_mentor: "",
               });
               setValidationErrors({});
             }}
@@ -562,7 +646,7 @@ const AdminMentorPage = () => {
             <FaPlus size={12} /> Tambah Mentor
           </button>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm text-left">
             <thead className="bg-gray-100 text-gray-700">
@@ -577,21 +661,28 @@ const AdminMentorPage = () => {
             <tbody>
               {dataMentor.length > 0 ? (
                 dataMentor.map((mentor, idx) => (
-                  <tr key={mentor.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="px-4 py-2">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                    <td className="px-4 py-2 font-medium">{mentor.nama_mentor}</td>
+                  <tr
+                    key={mentor.id}
+                    className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="px-4 py-2">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
+                    </td>
+                    <td className="px-4 py-2 font-medium">
+                      {mentor.nama_mentor}
+                    </td>
                     <td className="px-4 py-2">{mentor.created_at}</td>
                     <td className="px-4 py-2">{mentor.updated_at}</td>
                     <td className="px-4 py-2 text-center">
                       <div className="flex justify-center gap-2">
-                        <button 
+                        <button
                           onClick={() => handleViewDetail(mentor)}
                           className="text-gray-600 hover:text-blue-500 transition-colors"
                           title="Lihat Detail"
                         >
                           <FaSearch />
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
                             setSelectedMentor(mentor);
                             setEditedMentor(mentor);
@@ -603,7 +694,7 @@ const AdminMentorPage = () => {
                         >
                           <FaEdit />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(mentor)}
                           className="text-gray-600 hover:text-red-500 transition-colors"
                           title="Hapus"
@@ -616,14 +707,16 @@ const AdminMentorPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                  <td
+                    colSpan="5"
+                    className="px-4 py-8 text-center text-gray-500"
+                  >
                     <div className="flex flex-col items-center">
                       <FaExclamationCircle className="text-3xl mb-2 text-gray-400" />
                       <p className="text-sm">
                         {appliedSearchQuery
-                          ? 'Tidak ada mentor yang sesuai dengan pencarian'
-                          : 'Belum ada data mentor'
-                        }
+                          ? "Tidak ada mentor yang sesuai dengan pencarian"
+                          : "Belum ada data mentor"}
                       </p>
                     </div>
                   </td>
@@ -637,7 +730,12 @@ const AdminMentorPage = () => {
         {totalItems > 0 && (
           <div className="flex justify-between items-center mt-4">
             <div className="text-sm text-gray-600">
-              Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, (currentPage - 1) * itemsPerPage + dataMentor.length)} dari {totalItems} data
+              Menampilkan {(currentPage - 1) * itemsPerPage + 1} -{" "}
+              {Math.min(
+                currentPage * itemsPerPage,
+                (currentPage - 1) * itemsPerPage + dataMentor.length
+              )}{" "}
+              dari {totalItems} data
             </div>
             <div className="flex justify-center space-x-2">
               <button
@@ -653,9 +751,9 @@ const AdminMentorPage = () => {
                   key={i}
                   onClick={() => handlePageChange(i + 1)}
                   className={`px-3 py-2 border rounded ${
-                    currentPage === i + 1 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-200 hover:bg-gray-300'
+                    currentPage === i + 1
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 hover:bg-gray-300"
                   }`}
                 >
                   {i + 1}
@@ -679,30 +777,36 @@ const AdminMentorPage = () => {
             <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md mx-auto">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold">Tambah Mentor</h3>
-                <button 
+                <button
                   onClick={() => setShowForm(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FaTimes size={16} />
                 </button>
               </div>
-              
+
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="nama_mentor">Nama Mentor</Label>
                   <InputText
-                    type="text" 
+                    type="text"
                     id="nama_mentor"
                     name="nama_mentor"
                     value={form.nama_mentor}
-                    onChange={(e) => setForm({...form, nama_mentor: e.target.value})}
+                    onChange={(e) =>
+                      setForm({ ...form, nama_mentor: e.target.value })
+                    }
                     required
                     placeholder="Contoh: John Doe"
                   />
-                  {validationErrors.nama_mentor && <p className="text-red-500 text-xs mt-1">{validationErrors.nama_mentor[0]}</p>}
+                  {validationErrors.nama_mentor && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.nama_mentor[0]}
+                    </p>
+                  )}
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
@@ -728,38 +832,44 @@ const AdminMentorPage = () => {
             <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md mx-auto">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold">
-                  {isEditing ? 'Edit Mentor' : 'Detail Mentor'}
+                  {isEditing ? "Edit Mentor" : "Detail Mentor"}
                 </h3>
-                <button 
+                <button
                   onClick={() => setShowDetail(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FaTimes size={16} />
                 </button>
               </div>
-              
+
               <div className="space-y-3 mb-4">
                 <div>
                   <Label>Nama Mentor</Label>
                   {isEditing ? (
                     <InputText
-                      type="text" 
+                      type="text"
                       value={editedMentor.nama_mentor}
-                      onChange={(e) => handleInputChange('nama_mentor', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("nama_mentor", e.target.value)
+                      }
                     />
                   ) : (
                     <p className="font-medium">{selectedMentor.nama_mentor}</p>
                   )}
-                  {validationErrors.nama_mentor && <p className="text-red-500 text-xs mt-1">{validationErrors.nama_mentor[0]}</p>}
+                  {validationErrors.nama_mentor && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.nama_mentor[0]}
+                    </p>
+                  )}
                 </div>
-                
+
                 {!isEditing && (
                   <>
                     <div>
                       <Label>Dibuat</Label>
                       <p className="font-medium">{selectedMentor.created_at}</p>
                     </div>
-                    
+
                     <div>
                       <Label>Diperbarui</Label>
                       <p className="font-medium">{selectedMentor.updated_at}</p>
@@ -767,7 +877,7 @@ const AdminMentorPage = () => {
                   </>
                 )}
               </div>
-              
+
               <div className="flex justify-end gap-2">
                 {isEditing ? (
                   <>

@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import Typography from "../Elements/AdminSource/Typhography";
 import StatsGrid from "../Fragments/StatsgridAdmin";
 import DataTable from "../Fragments/DataTableAdmin";
-import { FaUsers, FaChalkboardTeacher } from "react-icons/fa";
+import {
+  FaUsers,
+  FaChalkboardTeacher,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
 import { fetchData, setAuthToken } from "../../services/api";
 
 const AdminDashboardPage = () => {
@@ -18,6 +23,10 @@ const AdminDashboardPage = () => {
   const [tempatKerjaData, setTempatKerjaData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [pelatihanCurrentPage, setPelatihanCurrentPage] = useState(1);
+  const [tempatKerjaCurrentPage, setTempatKerjaCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -154,6 +163,26 @@ const AdminDashboardPage = () => {
     { key: "tempatKerja", header: "Tempat Bekerja" },
   ];
 
+  // ADDED: Logic to slice data for the current page (Pelatihan)
+  const pelatihanTotalPages = Math.ceil(pelatihanData.length / itemsPerPage);
+  const pelatihanStartIndex = (pelatihanCurrentPage - 1) * itemsPerPage;
+  const pelatihanEndIndex = pelatihanStartIndex + itemsPerPage;
+  const displayedPelatihanData = pelatihanData.slice(
+    pelatihanStartIndex,
+    pelatihanEndIndex
+  );
+
+  // ADDED: Logic to slice data for the current page (Tempat Kerja)
+  const tempatKerjaTotalPages = Math.ceil(
+    tempatKerjaData.length / itemsPerPage
+  );
+  const tempatKerjaStartIndex = (tempatKerjaCurrentPage - 1) * itemsPerPage;
+  const tempatKerjaEndIndex = tempatKerjaStartIndex + itemsPerPage;
+  const displayedTempatKerjaData = tempatKerjaData.slice(
+    tempatKerjaStartIndex,
+    tempatKerjaEndIndex
+  );
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -169,21 +198,113 @@ const AdminDashboardPage = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <DataTable
-          title="Pelatihan Yang Tersedia"
-          columns={pelatihanColumns}
-          data={pelatihanData}
-          loading={loading}
-          className="lg:col-span-2"
-        />
+        <div className="bg-white p-4 rounded-lg shadow-md lg:col-span-2">
+          <DataTable
+            title="Pelatihan Yang Tersedia"
+            columns={pelatihanColumns}
+            data={displayedPelatihanData}
+            loading={loading}
+          />
+          {/* UPDATED: Numbered Pagination for Pelatihan table */}
+          {pelatihanData.length > itemsPerPage && (
+            <div className="flex justify-between items-center mt-4 text-sm">
+              <span className="text-gray-600">
+                Menampilkan {pelatihanStartIndex + 1} -{" "}
+                {Math.min(pelatihanEndIndex, pelatihanData.length)} dari{" "}
+                {pelatihanData.length} data
+              </span>
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={() =>
+                    setPelatihanCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={pelatihanCurrentPage === 1}
+                  className="px-3 py-1 border rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Prev
+                </button>
+                {[...Array(pelatihanTotalPages)].map((_, i) => (
+                  <button
+                    key={`pelatihan-page-${i}`}
+                    onClick={() => setPelatihanCurrentPage(i + 1)}
+                    className={`px-3 py-1 border rounded ${
+                      pelatihanCurrentPage === i + 1
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() =>
+                    setPelatihanCurrentPage((prev) =>
+                      Math.min(prev + 1, pelatihanTotalPages)
+                    )
+                  }
+                  disabled={pelatihanCurrentPage === pelatihanTotalPages}
+                  className="px-3 py-1 border rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
-        <DataTable
-          title="Tempat Bekerja Alumni (Yang Telah Memberikan Feedback)"
-          columns={tempatKerjaColumns}
-          data={tempatKerjaData}
-          loading={loading}
-          className="lg:col-span-2"
-        />
+        <div className="bg-white p-4 rounded-lg shadow-md lg:col-span-2">
+          <DataTable
+            title="Tempat Bekerja Alumni (Yang Telah Memberikan Feedback)"
+            columns={tempatKerjaColumns}
+            data={displayedTempatKerjaData}
+            loading={loading}
+          />
+          {/* UPDATED: Numbered Pagination for Tempat Kerja table */}
+          {tempatKerjaData.length > itemsPerPage && (
+            <div className="flex justify-between items-center mt-4 text-sm">
+              <span className="text-gray-600">
+                Menampilkan {tempatKerjaStartIndex + 1} -{" "}
+                {Math.min(tempatKerjaEndIndex, tempatKerjaData.length)} dari{" "}
+                {tempatKerjaData.length} data
+              </span>
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={() =>
+                    setTempatKerjaCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={tempatKerjaCurrentPage === 1}
+                  className="px-3 py-1 border rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Prev
+                </button>
+                {[...Array(tempatKerjaTotalPages)].map((_, i) => (
+                  <button
+                    key={`tempat-kerja-page-${i}`}
+                    onClick={() => setTempatKerjaCurrentPage(i + 1)}
+                    className={`px-3 py-1 border rounded ${
+                      tempatKerjaCurrentPage === i + 1
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() =>
+                    setTempatKerjaCurrentPage((prev) =>
+                      Math.min(prev + 1, tempatKerjaTotalPages)
+                    )
+                  }
+                  disabled={tempatKerjaCurrentPage === tempatKerjaTotalPages}
+                  className="px-3 py-1 border rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -498,66 +498,47 @@ const AdminPelatihanPage = () => {
     fetchKategoriOptions();
   }, []);
 
+  // In AdminPelatihanPage.jsx
+
   const fetchPelatihanData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      let url = `${apiEndpoints.pelatihan}?page=${currentPage}&per_page=${itemsPerPage}`;
+      const params = new URLSearchParams({
+        page: currentPage,
+        per_page: itemsPerPage,
+      });
 
       if (appliedSearchQuery) {
-        url += `&search=${encodeURIComponent(appliedSearchQuery)}`;
+        params.append("search", appliedSearchQuery);
       }
       if (statusFilter !== "Semua") {
-        url += `&status_pelatihan=${encodeURIComponent(statusFilter)}`;
+        params.append("status_pelatihan", statusFilter);
       }
       if (postStatusFilter !== "Semua") {
-        url += `&post_status=${encodeURIComponent(postStatusFilter)}`;
+        params.append("post_status", postStatusFilter);
       }
+
+      const url = `${apiEndpoints.pelatihan}?${params.toString()}`;
 
       console.log("Fetching Pelatihan Data from URL:", url);
+      // The 'response' variable here is the object from your log
       const response = await fetchData(url);
-      console.log("API Raw Response for Pelatihan:", response);
+      console.log("API Response for Pelatihan:", response);
 
-      let fetchedRawItems = [];
-      let currentTotal = 0;
-      let currentLastPage = 1;
-      let currentCurrentPage = 1;
+      // ▼▼▼ FINAL CORRECTED LOGIC ▼▼▼
+      // The check now correctly looks at the object you logged
+      if (response && response.data && response.meta) {
+        // No extra .data needed here
+        const fetchedRawItems = response.data;
+        const meta = response.meta;
 
-      if (response && Array.isArray(response.data)) {
-        fetchedRawItems = response.data;
-        currentTotal = response.total || response.data.length;
-        currentLastPage = response.last_page || 1;
-        currentCurrentPage = response.current_page || 1;
-      } else if (
-        response &&
-        response.data &&
-        Array.isArray(response.data.data)
-      ) {
-        fetchedRawItems = response.data.data;
-        currentTotal = response.data.total || response.data.data.length;
-        currentLastPage = response.data.last_page || 1;
-        currentCurrentPage = response.data.current_page || 1;
-      } else {
-        console.warn(
-          "API response for pelatihan data is not in expected format:",
-          response
-        );
-      }
-
-      const mappedData = fetchedRawItems.map((item) => {
-        // Construct the full and correct image URL if foto_pelatihan exists
-        const imageUrl = item.foto_pelatihan
-          ? `${import.meta.env.VITE_API_URL}${
-              item.foto_pelatihan
-            }`
-          : null;
-
-        return {
+        const mappedData = fetchedRawItems.map((item) => ({
           id: item.id,
           nama: item.nama_pelatihan,
           keterangan: item.keterangan_pelatihan,
           kategori_id: item.kategori_id || "",
-          kategori: item.kategori || "N/A",
+          kategori: item.kategori || "N/A", // Using the pre-loaded 'kategori' from your resource
           biaya: item.biaya,
           jumlah_kuota: item.jumlah_kuota,
           jumlah_peserta: item.jumlah_peserta || 0,
@@ -568,17 +549,25 @@ const AdminPelatihanPage = () => {
           instruktur: item.mentor ? item.mentor.nama_mentor : "N/A",
           status: item.status_pelatihan || "Belum Dimulai",
           postStatus: item.post_status || "Draft",
-          foto_pelatihan: imageUrl,
-        };
-      });
+          foto_pelatihan: item.foto_pelatihan
+            ? `${import.meta.env.VITE_API_URL}${item.foto_pelatihan}`
+            : null,
+        }));
 
-      setDataPelatihan(mappedData);
-      setTotalPages(currentLastPage);
-      setTotalItems(currentTotal);
-      setCurrentPage(currentCurrentPage);
-
-      console.log("DEBUG: Total items fetched from API:", currentTotal);
-      console.log("DEBUG: Total pages calculated:", currentLastPage);
+        setDataPelatihan(mappedData);
+        setTotalPages(meta.last_page || 1);
+        setTotalItems(meta.total || 0);
+      } else {
+        // This warning will no longer trigger
+        console.warn(
+          "API response for pelatihan data is not in the expected format:",
+          response
+        );
+        setDataPelatihan([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
+      // ▲▲▲ END OF FINAL CORRECTED LOGIC ▲▲▲
     } catch (err) {
       console.error("Failed to fetch pelatihan:", err);
       if (err.code === "ERR_NETWORK") {
