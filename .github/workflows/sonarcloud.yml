@@ -1,12 +1,11 @@
 name: SonarCloud Analysis
-
 on:
   push:
     branches:
-      - main # Ganti dengan nama branch utama Anda jika berbeda
+      - main
   pull_request:
     branches:
-      - main # Ganti dengan nama branch utama Anda jika berbeda
+      - main
 
 jobs:
   sonarcloud:
@@ -14,15 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          # Penting agar SonarCloud bisa menganalisis commit dan branch dengan benar
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20' # Gunakan versi Node yang sesuai dengan proyek Anda
+          node-version: '20'
           cache: 'npm'
 
       - name: Verify Node version
@@ -34,16 +32,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install optional dependencies
-        run: npm install --no-save --no-audit --no-fund --omit=dev
+      - name: Install Vitest and testing dependencies
+        run: |
+          npm install --save-dev vitest @vitest/coverage-v8 @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
+
+      - name: Check if vitest exists after installation
+        run: ls -l node_modules/.bin/vitest
 
       - name: Run tests and generate coverage
-        # Langkah ini WAJIB untuk menghasilkan laporan LCOV sebelum analisis
-        run: npm test
+        run: npm run test:coverage
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          NODE_ENV: production
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token ini disediakan otomatis oleh GitHub
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}      # Token yang kita simpan di Langkah 2
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
