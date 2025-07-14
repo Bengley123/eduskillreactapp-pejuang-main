@@ -569,7 +569,7 @@ const AdminNotifikasiPage = () => {
             <div>
               <h3 className="font-semibold text-gray-900">Sistem Pengumuman</h3>
               <p className="text-gray-600 text-sm">
-                Kirim pengumuman penting kepada peserta yang telah diterima
+                Kirim pengumuman penting kepada peserta
               </p>
             </div>
           </div>
@@ -580,7 +580,7 @@ const AdminNotifikasiPage = () => {
                 {isLoading ? "..." : totalPeserta > 0 ? totalPeserta : "⚠️"}
               </div>
               <div className="text-sm text-gray-600">
-                {totalPeserta > 0 ? "Peserta Diterima" : "Data Peserta N/A"}
+                {totalPeserta > 0 ? "Peserta" : "Data Peserta N/A"}
               </div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -593,7 +593,7 @@ const AdminNotifikasiPage = () => {
               <div className="text-2xl font-bold text-purple-600">
                 <FaUsers className="text-2xl mx-auto" />
               </div>
-              <div className="text-sm text-gray-600">Broadcast ke Peserta Diterima</div>
+              <div className="text-sm text-gray-600">Broadcast ke Peserta</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <div className="text-2xl font-bold text-orange-600">Aktif</div>
@@ -881,7 +881,7 @@ const AdminNotifikasiPage = () => {
                     ) : (
                       <>
                         <FaBell size={14} />
-                        {editMode ? "Update Pengumuman" : "Kirim ke Peserta Diterima"}
+                        {editMode ? "Update Pengumuman" : "Kirim ke Peserta"}
                       </>
                     )}
                   </button>
