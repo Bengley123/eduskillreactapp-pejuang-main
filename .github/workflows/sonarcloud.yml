@@ -23,24 +23,17 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Verify Node version
-        run: node -v
-
-      - name: Clean npm cache
-        run: npm cache clean --force
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Vitest and testing dependencies
-        run: |
-          npm install --save-dev vitest @vitest/coverage-v8 @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
+      - name: Install coverage reporter
+        run: npm install --save-dev @vitest/coverage-v8
 
-      - name: Check if vitest exists after installation
-        run: ls -l node_modules/.bin/vitest
-
-      - name: Run tests and generate coverage
+      - name: Run tests with coverage
         run: npm run test:coverage
+
+      - name: List coverage files
+        run: ls -la coverage/
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
