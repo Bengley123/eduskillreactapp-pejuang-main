@@ -37,8 +37,14 @@ jobs:
       - name: Install optional dependencies
         run: npm install --no-save --no-audit --no-fund --omit=dev
 
-      - name: Add Vitest to PATH
-        run: echo "::add-path::$(npm bin)"
+      - name: Get npm bin directory
+        id: npm-bin
+        run: echo "bin=$(npm bin)" >> $GITHUB_OUTPUT
+
+      - name: Add npm bin directory to PATH
+        uses: actions/add-to-path@v3
+        with:
+          path: ${{ steps.npm-bin.outputs.bin }}
 
       - name: Run tests and generate coverage
         # Langkah ini WAJIB untuk menghasilkan laporan LCOV sebelum analisis
