@@ -11,6 +11,6 @@ const ResourcesLinks = () => (
     </ul>
   </div>
 );
-
+ 
 export default ResourcesLinks;
   

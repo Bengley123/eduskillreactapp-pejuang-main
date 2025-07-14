@@ -8,7 +8,7 @@ const ContactInfo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  useEffect(() => { 
     const getContactData = async () => {
       setLoading(true);
       setError(null);

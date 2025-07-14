@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import CardPelatihan from "./CardPelatihan";
 import { fetchData } from "../../services/api";
 
-const PelatihanList = () => {
+const PelatihanList = () => { 
   const [pelatihan, setPelatihan] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

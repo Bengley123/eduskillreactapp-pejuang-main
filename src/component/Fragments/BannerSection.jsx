@@ -12,7 +12,7 @@ const BannerSection = () => {
 
   // Settings untuk react-slick carousel
   const settings = {
-    dots: true,
+    dots: true, 
     infinite: true,
     speed: 500,
     slidesToShow: 1, // Menampilkan 1 slide dalam satu waktu

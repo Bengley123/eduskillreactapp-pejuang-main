@@ -11,7 +11,7 @@ const TestimoniCarousel = () => {
   const [error, setError] = useState(null);
 
   const settings = {
-    dots: true,
+    dots: true, 
     infinite: true,
     autoplay: true,
     autoplaySpeed: 4000,

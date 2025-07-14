@@ -7,7 +7,7 @@ import { NextArrow, PrevArrow } from "./Arrownavigation";
 
 import { fetchData } from "../../../services/api"; 
 
-const CarouselComponent = () => {
+const CarouselComponent = () => { 
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

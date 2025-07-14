@@ -7,7 +7,7 @@ const CardPelatihan = ({ id, image, title, description, kategori }) => {
   const MAX_DESCRIPTION_LENGTH = 150;
 
   const truncateDescription = (text, maxLength) => {
-    if (!text) return "";
+    if (!text) return ""; 
     return text.length <= maxLength ? text : text.substring(0, maxLength) + "...";
   };
 

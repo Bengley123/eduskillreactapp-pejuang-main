@@ -12,7 +12,7 @@ const NavMenu = ({ isLoggedIn }) => {
   const [error, setError] = useState(null);
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
-
+ 
   // Fetch notifications
   const fetchNotifications = async () => {
     setLoading(true);
