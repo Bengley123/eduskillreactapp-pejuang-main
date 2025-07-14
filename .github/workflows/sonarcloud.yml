@@ -111,6 +111,28 @@ jobs:
           ls -la coverage/ || echo "Coverage folder not found"
           cat coverage/lcov.info || echo "LCOV file not found"
 
+      - name: Debug SonarCloud configuration
+        run: |
+          echo "Checking SONAR_TOKEN..."
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "❌ SONAR_TOKEN is empty!"
+            echo "Please add SONAR_TOKEN to GitHub repository secrets"
+            exit 1
+          else
+            echo "✅ SONAR_TOKEN is set"
+          fi
+          
+          echo "Checking sonar-project.properties..."
+          if [ -f "sonar-project.properties" ]; then
+            echo "✅ sonar-project.properties found"
+            cat sonar-project.properties
+          else
+            echo "❌ sonar-project.properties not found!"
+            exit 1
+          fi
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
