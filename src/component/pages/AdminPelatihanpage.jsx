@@ -31,7 +31,7 @@ import api, {
   setAuthToken,
 } from "../../services/api.js";
 
-// Custom Modal Components (Tidak ada perubahan di sini)
+// Custom Modal Components
 const AlertModal = ({
   show,
   onClose,
@@ -246,7 +246,6 @@ const AdminPelatihanPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // We get the token using the key "jwt", just like in your PesertaPage
     const token = localStorage.getItem("jwt");
     if (token) {
       setAuthToken(token);
@@ -302,13 +301,9 @@ const AdminPelatihanPage = () => {
     }
 
     try {
-      // ▼▼▼ USE 'api', NOT 'axios' ▼▼▼
-      // 'api' is your pre-configured instance that already has the JWT token.
       const response = await api.get(documentUrl, {
         responseType: "blob",
       });
-
-      // The rest of the function is correct
       const fileURL = URL.createObjectURL(response.data);
       window.open(fileURL, "_blank");
     } catch (error) {
@@ -326,7 +321,6 @@ const AdminPelatihanPage = () => {
     }
   };
 
-  // Fungsi untuk handle upload gambar
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -353,7 +347,6 @@ const AdminPelatihanPage = () => {
 
       setSelectedImage(file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target.result);
@@ -388,7 +381,6 @@ const AdminPelatihanPage = () => {
 
       setSelectedEditImage(file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         setEditImagePreview(e.target.result);
@@ -498,8 +490,6 @@ const AdminPelatihanPage = () => {
     fetchKategoriOptions();
   }, []);
 
-  // In AdminPelatihanPage.jsx
-
   const fetchPelatihanData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -522,14 +512,10 @@ const AdminPelatihanPage = () => {
       const url = `${apiEndpoints.pelatihan}?${params.toString()}`;
 
       console.log("Fetching Pelatihan Data from URL:", url);
-      // The 'response' variable here is the object from your log
       const response = await fetchData(url);
       console.log("API Response for Pelatihan:", response);
 
-      // ▼▼▼ FINAL CORRECTED LOGIC ▼▼▼
-      // The check now correctly looks at the object you logged
       if (response && response.data && response.meta) {
-        // No extra .data needed here
         const fetchedRawItems = response.data;
         const meta = response.meta;
 
@@ -538,7 +524,7 @@ const AdminPelatihanPage = () => {
           nama: item.nama_pelatihan,
           keterangan: item.keterangan_pelatihan,
           kategori_id: item.kategori_id || "",
-          kategori: item.kategori || "N/A", // Using the pre-loaded 'kategori' from your resource
+          kategori: item.kategori || "N/A",
           biaya: item.biaya,
           jumlah_kuota: item.jumlah_kuota,
           jumlah_peserta: item.jumlah_peserta || 0,
@@ -558,7 +544,6 @@ const AdminPelatihanPage = () => {
         setTotalPages(meta.last_page || 1);
         setTotalItems(meta.total || 0);
       } else {
-        // This warning will no longer trigger
         console.warn(
           "API response for pelatihan data is not in the expected format:",
           response
@@ -567,7 +552,6 @@ const AdminPelatihanPage = () => {
         setTotalPages(1);
         setTotalItems(0);
       }
-      // ▲▲▲ END OF FINAL CORRECTED LOGIC ▲▲▲
     } catch (err) {
       console.error("Failed to fetch pelatihan:", err);
       if (err.code === "ERR_NETWORK") {
@@ -623,9 +607,6 @@ const AdminPelatihanPage = () => {
     setEditImagePreview(null);
   };
 
-  // =================================================================
-  // ▼▼▼ FUNGSI handleViewPelamar YANG SUDAH DIPERBAIKI ▼▼▼
-  // =================================================================
   const handleViewPelamar = async (pelatihan) => {
     setLoadingPelamar(true);
     setSelectedPelamarList([]);
@@ -643,19 +624,15 @@ const AdminPelatihanPage = () => {
         fetchedPelamar = response.data.data;
       }
 
-      // Add this console.log to see what the API is actually sending!
       console.log("Raw API response for pelamar:", fetchedPelamar);
 
       const mappedPelamar = fetchedPelamar.map((item) => {
         const namaPelamar =
           item.user?.name || item.peserta?.user?.name || "N/A";
 
-        const documentApiUrl = `${
-          import.meta.env.VITE_API_URL
-        }/api/documents-view/`;
+        const documentApiUrl = `${import.meta.env.VITE_API_URL}/api/documents-view/`;
 
         const dokumen = {
-          // Langsung gunakan path lengkap dari item.ktp, dll.
           ktp: item.ktp ? `${documentApiUrl}${item.ktp}` : null,
           kk: item.kk ? `${documentApiUrl}${item.kk}` : null,
           ijazah: item.ijazah ? `${documentApiUrl}${item.ijazah}` : null,
@@ -671,7 +648,7 @@ const AdminPelatihanPage = () => {
           tanggalDaftar: item.created_at
             ? new Date(item.created_at).toLocaleDateString("id-ID")
             : "N/A",
-          dokumen: dokumen, // We now have an object with all doc URLs
+          dokumen: dokumen,
           originalRegistration: item,
         };
       });
@@ -684,21 +661,15 @@ const AdminPelatihanPage = () => {
       setLoadingPelamar(false);
     }
   };
-  // =================================================================
-  // ▲▲▲ AKHIR DARI FUNGSI YANG DIPERBAIKI ▲▲▲
-  // =================================================================
 
   const handlePreviewDokumen = (pelamar) => {
     if (pelamar.dokumen_url) {
-      // Check if the URL potentially indicates an image to open in image modal
-      // This is a basic check, you might need more robust file type detection
       const isImage = /\.(jpg|jpeg|png|gif)$/i.test(pelamar.dokumen_url);
 
       if (isImage) {
         setModalImageSrc(pelamar.dokumen_url);
         setShowImageModal(true);
       } else {
-        // Assume it's a PDF or other document type that can be embedded in an iframe
         setDocumentPreviewUrl(pelamar.dokumen_url);
         setDocumentOwnerName(pelamar.nama);
         setShowDocumentModal(true);
@@ -733,7 +704,6 @@ const AdminPelatihanPage = () => {
           "Berhasil!",
           "Status pelamar berhasil diperbarui!"
         );
-        // Re-fetch pelamar list for the current training to update status visually
         handleViewPelamar({
           id: selectedPelatihanId,
           nama: selectedPelatihanNama,
@@ -741,7 +711,6 @@ const AdminPelatihanPage = () => {
         setShowStatusPopup(false);
         setSelectedPelamar(null);
         setNewStatus("");
-        // Also refresh the main training data to update 'jumlah_peserta' if applicable
         fetchPelatihanData();
       } else {
         throw new Error("Respon API tidak valid.");
@@ -811,6 +780,49 @@ const AdminPelatihanPage = () => {
   const handleSaveEdit = async () => {
     setLoading(true);
     setValidationErrors({});
+
+    // Validasi Biaya Negatif
+    if (parseFloat(editedPelatihan.biaya) < 0) {
+      showAlert("error", "Gagal", "Biaya pelatihan tidak boleh negatif.");
+      setLoading(false);
+      return;
+    }
+
+    // Validasi Panjang Minimal Nama Pelatihan
+    const minNamaPelatihanLength = 5;
+    if (editedPelatihan.nama.length < minNamaPelatihanLength) {
+      showAlert("error", "Gagal", `Nama pelatihan harus memiliki minimal ${minNamaPelatihanLength} karakter.`);
+      setLoading(false);
+      return;
+    }
+
+    // Validasi Panjang Minimal Keterangan Pelatihan
+    const minKeteranganLength = 10;
+    if (editedPelatihan.keterangan.length < minKeteranganLength) {
+      showAlert("error", "Gagal", `Keterangan pelatihan harus memiliki minimal ${minKeteranganLength} karakter.`);
+      setLoading(false);
+      return;
+    }
+
+    // Validasi Jumlah Kuota
+    const maxKuota = 100;
+    if (parseInt(editedPelatihan.jumlah_kuota) > maxKuota) {
+      showAlert("error", "Gagal", `Jumlah kuota tidak boleh lebih dari ${maxKuota}.`);
+      setLoading(false);
+      return;
+    }
+
+    // Validasi Instruktur tidak boleh kosong
+    if (!editedPelatihan.mentor_id) {
+      setValidationErrors({
+        ...validationErrors,
+        mentor_id: ["Instruktur harus dipilih"]
+      });
+      showAlert("error", "Gagal", "Instruktur harus dipilih.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("_method", "PUT");
@@ -879,6 +891,34 @@ const AdminPelatihanPage = () => {
 
   const handleSubmit = async (postStatusValue) => {
     setValidationErrors({});
+
+    // Validasi Biaya Negatif
+    if (parseFloat(form.biaya) < 0) {
+      showAlert("error", "Gagal", "Biaya pelatihan tidak boleh negatif.");
+      return;
+    }
+
+    // Validasi Panjang Minimal Nama Pelatihan
+    const minNamaPelatihanLength = 5;
+    if (form.nama_pelatihan.length < minNamaPelatihanLength) {
+      showAlert("error", "Gagal", `Nama pelatihan harus memiliki minimal ${minNamaPelatihanLength} karakter.`);
+      return;
+    }
+
+    // Validasi Panjang Minimal Keterangan Pelatihan
+    const minKeteranganLength = 10;
+    if (form.keterangan_pelatihan.length < minKeteranganLength) {
+      showAlert("error", "Gagal", `Keterangan pelatihan harus memiliki minimal ${minKeteranganLength} karakter.`);
+      return;
+    }
+
+    // Validasi Jumlah Kuota
+    const maxKuota = 100;
+    if (parseInt(form.jumlah_kuota) > maxKuota) {
+      showAlert("error", "Gagal", `Jumlah kuota tidak boleh lebih dari ${maxKuota}.`);
+      return;
+    }
+
     if (
       !form.nama_pelatihan ||
       !form.keterangan_pelatihan ||
@@ -2208,11 +2248,10 @@ const AdminPelatihanPage = () => {
                             <div className="flex items-center justify-center gap-4">
                               <button
                                 onClick={() => {
-                                  setCurrentPelamarDocs(pelamar.dokumen); // Set the docs for the modal
-                                  setDocumentListModalOpen(true); // Open the modal
+                                  setCurrentPelamarDocs(pelamar.dokumen);
+                                  setDocumentListModalOpen(true);
                                 }}
                                 className={`transition-colors ${
-                                  // Check if at least one document URL exists
                                   Object.values(pelamar.dokumen).some(
                                     (doc) => doc
                                   )
@@ -2416,7 +2455,6 @@ const AdminPelatihanPage = () => {
                 </button>
               </div>
               <div className="space-y-4">
-                {/* KTP - Changed from <a> to <button> */}
                 <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
                   <span className="font-medium text-gray-700">Foto KTP</span>
                   {currentPelamarDocs.ktp ? (
@@ -2431,7 +2469,6 @@ const AdminPelatihanPage = () => {
                   )}
                 </div>
 
-                {/* KK - Changed from <a> to <button> */}
                 <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
                   <span className="font-medium text-gray-700">
                     Kartu Keluarga (KK)
@@ -2448,7 +2485,6 @@ const AdminPelatihanPage = () => {
                   )}
                 </div>
 
-                {/* Ijazah - Changed from <a> to <button> */}
                 <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
                   <span className="font-medium text-gray-700">Ijazah</span>
                   {currentPelamarDocs.ijazah ? (
@@ -2465,7 +2501,6 @@ const AdminPelatihanPage = () => {
                   )}
                 </div>
 
-                {/* Foto - Changed from <a> to <button> */}
                 <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
                   <span className="font-medium text-gray-700">Pas Foto</span>
                   {currentPelamarDocs.foto ? (

@@ -104,8 +104,17 @@ const EditProfileForm = () => {
 
   const validateNewPassword = (password) => {
     if (!password) return "Password baru tidak boleh kosong.";
-    if (password.length < 8) return "Password minimal 8 karakter.";
-    // Anda bisa menambahkan validasi regex yang lebih kompleks di sini
+    if (password.length < 8) return "Password baru minimal 8 karakter.";
+    
+    // Validasi kompleksitas password (opsional - sesuai dengan ketentuan password)
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    
+    if (!(hasUpperCase && hasLowerCase && hasNumber)) {
+      return "Password harus mengandung huruf besar, huruf kecil, dan angka.";
+    }
+    
     return null;
   };
 
@@ -233,6 +242,11 @@ const EditProfileForm = () => {
         passwordData.new_password
       );
 
+      // Update error states
+      setCurrentPasswordError(currentErr);
+      setNewPasswordError(newErr);
+      setConfirmPasswordError(confirmErr);
+
       const isValid = !currentErr && !newErr && !confirmErr;
       setIsPasswordFormValid(isValid);
     };
@@ -273,10 +287,13 @@ const EditProfileForm = () => {
       [name]: value,
     }));
 
+    // Validasi setiap kali input password berubah
     if (name === "current_password") {
-      setCurrentPasswordError(validateCurrentPassword(value));
+      const error = validateCurrentPassword(value);
+      setCurrentPasswordError(error);
     } else if (name === "new_password") {
-      setNewPasswordError(validateNewPassword(value));
+      const error = validateNewPassword(value);
+      setNewPasswordError(error);
       // Re-validate confirmation password when new password changes
       if (passwordData.new_password_confirmation) {
         setConfirmPasswordError(
@@ -306,6 +323,11 @@ const EditProfileForm = () => {
     setNameError(nameErr);
     setEmailError(emailErr);
     setNomorTelpError(nomorTelpErr);
+
+    // Jika ada error, hentikan proses submit
+    if (nameErr || emailErr || nomorTelpErr) {
+      return;
+    }
 
     setSaving(true);
     setError(null); // Reset error umum sebelum menyimpan
@@ -375,6 +397,7 @@ const EditProfileForm = () => {
   };
 
   const handleChangePassword = async () => {
+    // Validasi input sebelum submit
     const currentErr = validateCurrentPassword(passwordData.current_password);
     const newErr = validateNewPassword(passwordData.new_password);
     const confirmErr = validateConfirmPassword(
@@ -382,10 +405,12 @@ const EditProfileForm = () => {
       passwordData.new_password
     );
 
+    // Update state error
     setCurrentPasswordError(currentErr);
     setNewPasswordError(newErr);
     setConfirmPasswordError(confirmErr);
 
+    // Jika ada error, hentikan proses submit
     if (currentErr || newErr || confirmErr) {
       return;
     }
@@ -429,7 +454,7 @@ const EditProfileForm = () => {
       }
       setPasswordError(errorMessage);
     } finally {
-      setSendingLink(false);
+      setSavingPassword(false);
     }
   };
 
@@ -509,7 +534,7 @@ const EditProfileForm = () => {
                     variant="primary"
                     onClick={handleSendVerification}
                     disabled={sendingLink || saving}
-                    className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 h-10 px-4" // Added h-10 px-4
+                    className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 h-10 px-4"
                   >
                     {sendingLink ? "Mengirim..." : "Verify"}
                   </Button>
@@ -583,6 +608,9 @@ const EditProfileForm = () => {
                 >
                   {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
                 </button>
+                {currentPasswordError && (
+                  <div className="text-red-500 text-sm mt-1">{currentPasswordError}</div>
+                )}
               </div>
 
               <div className="relative">
@@ -603,6 +631,10 @@ const EditProfileForm = () => {
                 >
                   {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
                 </button>
+                {/* Tambahkan tampilan pesan error yang jelas untuk password baru */}
+                {newPasswordError && (
+                  <div className="text-red-500 text-sm mt-1">{newPasswordError}</div>
+                )}
               </div>
 
               <div className="relative">
@@ -623,6 +655,9 @@ const EditProfileForm = () => {
                 >
                   {showPasswords.confirmation ? <FaEyeSlash /> : <FaEye />}
                 </button>
+                {confirmPasswordError && (
+                  <div className="text-red-500 text-sm mt-1">{confirmPasswordError}</div>
+                )}
               </div>
 
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
@@ -638,7 +673,7 @@ const EditProfileForm = () => {
                 <Button
                   variant="primary"
                   onClick={handleChangePassword}
-                  disabled={savingPassword || !isPasswordFormValid}
+                  disabled={savingPassword}
                 >
                   {savingPassword ? "Mengubah Password..." : "Ubah Password"}
                 </Button>

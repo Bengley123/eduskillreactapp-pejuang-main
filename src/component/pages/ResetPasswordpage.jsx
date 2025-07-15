@@ -70,6 +70,11 @@ export default function ResetPasswordPage() {
       passwordData.password_confirmation,
       passwordData.password
     );
+    
+    // Perbarui state error untuk password dan konfirmasi password
+    setPasswordError(passErr);
+    setConfirmPasswordError(confirmErr);
+    
     setIsFormValid(!passErr && !confirmErr);
   }, [passwordData]);
 
@@ -80,7 +85,8 @@ export default function ResetPasswordPage() {
 
     // Validasi saat mengetik
     if (name === "password") {
-      setPasswordError(validatePassword(value));
+      const error = validatePassword(value);
+      setPasswordError(error);
       // Validasi ulang konfirmasi jika password utama berubah
       if (passwordData.password_confirmation) {
         setConfirmPasswordError(
@@ -102,8 +108,24 @@ export default function ResetPasswordPage() {
   // Handler untuk submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isFormValid) return;
-
+    
+    // Validasi lagi sebelum submit untuk memastikan
+    const passErr = validatePassword(passwordData.password);
+    const confirmErr = validateConfirmPassword(
+      passwordData.password_confirmation,
+      passwordData.password
+    );
+    
+    // Update error state
+    setPasswordError(passErr);
+    setConfirmPasswordError(confirmErr);
+    
+    // Hentikan submit jika ada error
+    if (passErr || confirmErr) {
+      setIsFormValid(false);
+      return;
+    }
+    
     setLoading(true);
     setError("");
     setSuccessMessage("");
@@ -127,6 +149,11 @@ export default function ResetPasswordPage() {
       const errorMessage =
         err.response?.data?.message || "Gagal mengatur ulang password.";
       setError(errorMessage);
+      
+      // Cek apakah ada error yang spesifik untuk password dari server
+      if (err.response?.data?.errors?.password) {
+        setPasswordError(err.response.data.errors.password[0]);
+      }
     } finally {
       setLoading(false);
     }
@@ -175,6 +202,10 @@ export default function ResetPasswordPage() {
               >
                 {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
               </button>
+              {/* Tambahkan tampilan error yang jelas */}
+              {passwordError && (
+                <div className="text-red-500 text-sm mt-1">{passwordError}</div>
+              )}
             </div>
 
             <div className="relative">
@@ -195,6 +226,10 @@ export default function ResetPasswordPage() {
               >
                 {showPasswords.confirmation ? <FaEyeSlash /> : <FaEye />}
               </button>
+              {/* Tambahkan tampilan error yang jelas */}
+              {confirmPasswordError && (
+                <div className="text-red-500 text-sm mt-1">{confirmPasswordError}</div>
+              )}
             </div>
 
             <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
@@ -208,7 +243,7 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               variant="primary"
-              disabled={!isFormValid || loading}
+              disabled={loading}
               className="w-full"
             >
               {loading ? "Menyimpan..." : "Reset Password"}

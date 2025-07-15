@@ -1042,6 +1042,14 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
   };
 
   const handleSaveEdit = async () => {
+    const pubDate = new Date(editedItem.date);
+    pubDate.setHours(0,0,0,0);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (pubDate < today) {
+      setActionError("Tanggal publikasi tidak boleh di masa lalu.");
+      return;
+    }
     setLoadingAction(true);
     setActionError(null);
     try {
@@ -1127,6 +1135,14 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
   };
 
   const handleSubmitNew = async () => {
+    const pubDate = new Date(form.date);
+    pubDate.setHours(0,0,0,0);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (pubDate < today) {
+      setActionError("Tanggal publikasi tidak boleh di masa lalu.");
+      return;
+    }
     setLoadingAction(true);
     setActionError(null);
 
@@ -2224,6 +2240,7 @@ const InformasiKontakEditor = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({
     namaOrganisasi: data?.namaOrganisasi || "BINA ESSA",
+    alamat: data?.alamat || "",
     email: data?.email || "",
     telepon: data?.telepon || "",
     whatsapp: data?.whatsapp || "",
@@ -2249,6 +2266,7 @@ const InformasiKontakEditor = ({
   useEffect(() => {
     setEditedData({
       namaOrganisasi: data?.namaOrganisasi || "BINA ESSA",
+      alamat: data?.alamat || "",
       email: data?.email || "",
       telepon: data?.telepon || "",
       whatsapp: data?.whatsapp || "",
@@ -2276,6 +2294,7 @@ const InformasiKontakEditor = ({
   const handleCancel = () => {
     setEditedData({
       namaOrganisasi: data?.namaOrganisasi || "BINA ESSA",
+      alamat: data?.alamat || "",
       email: data?.email || "",
       telepon: data?.telepon || "",
       whatsapp: data?.whatsapp || "",
@@ -2297,13 +2316,36 @@ const InformasiKontakEditor = ({
     setIsEditing(false);
     setError(null);
   };
+  const validatePhoneNumber = (number) => {
+    return /^[0-9]{8,15}$/.test(number);
+  };
 
   const handleSave = async () => {
     setLoading(true);
     setError(null);
+
+    if (!editedData.alamat) {
+      setError("Alamat tidak boleh kosong");
+      setLoading(false);
+      return;
+    }
+
+    if (editedData.telepon && !validatePhoneNumber(editedData.telepon)) {
+      setError("Nomor telepon harus berupa angka (8-15 digit)");
+      setLoading(false);
+      return;
+    }
+
+    if (editedData.whatsapp && !validatePhoneNumber(editedData.whatsapp)) {
+      setError("Nomor WhatsApp harus berupa angka (8-15 digit)");
+      setLoading(false);
+      return;
+    }
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("nama_organisasi", editedData.namaOrganisasi || "");
+      formDataToSend.append("alamat", editedData.alamat);
       formDataToSend.append("email", editedData.email || "");
       formDataToSend.append("telepon", editedData.telepon || "");
       formDataToSend.append("whatsapp", editedData.whatsapp || "");
@@ -2500,7 +2542,22 @@ const InformasiKontakEditor = ({
                 </p>
               )}
             </div>
-
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Alamat
+              </label>
+              {isEditing ? (
+                <textarea
+                  value={editedData.alamat}
+                  onChange={(e) => handleInputChange("alamat", e.target.value)}
+                  className="w-full p-2 border rounded"
+                  rows="2"
+                  required
+                />
+              ) : (
+                <p className="p-2 bg-gray-50 rounded">{data?.alamat || "Alamat belum diisi"}</p>
+              )}
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -3086,6 +3143,7 @@ const AdminKontenpage = () => {
         if (apiItem && apiItem.id) {
           setInformasiKontakData({
             namaOrganisasi: apiItem.nama_organisasi || "BINA ESSA",
+            alamat: apiItem.alamat || "",
             email: apiItem.email || "",
             telepon: apiItem.telepon || "",
             whatsapp: apiItem.whatsapp || "",
@@ -3116,6 +3174,7 @@ const AdminKontenpage = () => {
       console.error("Error fetching Informasi Kontak data:", error);
       setInformasiKontakData({
         namaOrganisasi: "BINA ESSA",
+        alamat: "",
         email: "",
         telepon: "",
         whatsapp: "",
