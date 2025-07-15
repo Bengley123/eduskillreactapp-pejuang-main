@@ -326,7 +326,14 @@ const EditProfileForm = () => {
 
     // Jika ada error, hentikan proses submit
     if (nameErr || emailErr || nomorTelpErr) {
-      return;
+        // Tambahkan notifikasi di sini
+        setNotification({
+            message: "Terdapat kesalahan pada input Anda. Mohon periksa kembali formulir.",
+            type: "error"
+        });
+        // Gulir ke atas halaman untuk memastikan notifikasi terlihat
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
     }
 
     setSaving(true);

@@ -797,7 +797,7 @@ const AdminPelatihanPage = () => {
     }
 
     // Validasi Panjang Minimal Keterangan Pelatihan
-    const minKeteranganLength = 10;
+    const minKeteranganLength = 20;
     if (editedPelatihan.keterangan.length < minKeteranganLength) {
       showAlert("error", "Gagal", `Keterangan pelatihan harus memiliki minimal ${minKeteranganLength} karakter.`);
       setLoading(false);
@@ -805,7 +805,7 @@ const AdminPelatihanPage = () => {
     }
 
     // Validasi Jumlah Kuota
-    const maxKuota = 100;
+    const maxKuota = 9999;
     if (parseInt(editedPelatihan.jumlah_kuota) > maxKuota) {
       showAlert("error", "Gagal", `Jumlah kuota tidak boleh lebih dari ${maxKuota}.`);
       setLoading(false);
@@ -906,14 +906,14 @@ const AdminPelatihanPage = () => {
     }
 
     // Validasi Panjang Minimal Keterangan Pelatihan
-    const minKeteranganLength = 10;
+    const minKeteranganLength = 20;
     if (form.keterangan_pelatihan.length < minKeteranganLength) {
       showAlert("error", "Gagal", `Keterangan pelatihan harus memiliki minimal ${minKeteranganLength} karakter.`);
       return;
     }
 
     // Validasi Jumlah Kuota
-    const maxKuota = 100;
+    const maxKuota = 9999;
     if (parseInt(form.jumlah_kuota) > maxKuota) {
       showAlert("error", "Gagal", `Jumlah kuota tidak boleh lebih dari ${maxKuota}.`);
       return;
