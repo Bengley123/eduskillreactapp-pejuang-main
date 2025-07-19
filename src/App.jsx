@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import UserLayout from "./component/Layouts/UserLayout";
@@ -16,9 +16,13 @@ import TentangKamiLPKPage from "./component/pages/TentangKamiLPKpage";
 import TentangKamiLKPPage from "./component/pages/TentangKamiLKPpage";
 import TentangKamiYayasanPage from "./component/pages/TentangKamiYayasanpage";
 import LupaPasswordPage from "./component/pages/LupaPasswordpage";
+import PelatihanLengkapPage from "./component/pages/PelatihanLengkappage";
+import VerificationResultPage from "./component/pages/VerificationResultPage";
+import BeritaLengkapPage from "./component/pages/BeritaMorepage";
+import AdminKategoriPelatihanPage from "./component/pages/AdminKategoriPelatihanpage";
+import AdminMentorPage from "./component/pages/AdminMentorpage";
 
-
-import KetuaDashboardPage from "./component/pages/KetuaDashboardpage"
+import KetuaDashboardPage from "./component/pages/KetuaDashboardpage";
 
 import AdminPesertaPage from "./component/pages/AdminPesertapage";
 import AdminKontenPage from "./component/pages/AdminKontenpage";
@@ -28,13 +32,25 @@ import AdminNotifikasiPage from "./component/pages/AdminNotifikasipage";
 import AdminDashboardPage from "./component/pages/AdminDashboardpage";
 import ProfilePage from "./component/pages/Profilepage";
 import EditProfilePage from "./component/pages/EditProfilePage";
-import StatusPendaftaranPage from "./component/pages/StatusPendaftaranpage";
+// import StatusPendaftaranPage from "./component/pages/StatusPendaftaranpage";
 import FeedBackPage from "./component/pages/Feedbackpage";
 import AdminFeedbackPage from "./component/pages/AdminFeedbackpage";
+import ResetPasswordPage from "./component/pages/ResetPasswordPage";
 
-
+import { setAuthToken } from "./services/api";
 
 function App() {
+  // --- BARU: Tambahkan useEffect untuk mengatur token saat aplikasi dimuat ---
+  useEffect(() => {
+    const token = localStorage.getItem("jwt"); // Ambil token dari localStorage
+    if (token) {
+      setAuthToken(token); // Set token ke Axios defaults
+      console.log("Auth token successfully set from localStorage."); // Pesan debug
+    } else {
+      console.log("No auth token found in localStorage."); // Pesan debug jika tidak ada token
+    }
+  }, []); // Array dependensi kosong agar hook ini hanya berjalan sekali saat komponen di-mount
+
   return (
     <Routes>
       {/* Layout untuk User */}
@@ -43,10 +59,15 @@ function App() {
         <Route path="/daftar/:id" element={<DaftarPage />} />
         <Route path="/tentangkamiLPK" element={<TentangKamiLPKPage />} />
         <Route path="/tentangkamiLKP" element={<TentangKamiLKPPage />} />
-        <Route path="/tentangkamiYayasan" element={<TentangKamiYayasanPage />} />
+        <Route
+          path="/tentangkamiYayasan"
+          element={<TentangKamiYayasanPage />}
+        />
         <Route path="/pelatihan/:id" element={<DetailPelatihan />} />
+        <Route path="/pelatihanlengkap" element={<PelatihanLengkapPage />} />
         <Route path="/berita/:id" element={<DetailBeritaPage />} />
-        <Route path="/statusdaftar" element={<StatusPendaftaranPage />} />
+        <Route path="/beritalengkap" element={<BeritaLengkapPage />} />
+        {/* <Route path="/statusdaftar" element={<StatusPendaftaranPage />} /> */}
         <Route path="/galeri" element={<GaleriPage />} />
         <Route path="/feedback" element={<FeedBackPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -54,6 +75,12 @@ function App() {
         <Route path="/regis" element={<RegisterPage />} />
         <Route path="/profil" element={<ProfilePage />} />
         <Route path="/editprofil" element={<EditProfilePage />} />
+        <Route
+          path="/tentangkamiYayasan"
+          element={<TentangKamiYayasanPage />}
+        />
+        <Route path="/verify-email" element={<VerificationResultPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Layout untuk Admin */}
@@ -61,6 +88,8 @@ function App() {
         <Route path="/admindashboard" element={<AdminDashboardPage />} />
         <Route path="/adpeserta" element={<AdminPesertaPage />} />
         <Route path="/adkonten" element={<AdminKontenPage />} />
+        <Route path="/adkategori" element={<AdminKategoriPelatihanPage />} />
+        <Route path="/admentor" element={<AdminMentorPage />} />
         <Route path="/adpelatihan" element={<AdminPelatihanPage />} />
         <Route path="/adlaporan" element={<AdminLaporanPage />} />
         <Route path="/adfeedback" element={<AdminFeedbackPage />} />

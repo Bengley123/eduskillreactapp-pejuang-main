@@ -1,7 +1,15 @@
 import React from "react";
-import { FaEnvelope, FaPhone, FaWhatsapp, FaInstagram, FaFacebook, FaTwitter, FaYoutube, FaTiktok } from "react-icons/fa";
-import logo from '../assets/logo-bina-essa1.jpg';
-
+import {
+  FaEnvelope,
+  FaPhone,
+  FaWhatsapp,
+  FaInstagram,
+  FaFacebook,
+  FaTwitter,
+  FaYoutube,
+  FaTiktok,
+} from "react-icons/fa";
+import logo from "../assets/logo-bina-essa1.jpg";
 
 const FooterComponent = () => {
   return (
@@ -10,21 +18,39 @@ const FooterComponent = () => {
         {/* Logo dan Kontak */}
         <div>
           {/* <h3 className="text-xl font-bold mb-2">BINA ESSA</h3> */}
-            <div className="flex items-center space-x-3">
-              <img src={logo} alt="Logo Bina Essa" className="h-12 bg-white rounded" />
-              <div>
-                <div className="text-xs leading-tight font-bold text-dark">LEMBAGA KURSUS DAN PELATIHAN</div>
-                <div className="text-xl font-bold -mt-1 text-dark">BINA ESSA</div>
+          <div className="flex items-center space-x-3">
+            <img
+              src={logo}
+              alt="Logo Bina Essa"
+              className="h-12 bg-white rounded"
+            />
+            <div>
+              <div className="text-xs leading-tight font-bold text-dark">
+                LEMBAGA KURSUS DAN PELATIHAN
               </div>
+              <div className="text-xl font-bold -mt-1 text-dark">BINA ESSA</div>
             </div>
-          <p className="text-white">Jl. Griya Pesona No.1.C, Gunungleutik, Kec. Ciparay,<br/>Kabupaten Bandung, Jawa Barat 40381
-          </p><br/>
+          </div>
+          <p className="text-white">
+            Jl. Griya Pesona No.1.C, Gunungleutik, Kec. Ciparay,
+            <br />
+            Kabupaten Bandung, Jawa Barat 40381
+          </p>
+          <br />
           <p className="text-lg font-semibold mb-2">Call Center</p>
           <ul className="text-sm space-y-1">
-            <li><FaEnvelope className="inline mr-2" /> Email</li>
-            <li><FaPhone className="inline mr-2" /> No.tel</li>
-            <li><FaWhatsapp className="inline mr-2" /> No.wa</li>
-            <li><FaInstagram className="inline mr-2" /> Insta</li>
+            <li>
+              <FaEnvelope className="inline mr-2" /> Email
+            </li>
+            <li>
+              <FaPhone className="inline mr-2" /> No.tel
+            </li>
+            <li>
+              <FaWhatsapp className="inline mr-2" /> No.wa
+            </li>
+            <li>
+              <FaInstagram className="inline mr-2" /> Insta
+            </li>
           </ul>
         </div>
 
@@ -35,7 +61,7 @@ const FooterComponent = () => {
             <li>Publikasi</li>
             <li>Pelayanan Publik</li>
             <li>FAQ</li>
-            <li>Hubungi Kami</li>
+            <li>Hubungi Kamia</li>
           </ul>
         </div>
 
