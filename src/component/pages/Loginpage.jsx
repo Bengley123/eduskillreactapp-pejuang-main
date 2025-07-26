@@ -92,7 +92,7 @@ const LoginPage = () => {
       <div className="w-full h-screen bg-cover bg-center flex items-center justify-center">
         <div className="bg-white p-8 rounded-md shadow-md w-[350px]">
           <h2 className="text-2xl font-semibold text-center mb-1">EduSkill</h2>
-          <p className="text-sm text-center text-blue-600 mb-4">Login</p>
+          <p className="text-sm text-center font-bold text-blue-600 mb-4">LOGIN</p>
 
           <LoginForm
             username={username}

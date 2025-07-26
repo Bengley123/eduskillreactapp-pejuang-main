@@ -19,7 +19,7 @@ const LoginForm = ({
       <InputWithLabel
         label="Username"
         type="text"
-        placeholder="Username anda"
+        placeholder="Username"
         value={username}
         onChange={onUsernameChange}
         icon={FaUser}
@@ -28,7 +28,7 @@ const LoginForm = ({
       <InputWithLabel
         label="Password"
         type="password"
-        placeholder="Password anda"
+        placeholder="Password"
         value={password}
         onChange={onPasswordChange}
         icon={FaLock}
