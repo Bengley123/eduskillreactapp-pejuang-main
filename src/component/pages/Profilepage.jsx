@@ -19,6 +19,10 @@ const ProfilePage = () => {
   const [feedbackContent, setFeedbackContent] = useState("");
   const [workplace, setWorkplace] = useState("");
 
+  // Simple: This represents if peserta has ANY feedback in the database
+  const [hasFeedback, setHasFeedback] = useState(false);
+  const [checkingFeedback, setCheckingFeedback] = useState(false);
+
   const statusSteps = [
     "Unggah Persyaratan",
     "Lolos Seleksi",
@@ -44,6 +48,33 @@ const ProfilePage = () => {
     }
   }, []);
 
+  const checkExistingFeedback = useCallback(async (daftarPelatihanId) => {
+    if (!daftarPelatihanId) {
+      return;
+    }
+
+    setCheckingFeedback(true);
+    try {
+      const token = localStorage.getItem("jwt");
+      setAuthToken(token);
+
+      const response = await fetchData(`/feedbackcheck/${daftarPelatihanId}`);
+
+      // Check if response has the data directly or nested in .data
+      const responseData = response.data || response;
+
+      if (responseData && typeof responseData.hasFeedback !== "undefined") {
+        setHasFeedback(responseData.hasFeedback);
+      } else {
+        setHasFeedback(false);
+      }
+    } catch (err) {
+      setHasFeedback(false);
+    } finally {
+      setCheckingFeedback(false);
+    }
+  }, []);
+
   const loadUserProfileAndTrainings = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -52,7 +83,6 @@ const ProfilePage = () => {
     const storedUser = localStorage.getItem("user");
 
     if (!storedToken) {
-      console.log("ProfilePage: Tidak ada token, mengarahkan ke login.");
       navigate("/login");
       setLoading(false);
       return;
@@ -65,24 +95,19 @@ const ProfilePage = () => {
       if (storedUser) {
         try {
           currentUserData = JSON.parse(storedUser);
-          console.log("ProfilePage: Data pengguna dimuat dari localStorage.");
         } catch (e) {
-          console.error("Gagal mengurai data pengguna dari localStorage:", e);
           setError("Data pengguna rusak di penyimpanan lokal.");
           localStorage.removeItem("user");
         }
       }
 
       if (!currentUserData) {
-        console.log("ProfilePage: Data pengguna tidak ada di localStorage atau rusak, mencoba ambil dari API /user.");
         const response = await fetchData("/user");
         if (response && response.data) {
           currentUserData = response.data;
           localStorage.setItem("user", JSON.stringify(currentUserData));
-          console.log("ProfilePage: Data pengguna dimuat dari API /user:", currentUserData);
         } else {
           setError("Gagal memuat data pengguna dari API.");
-          console.error("ProfilePage: Respon API user tidak valid:", response);
           navigate("/login");
           setLoading(false);
           return;
@@ -91,25 +116,30 @@ const ProfilePage = () => {
 
       setUser(currentUserData);
 
-      console.log("ProfilePage: Mengambil data pendaftaran pelatihan.");
-      const registeredTrainingsResponse = await fetchData("/daftar-pelatihan/current-user");
-      if (registeredTrainingsResponse && Array.isArray(registeredTrainingsResponse.data)) {
+      const registeredTrainingsResponse = await fetchData(
+        "/daftar-pelatihan/current-user"
+      );
+      if (
+        registeredTrainingsResponse &&
+        Array.isArray(registeredTrainingsResponse.data)
+      ) {
         setRegisteredTrainings(registeredTrainingsResponse.data);
-        console.log("ProfilePage: Data pendaftaran pelatihan dimuat:", registeredTrainingsResponse.data);
-      } else if (registeredTrainingsResponse && registeredTrainingsResponse.data && Array.isArray(registeredTrainingsResponse.data.data)) {
+      } else if (
+        registeredTrainingsResponse &&
+        registeredTrainingsResponse.data &&
+        Array.isArray(registeredTrainingsResponse.data.data)
+      ) {
         setRegisteredTrainings(registeredTrainingsResponse.data.data);
-        console.log("ProfilePage: Data pendaftaran pelatihan dimuat (paginasi):", registeredTrainingsResponse.data.data);
       } else {
-        console.warn("ProfilePage: Tidak ada data pendaftaran pelatihan atau respons tidak valid:", registeredTrainingsResponse);
         setRegisteredTrainings([]);
       }
-
     } catch (err) {
-      console.error("Gagal mengambil data profil atau pendaftaran pelatihan dari API:", err);
       if (err.response && err.response.status === 401) {
         setError("Sesi kedaluwarsa atau tidak sah. Silakan login kembali.");
       } else {
-        setError("Gagal mengambil data profil atau pendaftaran pelatihan. Pastikan Anda sudah login.");
+        setError(
+          "Gagal mengambil data profil atau pendaftaran pelatihan. Pastikan Anda sudah login."
+        );
       }
       navigate("/login");
     } finally {
@@ -118,16 +148,18 @@ const ProfilePage = () => {
   }, [navigate]);
 
   const handleProfileUpdated = () => {
-    console.log("ProfilePage: Menerima sinyal update, memicu refresh profil.");
-    setRefreshProfile(prev => prev + 1);
+    setRefreshProfile((prev) => prev + 1);
   };
 
   const handleSelectTraining = (training) => {
     setSelectedTraining(training);
+    setHasFeedback(false);
+    checkExistingFeedback(training.id);
   };
 
   const handleBackToTrainings = () => {
     setSelectedTraining(null);
+    setHasFeedback(false);
   };
 
   const handleSubmitFeedback = async () => {
@@ -141,50 +173,42 @@ const ProfilePage = () => {
       return;
     }
 
+    if (hasFeedback) {
+      alert(
+        "Anda sudah pernah memberikan feedback. Hanya diperbolehkan satu feedback per peserta."
+      );
+      return;
+    }
+
     try {
       const token = localStorage.getItem("jwt");
       setAuthToken(token);
 
-      console.log("Mengirim feedback untuk daftar_pelatihan_id:", selectedTraining.id);
-      console.log("Data feedback:", {
+      const response = await api.post("/feedback", {
         daftar_pelatihan_id: selectedTraining.id,
         comment: feedbackContent,
-        tempat_kerja: workplace
+        tempat_kerja: workplace,
       });
 
-      // PERBAIKAN: Gunakan endpoint yang sesuai dengan route Laravel
-      // Route: POST /feedback/{id} - di mana {id} adalah daftar_pelatihan_id
-      const response = await api.post(
-        `/feedback/${selectedTraining.id}`, // Tambahkan ID ke URL
-        {
-          daftar_pelatihan_id: selectedTraining.id, // ID dari entri daftar_pelatihan
-          comment: feedbackContent, // Nama bidang yang benar untuk isi feedback
-          tempat_kerja: workplace // Nama bidang yang benar untuk tempat kerja
-        }
-      );
-
-      console.log("Response feedback:", response.data);
       alert("Feedback berhasil dikirim!");
       setIsFeedbackModalOpen(false);
       setFeedbackContent("");
       setWorkplace("");
-      setRefreshProfile(prev => prev + 1);
-      
+
+      setHasFeedback(true);
+      await checkExistingFeedback(selectedTraining.id);
+      setRefreshProfile((prev) => prev + 1);
     } catch (err) {
-      console.error("Gagal mengirim feedback:", err);
-      console.error("Error response:", err.response);
-      
       let errorMessage = "Terjadi kesalahan tidak dikenal";
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.response?.data?.errors) {
-        // Handle validation errors
         const errors = Object.values(err.response.data.errors).flat();
         errorMessage = errors.join(", ");
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setError(`Gagal mengirim feedback: ${errorMessage}`);
       alert(`Gagal mengirim feedback: ${errorMessage}`);
     }
@@ -195,7 +219,11 @@ const ProfilePage = () => {
   }, [refreshProfile, loadUserProfileAndTrainings]);
 
   if (loading) {
-    return <div className="text-center mt-10 text-gray-600">Memuat profil dan pelatihan...</div>;
+    return (
+      <div className="text-center mt-10 text-gray-600">
+        Memuat profil dan pelatihan...
+      </div>
+    );
   }
 
   if (error) {
@@ -203,29 +231,48 @@ const ProfilePage = () => {
   }
 
   if (!user) {
-    return <div className="text-center mt-10 text-red-500">Data pengguna tidak tersedia.</div>;
+    return (
+      <div className="text-center mt-10 text-red-500">
+        Data pengguna tidak tersedia.
+      </div>
+    );
   }
 
   return (
     <div className="bg-gray-100 min-h-screen py-10 px-4 flex flex-col items-center space-y-6">
-      <ProfileCard user={user} onEdit={() => navigate("/editprofil")} onProfileUpdated={handleProfileUpdated} />
+      <ProfileCard
+        user={user}
+        onEdit={() => navigate("/editprofil")}
+        onProfileUpdated={handleProfileUpdated}
+      />
 
       {!selectedTraining ? (
         <div className="bg-white shadow-md rounded-lg w-full max-w-4xl p-4 flex flex-col items-start space-y-2">
-          <h3 className="text-lg font-semibold text-gray-800">Pelatihan yang Diikuti</h3>
+          <h3 className="text-lg font-semibold text-gray-800">
+            Pelatihan yang Diikuti
+          </h3>
 
           {registeredTrainings.length > 0 ? (
             <div className="w-full mt-2">
               {registeredTrainings.map((training) => (
-                <div key={training.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                <div
+                  key={training.id}
+                  className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0"
+                >
                   <div>
                     <p className="text-gray-700 font-medium">
-                      {training.pelatihan?.nama_pelatihan || 'Nama Pelatihan Tidak Tersedia'}
+                      {training.pelatihan?.nama_pelatihan ||
+                        "Nama Pelatihan Tidak Tersedia"}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Status Pendaftaran: {training.status.charAt(0).toUpperCase() + training.status.slice(1)}
+                      Status Pendaftaran:{" "}
+                      {training.status.charAt(0).toUpperCase() +
+                        training.status.slice(1)}
                     </p>
-                    <p className="text-sm text-gray-500">Status Pelatihan: {training.pelatihan?.status_pelatihan || 'Tidak Tersedia'}</p>
+                    <p className="text-sm text-gray-500">
+                      Status Pelatihan:{" "}
+                      {training.pelatihan?.status_pelatihan || "Tidak Tersedia"}
+                    </p>
                   </div>
                   <button
                     onClick={() => handleSelectTraining(training)}
@@ -248,14 +295,27 @@ const ProfilePage = () => {
                 onClick={handleBackToTrainings}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
                 <span>Kembali</span>
               </button>
             </div>
             <div className="mt-3">
-              <h2 className="text-lg font-semibold text-gray-800">{selectedTraining.pelatihan?.nama_pelatihan || 'Detail Pelatihan'}</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                {selectedTraining.pelatihan?.nama_pelatihan ||
+                  "Detail Pelatihan"}
+              </h2>
             </div>
           </div>
 
@@ -265,6 +325,8 @@ const ProfilePage = () => {
             statusString={getStepIndex(selectedTraining.status)}
             trainingStatus={selectedTraining.pelatihan?.status_pelatihan}
             onFeedback={() => setIsFeedbackModalOpen(true)}
+            hasFeedback={hasFeedback}
+            checkingFeedback={checkingFeedback}
           />
         </>
       )}
