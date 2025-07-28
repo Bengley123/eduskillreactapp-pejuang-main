@@ -446,7 +446,7 @@ const Galeripage = () => {
 
         {/* Info Footer */}
         <div className="text-center mt-8 pt-6 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
+          {/* <p className="text-sm text-gray-500">
             Galeri kegiatan diperbarui secara berkala oleh tim admin.
             {galleryItems.length > 0 && (
               <span className="block mt-1">
@@ -460,7 +460,7 @@ const Galeripage = () => {
                 })}
               </span>
             )}
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

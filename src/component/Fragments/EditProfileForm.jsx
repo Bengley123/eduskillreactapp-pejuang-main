@@ -11,10 +11,86 @@ import {
   FaEyeSlash,
   FaChevronDown,
   FaChevronUp,
+  FaCheck,
+  FaTimes,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 
 import api, { fetchData, updateData } from "../../services/api";
 import { setAuthToken } from "../../services/api";
+
+// Modal Component
+const Modal = ({ isOpen, onClose, type, title, message, onConfirm, confirmText = "OK", showCancel = false }) => {
+  if (!isOpen) return null;
+
+  const getModalStyle = () => {
+    switch (type) {
+      case 'success':
+        return {
+          icon: <FaCheck className="w-16 h-16 text-green-500" />,
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200',
+          buttonColor: 'bg-green-600 hover:bg-green-700'
+        };
+      case 'error':
+        return {
+          icon: <FaTimes className="w-16 h-16 text-red-500" />,
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200',
+          buttonColor: 'bg-red-600 hover:bg-red-700'
+        };
+      case 'warning':
+        return {
+          icon: <FaExclamationTriangle className="w-16 h-16 text-yellow-500" />,
+          bgColor: 'bg-yellow-50',
+          borderColor: 'border-yellow-200',
+          buttonColor: 'bg-yellow-600 hover:bg-yellow-700'
+        };
+      default:
+        return {
+          icon: <FaCheck className="w-16 h-16 text-blue-500" />,
+          bgColor: 'bg-blue-50',
+          borderColor: 'border-blue-200',
+          buttonColor: 'bg-blue-600 hover:bg-blue-700'
+        };
+    }
+  };
+
+  const modalStyle = getModalStyle();
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+        <div className={`${modalStyle.bgColor} ${modalStyle.borderColor} border-2 rounded-t-2xl p-6 text-center`}>
+          <div className="flex justify-center mb-4">
+            {modalStyle.icon}
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+          <p className="text-gray-600 leading-relaxed">{message}</p>
+        </div>
+        
+        <div className="p-6 bg-white rounded-b-2xl">
+          <div className="flex gap-3 justify-center">
+            {showCancel && (
+              <button
+                onClick={onClose}
+                className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors duration-200 min-w-[100px]"
+              >
+                Batal
+              </button>
+            )}
+            <button
+              onClick={onConfirm || onClose}
+              className={`px-6 py-3 ${modalStyle.buttonColor} text-white font-semibold rounded-lg transition-colors duration-200 min-w-[100px]`}
+            >
+              {confirmText}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const EditProfileForm = () => {
   const navigate = useNavigate();
@@ -62,6 +138,33 @@ const EditProfileForm = () => {
   const [isPasswordFormValid, setIsPasswordFormValid] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
+
+  // Modal states
+  const [modal, setModal] = useState({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: '',
+    onConfirm: null,
+    confirmText: 'OK',
+    showCancel: false
+  });
+
+  const showModal = (type, title, message, onConfirm = null, confirmText = 'OK', showCancel = false) => {
+    setModal({
+      isOpen: true,
+      type,
+      title,
+      message,
+      onConfirm,
+      confirmText,
+      showCancel
+    });
+  };
+
+  const closeModal = () => {
+    setModal({ ...modal, isOpen: false });
+  };
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -366,8 +469,15 @@ const EditProfileForm = () => {
       localStorage.setItem("user", JSON.stringify(fullUpdatedUser));
       console.log("localStorage user diperbarui dengan data terbaru.");
 
-      alert("Profil berhasil diperbarui!");
-      navigate("/profil");
+      showModal(
+        'success',
+        'Berhasil!',
+        'Profil berhasil diperbarui!',
+        () => {
+          closeModal();
+          navigate("/profil");
+        }
+      );
     } catch (err) {
       console.error("Gagal menyimpan data profil:", err);
       let errorMessage = "Gagal menyimpan profil.";
@@ -379,7 +489,8 @@ const EditProfileForm = () => {
       } else {
         errorMessage += ` Pesan: ${err.message}`;
       }
-      setError(errorMessage);
+      
+      showModal('error', 'Gagal Menyimpan', errorMessage);
     } finally {
       setSaving(false);
     }
@@ -433,15 +544,23 @@ const EditProfileForm = () => {
       });
 
       console.log("Password berhasil diubah:", response.data);
-      alert("Password berhasil diubah!");
+      
+      showModal(
+        'success',
+        'Berhasil!',
+        'Password berhasil diubah!',
+        () => {
+          closeModal();
+          // Reset form password
+          setPasswordData({
+            current_password: "",
+            new_password: "",
+            new_password_confirmation: "",
+          });
+          setShowPasswordSection(false);
+        }
+      );
 
-      // Reset form password
-      setPasswordData({
-        current_password: "",
-        new_password: "",
-        new_password_confirmation: "",
-      });
-      setShowPasswordSection(false);
     } catch (err) {
       console.error("Gagal mengubah password:", err);
       let errorMessage = "Gagal mengubah password.";
@@ -459,7 +578,8 @@ const EditProfileForm = () => {
       } else {
         errorMessage += ` Pesan: ${err.message}`;
       }
-      setPasswordError(errorMessage);
+      
+      showModal('error', 'Gagal Mengubah Password', errorMessage);
     } finally {
       setSavingPassword(false);
     }
@@ -474,222 +594,236 @@ const EditProfileForm = () => {
   }
 
   return (
-    <div className="bg-white shadow-md rounded-md w-full max-w-4xl p-8">
-      <h2 className="text-center text-2xl text-dark-700 mb-6 font-semibold">
-        Edit Profil
-      </h2>
-      {notification.message && (
-        <div
-          className={`p-3 rounded-md mb-4 text-sm text-white ${
-            notification.type === "success" ? "bg-green-500" : "bg-red-500"
-          }`}
-        >
-          {notification.message}
-        </div>
-      )}
+    <>
+      <div className="bg-white shadow-md rounded-md w-full max-w-4xl p-8">
+        <h2 className="text-center text-2xl text-dark-700 mb-6 font-semibold">
+          Edit Profil
+        </h2>
+        {notification.message && (
+          <div
+            className={`p-3 rounded-md mb-4 text-sm text-white ${
+              notification.type === "success" ? "bg-green-500" : "bg-red-500"
+            }`}
+          >
+            {notification.message}
+          </div>
+        )}
 
-      {error && (
-        <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded-md mb-4 flex items-center text-sm">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded-md mb-4 flex items-center text-sm">
+            {error}
+          </div>
+        )}
 
-      <div className="space-y-6">
-        {/* Form Data Profil */}
         <div className="space-y-6">
-          <h3 className="text-lg font-medium text-gray-800 border-b pb-2">
-            Informasi Profil
-          </h3>
+          {/* Form Data Profil */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium text-gray-800 border-b pb-2">
+              Informasi Profil
+            </h3>
 
-          <InputWithLabel
-            label="Nama Lengkap"
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            icon={FaUser}
-            disabled={saving}
-            error={nameError}
-          />
+            <InputWithLabel
+              label="Nama Lengkap"
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              icon={FaUser}
+              disabled={saving}
+              error={nameError}
+            />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <div className="flex items-end gap-4">
-              {/* Input field tetap sama */}
-              <div className="flex-grow">
-                <InputWithLabel
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  icon={FaEnvelope}
-                  disabled={saving || sendingLink} // Tambahkan disabled saat sendingLink
-                  error={emailError}
-                />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <div className="flex items-end gap-4">
+                {/* Input field tetap sama */}
+                <div className="flex-grow">
+                  <InputWithLabel
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    icon={FaEnvelope}
+                    disabled={saving || sendingLink} // Tambahkan disabled saat sendingLink
+                    error={emailError}
+                  />
+                </div>
+
+                {/* Logika untuk menampilkan badge atau tombol */}
+                <div className="flex-shrink-0">
+                  {isVerified && formData.email === originalEmail ? (
+                    <span className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-green-100 text-green-800 h-10">
+                      Terverifikasi
+                    </span>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      onClick={handleSendVerification}
+                      disabled={sendingLink || saving}
+                      className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 h-10 px-4"
+                    >
+                      {sendingLink ? "Mengirim..." : "Verify"}
+                    </Button>
+                  )}
+                </div>
               </div>
+            </div>
 
-              {/* Logika untuk menampilkan badge atau tombol */}
-              <div className="flex-shrink-0">
-                {isVerified && formData.email === originalEmail ? (
-                  <span className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-green-100 text-green-800 h-10">
-                    Terverifikasi
-                  </span>
-                ) : (
+            <InputWithLabel
+              label="Nomor Telepon"
+              type="tel"
+              name="nomor_telp"
+              value={formData.nomor_telp}
+              onChange={handleChange}
+              icon={FaPhone}
+              disabled={saving}
+              error={nomorTelpError}
+            />
+
+            <div className="flex justify-between mt-8">
+              <Button
+                variant="secondary"
+                onClick={() => navigate("/profil")}
+                disabled={saving}
+              >
+                Batal
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleSave}
+                disabled={saving || !isFormValid}
+              >
+                {saving ? "Menyimpan..." : "Simpan Profil"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Section Ganti Password */}
+          <div className="border-t pt-6">
+            <button
+              onClick={() => setShowPasswordSection(!showPasswordSection)}
+              className="flex items-center justify-between w-full text-left text-lg font-medium text-gray-800 hover:text-blue-600 transition-colors"
+            >
+              <span>Ganti Password</span>
+              {showPasswordSection ? <FaChevronUp /> : <FaChevronDown />}
+            </button>
+
+            {showPasswordSection && (
+              <div className="mt-4 space-y-4 bg-gray-50 p-4 rounded-lg">
+                {passwordError && (
+                  <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded-md text-sm">
+                    {passwordError}
+                  </div>
+                )}
+
+                <div className="relative">
+                  <InputWithLabel
+                    label="Password Saat Ini"
+                    type={showPasswords.current ? "text" : "password"}
+                    name="current_password"
+                    value={passwordData.current_password}
+                    onChange={handlePasswordChange}
+                    icon={FaLock}
+                    disabled={savingPassword}
+                    error={currentPasswordError}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("current")}
+                    className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                  {currentPasswordError && (
+                    <div className="text-red-500 text-sm mt-1">{currentPasswordError}</div>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <InputWithLabel
+                    label="Password Baru"
+                    type={showPasswords.new ? "text" : "password"}
+                    name="new_password"
+                    value={passwordData.new_password}
+                    onChange={handlePasswordChange}
+                    icon={FaLock}
+                    disabled={savingPassword}
+                    error={newPasswordError}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("new")}
+                    className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                  {/* Tambahkan tampilan pesan error yang jelas untuk password baru */}
+                  {newPasswordError && (
+                    <div className="text-red-500 text-sm mt-1">{newPasswordError}</div>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <InputWithLabel
+                    label="Konfirmasi Password Baru"
+                    type={showPasswords.confirmation ? "text" : "password"}
+                    name="new_password_confirmation"
+                    value={passwordData.new_password_confirmation}
+                    onChange={handlePasswordChange}
+                    icon={FaLock}
+                    disabled={savingPassword}
+                    error={confirmPasswordError}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("confirmation")}
+                    className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPasswords.confirmation ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                  {confirmPasswordError && (
+                    <div className="text-red-500 text-sm mt-1">{confirmPasswordError}</div>
+                  )}
+                </div>
+
+                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                  <p className="font-medium mb-1">Ketentuan Password Baru:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Minimal 8 karakter</li>
+                    <li>Mengandung huruf besar dan huruf kecil</li>
+                    <li>Mengandung minimal 1 angka</li>
+                  </ul>
+                </div>
+
+                <div className="flex justify-end">
                   <Button
                     variant="primary"
-                    onClick={handleSendVerification}
-                    disabled={sendingLink || saving}
-                    className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 h-10 px-4"
+                    onClick={handleChangePassword}
+                    disabled={savingPassword || !isPasswordFormValid}
                   >
-                    {sendingLink ? "Mengirim..." : "Verify"}
+                    {savingPassword ? "Mengubah Password..." : "Ubah Password"}
                   </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <InputWithLabel
-            label="Nomor Telepon"
-            type="tel"
-            name="nomor_telp"
-            value={formData.nomor_telp}
-            onChange={handleChange}
-            icon={FaPhone}
-            disabled={saving}
-            error={nomorTelpError}
-          />
-
-          <div className="flex justify-between mt-8">
-            <Button
-              variant="secondary"
-              onClick={() => navigate("/profil")}
-              disabled={saving}
-            >
-              Batal
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSave}
-              disabled={saving || !isFormValid}
-            >
-              {saving ? "Menyimpan..." : "Simpan Profil"}
-            </Button>
-          </div>
-        </div>
-
-        {/* Section Ganti Password */}
-        <div className="border-t pt-6">
-          <button
-            onClick={() => setShowPasswordSection(!showPasswordSection)}
-            className="flex items-center justify-between w-full text-left text-lg font-medium text-gray-800 hover:text-blue-600 transition-colors"
-          >
-            <span>Ganti Password</span>
-            {showPasswordSection ? <FaChevronUp /> : <FaChevronDown />}
-          </button>
-
-          {showPasswordSection && (
-            <div className="mt-4 space-y-4 bg-gray-50 p-4 rounded-lg">
-              {passwordError && (
-                <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded-md text-sm">
-                  {passwordError}
                 </div>
-              )}
-
-              <div className="relative">
-                <InputWithLabel
-                  label="Password Saat Ini"
-                  type={showPasswords.current ? "text" : "password"}
-                  name="current_password"
-                  value={passwordData.current_password}
-                  onChange={handlePasswordChange}
-                  icon={FaLock}
-                  disabled={savingPassword}
-                  error={currentPasswordError}
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility("current")}
-                  className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
-                >
-                  {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
-                </button>
-                {currentPasswordError && (
-                  <div className="text-red-500 text-sm mt-1">{currentPasswordError}</div>
-                )}
               </div>
-
-              <div className="relative">
-                <InputWithLabel
-                  label="Password Baru"
-                  type={showPasswords.new ? "text" : "password"}
-                  name="new_password"
-                  value={passwordData.new_password}
-                  onChange={handlePasswordChange}
-                  icon={FaLock}
-                  disabled={savingPassword}
-                  error={newPasswordError}
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility("new")}
-                  className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
-                >
-                  {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
-                </button>
-                {/* Tambahkan tampilan pesan error yang jelas untuk password baru */}
-                {newPasswordError && (
-                  <div className="text-red-500 text-sm mt-1">{newPasswordError}</div>
-                )}
-              </div>
-
-              <div className="relative">
-                <InputWithLabel
-                  label="Konfirmasi Password Baru"
-                  type={showPasswords.confirmation ? "text" : "password"}
-                  name="new_password_confirmation"
-                  value={passwordData.new_password_confirmation}
-                  onChange={handlePasswordChange}
-                  icon={FaLock}
-                  disabled={savingPassword}
-                  error={confirmPasswordError}
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility("confirmation")}
-                  className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
-                >
-                  {showPasswords.confirmation ? <FaEyeSlash /> : <FaEye />}
-                </button>
-                {confirmPasswordError && (
-                  <div className="text-red-500 text-sm mt-1">{confirmPasswordError}</div>
-                )}
-              </div>
-
-              <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                <p className="font-medium mb-1">Ketentuan Password Baru:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Minimal 8 karakter</li>
-                  <li>Mengandung huruf besar dan huruf kecil</li>
-                  <li>Mengandung minimal 1 angka</li>
-                </ul>
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  variant="primary"
-                  onClick={handleChangePassword}
-                  disabled={savingPassword}
-                >
-                  {savingPassword ? "Mengubah Password..." : "Ubah Password"}
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Modal Component */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        type={modal.type}
+        title={modal.title}
+        message={modal.message}
+        onConfirm={modal.onConfirm}
+        confirmText={modal.confirmText}
+        showCancel={modal.showCancel}
+      />
+    </>
   );
 };
 

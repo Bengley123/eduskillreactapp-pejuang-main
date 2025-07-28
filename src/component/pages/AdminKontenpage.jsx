@@ -1,5 +1,5 @@
 // src/components/Admin/AdminKontenpage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react"; // Tambahkan useCallback
 import {
   FaSearch,
   FaPlus,
@@ -29,6 +29,43 @@ import api, {
   apiEndpoints,
   setAuthToken,
 } from "../../services/api.js";
+
+// --- Komponen Modal Konfirmasi (Terintegrasi Langsung) ---
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, message, isLoading }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Konfirmasi</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <FaTimes size={16} />
+          </button>
+        </div>
+        <p className="text-gray-700 mb-6">{message}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            disabled={isLoading}
+          >
+            Batal
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors
+                        ${isLoading ? 'bg-gray-400' : 'bg-red-500 hover:bg-red-600'}`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Memproses..." : "Ya, Hapus"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 // --- Komponen Pagination (Tidak Berubah) ---
 const Pagination = ({
@@ -178,38 +215,34 @@ const VisiMisiEditor = ({
 
       let response;
       if (visiMisiId) {
-        // Jika ada ID, gunakan PUT untuk update
-        formDataToSend.append("_method", "PUT"); // Penting untuk Laravel PUT dengan FormData
+        formDataToSend.append("_method", "PUT");
         response = await updateData(apiEndpoint, visiMisiId, formDataToSend);
       } else {
-        // Jika tidak ada ID, gunakan POST untuk membuat baru
         response = await createData(apiEndpoint, formDataToSend);
       }
 
-      // Pastikan response.data memiliki struktur yang diharapkan
       const apiResponseData = response.data.data
         ? response.data.data
         : response.data;
 
       setData({
-        visi: apiResponseData.visi || editedData.visi, // Gunakan data dari API jika tersedia
-        misi: apiResponseData.misi || editedData.misi, // Gunakan data dari API jika tersedia
-        id: apiResponseData.id || visiMisiId, // Perbarui ID jika ini adalah entri baru
+        visi: apiResponseData.visi || editedData.visi,
+        misi: apiResponseData.misi || editedData.misi,
+        id: apiResponseData.id || visiMisiId,
       });
 
       if (!visiMisiId && apiResponseData.id) {
-        setVisiMisiId(apiResponseData.id); // Set ID jika baru dibuat
+        setVisiMisiId(apiResponseData.id);
       }
 
       alert("Visi dan Misi berhasil disimpan!");
       setIsEditing(false);
 
       if (onSaveSuccess) {
-        onSaveSuccess(); // Panggil fungsi refresh data di parent
+        onSaveSuccess();
       }
     } catch (err) {
       console.error("Failed to save Visi Misi data:", err);
-      // Penanganan error yang lebih detail dari response API
       setError(
         `Gagal menyimpan data Visi dan Misi. Pesan: ${
           err.response?.data?.message || err.message
@@ -348,7 +381,7 @@ const VisiMisiEditor = ({
   );
 };
 
-// --- Komponen TableSection (Tidak Berubah) ---
+// --- Komponen TableSection (Modifikasi untuk Konfirmasi Hapus) ---
 const TableSection = ({ title, apiEndpoint, data, setData }) => {
   const [showForm, setShowForm] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -361,6 +394,11 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
   const [loadingAction, setLoadingAction] = useState(false);
   const [actionError, setActionError] = useState(null);
 
+  // State untuk modal konfirmasi hapus
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [itemToDeleteId, setItemToDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false); // Untuk state loading di modal
+
   const itemsPerPage = 5;
 
   const [form, setForm] = useState({
@@ -368,44 +406,49 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
     file: null,
   });
 
-  useEffect(() => {
-    const fetchTableData = async () => {
-      setLoadingAction(true);
-      setActionError(null);
-      try {
-        const response = await fetchData(apiEndpoint);
-        let items = [];
-        if (response && response.data && Array.isArray(response.data.data)) {
-          items = response.data.data;
-        } else if (response && Array.isArray(response.data)) {
-          items = response.data;
-        } else if (response && Array.isArray(response)) {
-          items = response;
-        } else {
-          console.warn(
-            `No data or unexpected response format for ${title}:`,
-            response
-          );
-          setData([]);
-          return;
-        }
-
-        setData(
-          items.map((item) => ({
-            ...item,
-            name: title === "Slideshow" ? item.nama_slide : item.nama_banner,
-            filename: item.url_gambar || item.gambar || null,
-          }))
+  // useCallback untuk fetch data
+  const fetchTableData = useCallback(async () => {
+    setLoadingAction(true);
+    setActionError(null);
+    try {
+      const response = await fetchData(apiEndpoint);
+      let items = [];
+      if (response && response.data && Array.isArray(response.data.data)) {
+        items = response.data.data;
+      } else if (response && Array.isArray(response.data)) {
+        items = response.data;
+      } else if (response && Array.isArray(response)) {
+        items = response;
+      } else {
+        console.warn(
+          `No data or unexpected response format for ${title}:`,
+          response
         );
-      } catch (err) {
-        console.error(`Failed to load ${title} data:`, err);
-        setActionError(`Failed to load ${title} data.`);
-      } finally {
-        setLoadingAction(false);
+        setData([]);
+        return;
       }
-    };
+
+      setData(
+        items.map((item) => ({
+          ...item,
+          name: title === "Slideshow" ? item.nama_slide : item.nama_banner,
+          // Perbaikan Path Gambar
+          filename: item.url_gambar || item.gambar
+            ? `/storage/${title.toLowerCase() === 'slideshow' ? 'slideshow_images' : 'banner_images'}/${item.url_gambar || item.gambar}` // Asumsi path folder
+            : null,
+        }))
+      );
+    } catch (err) {
+      console.error(`Failed to load ${title} data:`, err);
+      setActionError(`Failed to load ${title} data.`);
+    } finally {
+      setLoadingAction(false);
+    }
+  }, [apiEndpoint, setData, title]); // Dependencies untuk useCallback
+
+  useEffect(() => {
     fetchTableData();
-  }, [apiEndpoint, setData, title]);
+  }, [fetchTableData]); // Gunakan fetchTableData di dependency array
 
   const filteredData = data.filter((item) =>
     (item.name || "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -426,29 +469,32 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
     setSelectedFile(null);
   };
 
-  const handleDelete = async (id) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete this ${title.toLowerCase()}?`
-      )
-    ) {
-      setLoadingAction(true);
-      setActionError(null);
-      try {
-        await deleteData(apiEndpoint, id);
-        setData(data.filter((item) => item.id !== id));
-        setShowDetail(false);
-        alert(`${title} deleted successfully!`);
-      } catch (err) {
-        console.error(`Failed to delete ${title}:`, err);
-        setActionError(
-          `Failed to delete ${title}. Error: ${
-            err.response?.data?.message || err.message
-          }`
-        );
-      } finally {
-        setLoadingAction(false);
-      }
+  // Fungsi untuk memicu modal konfirmasi hapus
+  const handleDelete = (id) => {
+    setItemToDeleteId(id);
+    setIsConfirmModalOpen(true);
+  };
+
+  // Fungsi yang dipanggil saat konfirmasi hapus
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    const id = itemToDeleteId;
+    try {
+      await deleteData(apiEndpoint, id);
+      setData(data.filter((item) => item.id !== id));
+      setShowDetail(false); // Tutup modal detail jika terbuka
+      alert(`${title} deleted successfully!`);
+    } catch (err) {
+      console.error(`Failed to delete ${title}:`, err);
+      setActionError(
+        `Failed to delete ${title}. Error: ${
+          err.response?.data?.message || err.message
+        }`
+      );
+    } finally {
+      setIsDeleting(false);
+      setIsConfirmModalOpen(false);
+      setItemToDeleteId(null);
     }
   };
 
@@ -478,7 +524,10 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
       if (selectedFile) {
         formDataToSend.append("gambar", selectedFile);
       } else if (editedItem.filename === null || editedItem.filename === "") {
-        formDataToSend.append("remove_gambar", true);
+        // Jika tidak ada file baru yang dipilih DAN filename di editedItem kosong/null
+        // Ini mungkin menandakan ingin menghapus gambar, tapi tergantung API.
+        // Jika API mendukung penghapusan gambar via parameter terpisah, tambahkan di sini.
+        // Contoh: formDataToSend.append("remove_gambar", true);
       }
 
       const response = await updateData(
@@ -499,8 +548,10 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
                   title === "Slideshow"
                     ? updatedItem.nama_slide
                     : updatedItem.nama_banner,
-                filename:
-                  updatedItem.url_gambar || updatedItem.gambar || item.filename,
+                // Perbaikan Path Gambar di state 'data'
+                filename: updatedItem.url_gambar || updatedItem.gambar
+                  ? `/storage/${title.toLowerCase() === 'slideshow' ? 'slideshow_images' : 'banner_images'}/${updatedItem.url_gambar || updatedItem.gambar}`
+                  : null,
               }
             : item
         )
@@ -513,7 +564,10 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
           title === "Slideshow"
             ? updatedItem.nama_slide
             : updatedItem.nama_banner,
-        filename: updatedItem.url_gambar || updatedItem.gambar || prev.filename,
+        // Perbaikan Path Gambar di state 'selectedItem'
+        filename: updatedItem.url_gambar || updatedItem.gambar
+          ? `/storage/${title.toLowerCase() === 'slideshow' ? 'slideshow_images' : 'banner_images'}/${updatedItem.url_gambar || updatedItem.gambar}`
+          : null,
       }));
 
       setIsEditing(false);
@@ -545,7 +599,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
       if (isEditing) {
         setEditedItem((prev) => ({
           ...prev,
-          filename: URL.createObjectURL(file),
+          filename: URL.createObjectURL(file), // Gunakan URL objek untuk preview
         }));
       }
     }
@@ -586,7 +640,10 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
           ...newItem,
           name:
             title === "Slideshow" ? newItem.nama_slide : newItem.nama_banner,
-          filename: newItem.url_gambar || newItem.gambar,
+          // Perbaikan Path Gambar untuk item baru
+          filename: newItem.url_gambar || newItem.gambar
+            ? `/storage/${title.toLowerCase() === 'slideshow' ? 'slideshow_images' : 'banner_images'}/${newItem.url_gambar || newItem.gambar}`
+            : null,
         },
       ]);
       setForm({
@@ -787,7 +844,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
                 <p className="text-xs text-gray-500 mb-1">Gambar</p>
                 {editedItem.filename ? (
                   <img
-                    src={editedItem.filename}
+                    src={editedItem.filename} // Gunakan URL objek dari file yang dipilih
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src =
@@ -896,7 +953,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
               ) : (
                 <>
                   <button
-                    onClick={() => handleDelete(selectedItem.id)}
+                    onClick={() => handleDelete(selectedItem.id)} // Panggil handleDelete untuk membuka modal konfirmasi
                     className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded inline-flex items-center gap-1 text-xs"
                   >
                     <FaTrashAlt size={12} /> Hapus
@@ -922,11 +979,23 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
           </div>
         </div>
       )}
+
+      {/* Render modal konfirmasi di sini */}
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => {
+          setIsConfirmModalOpen(false);
+          setItemToDeleteId(null);
+        }}
+        onConfirm={confirmDelete} // Panggil fungsi konfirmasi hapus
+        message={`Are you sure you want to delete this ${title.toLowerCase()}?`}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
 
-// --- Komponen BeritaSection (Tidak Berubah) ---
+// --- Komponen BeritaSection (Modifikasi untuk Konfirmasi Hapus) ---
 const BeritaSection = ({ apiEndpoint, data, setData }) => {
   const [showForm, setShowForm] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -939,6 +1008,11 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
   const [loadingAction, setLoadingAction] = useState(false);
   const [actionError, setActionError] = useState(null);
 
+  // State untuk modal konfirmasi hapus
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [itemToDeleteId, setItemToDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const itemsPerPage = 5;
 
   const [form, setForm] = useState({
@@ -948,45 +1022,48 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
     gambar: null,
   });
 
-  useEffect(() => {
-    const fetchBeritaData = async () => {
-      setLoadingAction(true);
-      setActionError(null);
-      try {
-        const response = await fetchData(apiEndpoint);
-        let fetchedDataArray = [];
-        if (response && Array.isArray(response.data)) {
-          fetchedDataArray = response.data;
-        } else if (
-          response &&
-          response.data &&
-          Array.isArray(response.data.data)
-        ) {
-          fetchedDataArray = response.data.data;
-        } else {
-          console.warn(`Unexpected data format for Berita:`, response);
-          fetchedDataArray = [];
-        }
-
-        setData(
-          fetchedDataArray.map((item) => ({
-            ...item,
-            judul: item.title || "",
-            date: item.date || "",
-            gambar: item.gambar
-              ? `http://127.0.0.1:8000/storage/${item.gambar}`
-              : null,
-          }))
-        );
-      } catch (err) {
-        console.error("Failed to load Berita data:", err);
-        setActionError("Failed to load Berita data.");
-      } finally {
-        setLoadingAction(false);
+  // useCallback untuk fetch data berita
+  const fetchBeritaData = useCallback(async () => {
+    setLoadingAction(true);
+    setActionError(null);
+    try {
+      const response = await fetchData(apiEndpoint);
+      let fetchedDataArray = [];
+      if (response && Array.isArray(response.data)) {
+        fetchedDataArray = response.data;
+      } else if (
+        response &&
+        response.data &&
+        Array.isArray(response.data.data)
+      ) {
+        fetchedDataArray = response.data.data;
+      } else {
+        console.warn(`Unexpected data format for Berita:`, response);
+        fetchedDataArray = [];
       }
-    };
+
+      setData(
+        fetchedDataArray.map((item) => ({
+          ...item,
+          judul: item.title || "",
+          date: item.date || "",
+          // Perbaikan Path Gambar
+          gambar: item.gambar
+            ? `/storage/berita_gambar/${item.gambar}` // Ganti 'berita_gambar' jika foldernya berbeda
+            : null,
+        }))
+      );
+    } catch (err) {
+      console.error("Failed to load Berita data:", err);
+      setActionError("Failed to load Berita data.");
+    } finally {
+      setLoadingAction(false);
+    }
+  }, [apiEndpoint, setData]); // Dependencies untuk useCallback
+
+  useEffect(() => {
     fetchBeritaData();
-  }, [apiEndpoint, setData]);
+  }, [fetchBeritaData]); // Gunakan fetchBeritaData di dependency array
 
   const filteredData = data.filter(
     (item) =>
@@ -1009,25 +1086,32 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
     setSelectedFile(null);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this news item?")) {
-      setLoadingAction(true);
-      setActionError(null);
-      try {
-        await deleteData(apiEndpoint, id);
-        setData(data.filter((item) => item.id !== id));
-        setShowDetail(false);
-        alert("News item deleted successfully!");
-      } catch (err) {
-        console.error("Failed to delete news item:", err);
-        setActionError(
-          `Failed to delete news item. Error: ${
-            err.response?.data?.message || err.message
-          }`
-        );
-      } finally {
-        setLoadingAction(false);
-      }
+  // Fungsi untuk memicu modal konfirmasi hapus
+  const handleDelete = (id) => {
+    setItemToDeleteId(id);
+    setIsConfirmModalOpen(true);
+  };
+
+  // Fungsi yang dipanggil saat konfirmasi hapus
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    const id = itemToDeleteId;
+    try {
+      await deleteData(apiEndpoint, id);
+      setData(data.filter((item) => item.id !== id));
+      setShowDetail(false); // Tutup modal detail jika terbuka
+      alert("News item deleted successfully!");
+    } catch (err) {
+      console.error("Failed to delete news item:", err);
+      setActionError(
+        `Failed to delete news item. Error: ${
+          err.response?.data?.message || err.message
+        }`
+      );
+    } finally {
+      setIsDeleting(false);
+      setIsConfirmModalOpen(false);
+      setItemToDeleteId(null);
     }
   };
 
@@ -1062,7 +1146,8 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       if (selectedFile) {
         formDataToSend.append("gambar", selectedFile);
       } else if (editedItem.gambar === null && selectedItem.gambar) {
-        formDataToSend.append("remove_gambar", true);
+        // Jika gambar dihapus atau diganti dengan null
+        // formDataToSend.append("remove_gambar", true); // Sesuaikan dengan API Anda jika ada
       }
 
       const response = await updateData(
@@ -1073,7 +1158,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       const updatedItem = response.data || {};
 
       const updatedGambarUrl = updatedItem.gambar
-        ? `http://localhost:8000/storage/berita_gambar/${updatedItem.gambar}`
+        ? `/storage/berita_gambar/${updatedItem.gambar}` // Perbaikan Path Gambar
         : null;
 
       setData(
@@ -1084,7 +1169,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
                 judul: updatedItem.title || item.judul || "",
                 deskripsi: updatedItem.deskripsi || item.deskripsi || "",
                 date: updatedItem.date || item.date || "",
-                gambar: updatedGambarUrl,
+                gambar: updatedGambarUrl, // Gunakan URL yang sudah diperbaiki
               }
             : item
         )
@@ -1095,7 +1180,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
         judul: updatedItem.title || prev.judul || "",
         deskripsi: updatedItem.deskripsi || prev.deskripsi || "",
         date: updatedItem.date || prev.date || "",
-        gambar: updatedGambarUrl,
+        gambar: updatedGambarUrl, // Gunakan URL yang sudah diperbaiki
       }));
       setIsEditing(false);
       setSelectedFile(null);
@@ -1128,7 +1213,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       } else if (isEditing) {
         setEditedItem((prev) => ({
           ...prev,
-          gambar: URL.createObjectURL(file),
+          gambar: URL.createObjectURL(file), // Untuk preview di modal edit
         }));
       }
     }
@@ -1168,7 +1253,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       const newItem = response.data || {};
 
       const newGambarUrl = newItem.gambar
-        ? `http://localhost:8000/storage/${newItem.gambar}`
+        ? `/storage/berita_gambar/${newItem.gambar}` // Perbaikan Path Gambar
         : null;
 
       setData((prevData) => [
@@ -1176,7 +1261,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
         {
           ...newItem,
           judul: newItem.title || "",
-          gambar: newGambarUrl,
+          gambar: newGambarUrl, // Gunakan URL yang sudah diperbaiki
         },
       ]);
       setForm({
@@ -1437,7 +1522,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
                 <p className="text-sm font-medium text-gray-700 mb-1">
                   Gambar Berita
                 </p>
-                {editedItem.gambar ? (
+                {editedItem.gambar ? ( // Gunakan editedItem.gambar untuk preview edit
                   <img
                     src={editedItem.gambar}
                     onError={(e) => {
@@ -1456,9 +1541,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-700">
-                  Judul Berita
-                </p>
+                <p className="text-sm font-medium text-gray-700">Judul Berita</p>
                 {isEditing ? (
                   <input
                     type="text"
@@ -1533,10 +1616,8 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
                     >
                       <div className="flex flex-col items-center justify-center gap-1">
                         <FaUpload className="text-gray-400" size={16} />
-                        <span className="text-xs text-gray-500">
-                          {selectedFile
-                            ? selectedFile.name
-                            : "Pilih gambar baru"}
+                        <span className="text-sm text-gray-500">
+                          {selectedFile ? selectedFile.name : "Pilih gambar baru"}
                         </span>
                       </div>
                     </label>
@@ -1600,7 +1681,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
               ) : (
                 <>
                   <button
-                    onClick={() => handleDelete(selectedItem.id)}
+                    onClick={() => handleDelete(selectedItem.id)} // Panggil handleDelete untuk membuka modal konfirmasi
                     className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded inline-flex items-center gap-1 text-sm"
                   >
                     <FaTrashAlt size={12} /> Hapus
@@ -1626,11 +1707,23 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
           </div>
         </div>
       )}
+
+      {/* Render modal konfirmasi di sini */}
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => {
+          setIsConfirmModalOpen(false);
+          setItemToDeleteId(null);
+        }}
+        onConfirm={confirmDelete}
+        message="Are you sure you want to delete this news item?"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
 
-// --- Komponen GaleriSection (Tidak Berubah) ---
+// --- Komponen GaleriSection (Modifikasi untuk Konfirmasi Hapus) ---
 const GaleriSection = ({ apiEndpoint, data, setData }) => {
   const [showForm, setShowForm] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -1643,6 +1736,11 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
   const [loadingAction, setLoadingAction] = useState(false);
   const [actionError, setActionError] = useState(null);
 
+  // State untuk modal konfirmasi hapus
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [itemToDeleteId, setItemToDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const itemsPerPage = 5;
 
   const [form, setForm] = useState({
@@ -1650,46 +1748,48 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
     fileFoto: null,
   });
 
-  useEffect(() => {
-    const fetchGaleriData = async () => {
-      setLoadingAction(true);
-      setActionError(null);
-      try {
-        const response = await fetchData(apiEndpoint);
-        let items = [];
-        if (response && response.data && Array.isArray(response.data.data)) {
-          items = response.data.data;
-        } else if (response && Array.isArray(response.data)) {
-          items = response.data;
-        } else if (response && Array.isArray(response)) {
-          items = response;
-        } else {
-          console.warn(
-            `No data or unexpected response format for Galeri:`,
-            response
-          );
-          setData([]);
-          return;
-        }
-
-        setData(
-          items.map((item) => ({
-            ...item,
-            file_foto: item.file_foto
-              ? `http://localhost:8000/storage/${item.file_foto}`
-              : null,
-            judulFoto: item.judul_foto || item.judulFoto,
-          }))
+  // useCallback untuk fetch data galeri
+  const fetchGaleriData = useCallback(async () => {
+    setLoadingAction(true);
+    setActionError(null);
+    try {
+      const response = await fetchData(apiEndpoint);
+      let items = [];
+      if (response && response.data && Array.isArray(response.data.data)) {
+        items = response.data.data;
+      } else if (response && Array.isArray(response.data)) {
+        items = response.data;
+      } else if (response && Array.isArray(response)) {
+        items = response;
+      } else {
+        console.warn(
+          `No data or unexpected response format for Galeri:`,
+          response
         );
-      } catch (err) {
-        console.error("Failed to load Galeri data:", err);
-        setActionError("Failed to load Galeri data.");
-      } finally {
-        setLoadingAction(false);
+        setData([]);
+        return;
       }
-    };
+
+      setData(
+        items.map((item) => ({
+          ...item,
+          file_foto: item.file_foto
+            ? `/storage/galeri_kegiatan/${item.file_foto}` // Perbaikan Path Gambar
+            : null,
+          judulFoto: item.judul_foto || item.judulFoto,
+        }))
+      );
+    } catch (err) {
+      console.error("Failed to load Galeri data:", err);
+      setActionError("Failed to load Galeri data.");
+    } finally {
+      setLoadingAction(false);
+    }
+  }, [apiEndpoint, setData]); // Dependencies untuk useCallback
+
+  useEffect(() => {
     fetchGaleriData();
-  }, [apiEndpoint, setData]);
+  }, [fetchGaleriData]); // Gunakan fetchGaleriData di dependency array
 
   const filteredData = data.filter((item) =>
     (item.judulFoto || "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -1710,25 +1810,32 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
     setSelectedFile(null);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this gallery item?")) {
-      setLoadingAction(true);
-      setActionError(null);
-      try {
-        await deleteData(apiEndpoint, id);
-        setData(data.filter((item) => item.id !== id));
-        setShowDetail(false);
-        alert("Gallery item deleted successfully!");
-      } catch (err) {
-        console.error("Failed to delete gallery item:", err);
-        setActionError(
-          `Failed to delete gallery item. Error: ${
-            err.response?.data?.message || err.message
-          }`
-        );
-      } finally {
-        setLoadingAction(false);
-      }
+  // Fungsi untuk memicu modal konfirmasi hapus
+  const handleDelete = (id) => {
+    setItemToDeleteId(id);
+    setIsConfirmModalOpen(true);
+  };
+
+  // Fungsi yang dipanggil saat konfirmasi hapus
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    const id = itemToDeleteId;
+    try {
+      await deleteData(apiEndpoint, id);
+      setData(data.filter((item) => item.id !== id));
+      setShowDetail(false); // Tutup modal detail jika terbuka
+      alert("Gallery item deleted successfully!");
+    } catch (err) {
+      console.error("Failed to delete gallery item:", err);
+      setActionError(
+        `Failed to delete gallery item. Error: ${
+          err.response?.data?.message || err.message
+        }`
+      );
+    } finally {
+      setIsDeleting(false);
+      setIsConfirmModalOpen(false);
+      setItemToDeleteId(null);
     }
   };
 
@@ -1768,8 +1875,8 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
                 ...item,
                 ...updatedItem,
                 judulFoto: updatedItem.judul_foto || item.judulFoto,
-                file_foto: updatedItem.file_foto
-                  ? `http://localhost:8000/storage/${updatedItem.file_foto}`
+                file_foto: updatedItem.file_foto // Perbaikan Path Gambar
+                  ? `/storage/galeri_kegiatan/${updatedItem.file_foto}`
                   : null,
               }
             : item
@@ -1779,8 +1886,8 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
         ...prev,
         ...updatedItem,
         judulFoto: updatedItem.judul_foto || prev.judulFoto,
-        file_foto: updatedItem.file_foto
-          ? `http://localhost:8000/storage/${updatedItem.file_foto}`
+        file_foto: updatedItem.file_foto // Perbaikan Path Gambar
+          ? `/storage/galeri_kegiatan/${updatedItem.file_foto}`
           : null,
       }));
       setIsEditing(false);
@@ -1812,7 +1919,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       if (isEditing) {
         setEditedItem((prev) => ({
           ...prev,
-          file_foto: URL.createObjectURL(file),
+          file_foto: URL.createObjectURL(file), // Untuk preview di modal edit
         }));
       }
     }
@@ -1846,8 +1953,8 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
         {
           ...newItem,
           judulFoto: newItem.judul_foto || newItem.judulFoto,
-          file_foto: newItem.file_foto
-            ? `http://localhost:8000/storage/${newItem.file_foto}`
+          file_foto: newItem.file_foto // Perbaikan Path Gambar
+            ? `/storage/galeri_kegiatan/${newItem.file_foto}`
             : null,
         },
       ]);
@@ -2078,7 +2185,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
                 <p className="text-sm font-medium text-gray-700 mb-1">
                   Preview Foto
                 </p>
-                {editedItem.file_foto ? (
+                {editedItem.file_foto ? ( // Gunakan editedItem.file_foto untuk preview edit
                   <img
                     src={editedItem.file_foto}
                     onError={(e) => {
@@ -2133,7 +2240,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
                     >
                       <div className="flex flex-col items-center justify-center gap-1">
                         <FaUpload className="text-gray-400" size={16} />
-                        <span className="text-xs text-gray-500">
+                        <span className="text-sm text-gray-500">
                           {selectedFile ? selectedFile.name : "Pilih file baru"}
                         </span>
                       </div>
@@ -2198,7 +2305,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
               ) : (
                 <>
                   <button
-                    onClick={() => handleDelete(selectedItem.id)}
+                    onClick={() => handleDelete(selectedItem.id)} // Panggil handleDelete untuk membuka modal konfirmasi
                     className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded inline-flex items-center gap-1 text-sm"
                   >
                     <FaTrashAlt size={12} /> Hapus
@@ -2224,11 +2331,23 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
           </div>
         </div>
       )}
+
+      {/* Render modal konfirmasi di sini */}
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => {
+          setIsConfirmModalOpen(false);
+          setItemToDeleteId(null);
+        }}
+        onConfirm={confirmDelete} // Panggil fungsi konfirmasi hapus
+        message="Are you sure you want to delete this gallery item?"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
 
-// --- Komponen InformasiKontakEditor (Tidak Berubah) ---
+// --- Komponen InformasiKontakEditor (Tidak Berubah, tidak ada delete) ---
 const InformasiKontakEditor = ({
   data,
   setData,
@@ -2358,10 +2477,13 @@ const InformasiKontakEditor = ({
 
       let response;
       if (kontakId) {
-        response = await createData(apiEndpoint, formDataToSend);
+        // Jika sudah ada ID, berarti kita update
+        response = await updateData(apiEndpoint, kontakId, formDataToSend);
       } else {
+        // Jika belum ada ID, berarti kita buat baru
         response = await createData(apiEndpoint, formDataToSend);
       }
+
       const apiResponseData = response.data.data
         ? response.data.data
         : response.data;
@@ -2771,7 +2893,7 @@ const InformasiKontakEditor = ({
   );
 };
 
-// --- Komponen TentangKamiEditor (Tidak Berubah) ---
+// --- Komponen TentangKamiEditor (Modifikasi untuk Path Gambar & Konfirmasi Hapus) ---
 const TentangKamiEditor = ({
   data,
   setData,
@@ -2786,6 +2908,9 @@ const TentangKamiEditor = ({
   const [selectedLogo, setSelectedLogo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // State untuk modal konfirmasi hapus (jika diperlukan, tapi untuk tentang kami biasanya tidak ada hapus langsung)
+  // Jika ada tombol hapus untuk suatu bagian (misal hapus seluruh data tentang kami), tambahkan state di sini.
 
   useEffect(() => {
     setEditedData(data);
@@ -2807,23 +2932,35 @@ const TentangKamiEditor = ({
     setError(null);
     try {
       const formDataToSend = new FormData();
-      // formDataToSend.append("_method", "PUT");
+      // formDataToSend.append("_method", "PUT"); // Laravel butuh ini jika pakai PUT dengan FormData
 
       let response;
+      // Logika untuk menentukan endpoint dan field berdasarkan tipe lembaga
       if (type === "LKP BINA ESSA") {
         formDataToSend.append("nama_lkp", editedData.title || "");
         formDataToSend.append("deskripsi_lkp", editedData.description || "");
         if (selectedLogo) formDataToSend.append("foto_lkp", selectedLogo);
-        formDataToSend.append("id_lembaga", 1);
+        formDataToSend.append("id_lembaga", 1); // Asumsi ID untuk LKP
 
-        response = await createData(apiEndpoint, formDataToSend);
+        // Gunakan updateData jika ada ID, jika tidak, createData
+        if (aboutId) {
+          formDataToSend.append("_method", "PUT");
+          response = await updateData(apiEndpoint, aboutId, formDataToSend);
+        } else {
+          response = await createData(apiEndpoint, formDataToSend);
+        }
       } else if (type === "LPK BINA ESSA") {
         formDataToSend.append("nama_lpk", editedData.title || "");
         formDataToSend.append("deskripsi_lpk", editedData.description || "");
         if (selectedLogo) formDataToSend.append("foto_lpk", selectedLogo);
-        formDataToSend.append("id_lembaga", 1);
+        formDataToSend.append("id_lembaga", 1); // Asumsi ID untuk LPK
 
-        response = await createData(apiEndpoint, formDataToSend);
+        if (aboutId) {
+          formDataToSend.append("_method", "PUT");
+          response = await updateData(apiEndpoint, aboutId, formDataToSend);
+        } else {
+          response = await createData(apiEndpoint, formDataToSend);
+        }
       } else if (type === "YAYASAN BINA ESSA") {
         formDataToSend.append("nama_yayasan", editedData.title || "");
         formDataToSend.append(
@@ -2832,8 +2969,14 @@ const TentangKamiEditor = ({
         );
         if (selectedLogo) formDataToSend.append("foto_yayasan", selectedLogo);
 
-        response = await createData(apiEndpoint, formDataToSend);
+        if (aboutId) {
+          formDataToSend.append("_method", "PUT");
+          response = await updateData(apiEndpoint, aboutId, formDataToSend);
+        } else {
+          response = await createData(apiEndpoint, formDataToSend);
+        }
       } else {
+        // Jika bukan lembaga yang terkelola via API (misalnya struktur awal yang belum ada di DB)
         setData(editedData);
         setIsEditing(false);
         setLoading(false);
@@ -2841,14 +2984,15 @@ const TentangKamiEditor = ({
         return;
       }
 
+      // Proses respon dari API
       const apiResponseData = response.data.data
         ? response.data.data
         : response.data;
 
       setData((prev) => ({
-        ...prev,
+        ...prev, // Tetap pertahankan data lain yang mungkin tidak berubah
         [type]: {
-          ...editedData,
+          ...editedData, // Gunakan data yang diedit sebagai dasar
           title:
             apiResponseData.nama_lkp ||
             apiResponseData.nama_lpk ||
@@ -2859,6 +3003,7 @@ const TentangKamiEditor = ({
             apiResponseData.deskripsi_lpk ||
             apiResponseData.deskripsi_yayasan ||
             editedData.description,
+          // Perbaikan Path Logo
           logoUrl:
             apiResponseData.foto_lkp ||
             apiResponseData.foto_lpk ||
@@ -2868,16 +3013,18 @@ const TentangKamiEditor = ({
         },
       }));
 
-      if (!aboutId && apiResponseData.id) {
-        setAboutId(apiResponseData.id);
-      }
+      // Update state ID jika baru dibuat
+      if (type === "LKP BINA ESSA") setLkpId(apiResponseData.id || aboutId);
+      if (type === "LPK BINA ESSA") setLpkId(apiResponseData.id || aboutId);
+      if (type === "YAYASAN BINA ESSA") setYayasanId(apiResponseData.id || aboutId);
+
 
       alert(`${type} berhasil disimpan!`);
       setIsEditing(false);
       setSelectedLogo(null);
 
       if (onSaveSuccess) {
-        onSaveSuccess();
+        onSaveSuccess(); // Panggil callback untuk refresh data global jika ada
       }
     } catch (err) {
       console.error(`Failed to save ${type} data:`, err);
@@ -2899,6 +3046,7 @@ const TentangKamiEditor = ({
     const file = e.target.files[0];
     if (file) {
       setSelectedLogo(file);
+      // Update preview logoUrl di editedData
       setEditedData({ ...editedData, logoUrl: URL.createObjectURL(file) });
     }
   };
@@ -2986,7 +3134,7 @@ const TentangKamiEditor = ({
           <div className="border rounded p-4 flex flex-col items-center justify-center">
             {isEditing ? (
               <div className="w-full">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer mb-2">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer">
                   <input
                     type="file"
                     id={`logo-upload-${type}`}
@@ -3009,10 +3157,10 @@ const TentangKamiEditor = ({
                     </div>
                   </label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 mt-2">
                   <span className="text-sm text-gray-500">Logo saat ini:</span>
                   <span className="text-sm font-medium">
-                    {editedData.logoUrl || "Tidak ada file dipilih"}
+                    {editedData.logoUrl ? editedData.logoUrl.split('/').pop() : "Tidak ada file dipilih"} {/* Tampilkan nama file saja */}
                   </span>
                 </div>
               </div>
@@ -3020,7 +3168,12 @@ const TentangKamiEditor = ({
               <div className="text-center">
                 {data.logoUrl ? (
                   <img
-                    src={`http://localhost:8000/storage/images/${data.logoUrl}`}
+                    src={
+                      // Perbaikan Path Logo
+                      data.logoUrl
+                        ? `/storage/images/${data.logoUrl}` // Gunakan path relatif
+                        : "https://placehold.co/128x128/e0e0e0/888888?text=No+Image"
+                    }
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src =
@@ -3046,7 +3199,7 @@ const TentangKamiEditor = ({
   );
 };
 
-// Komponen utama untuk Kelola Informasi - Modifikasi untuk Integrasi API Visi Misi
+// --- Komponen utama untuk Kelola Informasi - Modifikasi untuk Integrasi API Visi Misi ---
 const AdminKontenpage = () => {
   const [slideshowData, setSlideshowData] = useState([]);
   const [bannerData, setBannerData] = useState([]);
@@ -3057,6 +3210,7 @@ const AdminKontenpage = () => {
   const [visiMisiData, setVisiMisiData] = useState({ visi: "", misi: "" });
   const [visiMisiId, setVisiMisiId] = useState(null);
   const [loadingVisiMisi, setLoadingVisiMisi] = useState(true);
+  const [errorVisiMisi, setErrorVisiMisi] = useState(null); // State error untuk Visi Misi
 
   // State untuk Informasi Kontak (FITUR BARU)
   const [informasiKontakData, setInformasiKontakData] = useState({
@@ -3070,6 +3224,7 @@ const AdminKontenpage = () => {
   });
   const [kontakId, setKontakId] = useState(null);
   const [loadingKontak, setLoadingKontak] = useState(true);
+  const [errorKontak, setErrorKontak] = useState(null); // State error untuk Informasi Kontak
 
   const dataTentangKamiStrukturAwal = {
     "LKP BINA ESSA": { title: "", logoUrl: "", description: "", id: null },
@@ -3080,6 +3235,7 @@ const AdminKontenpage = () => {
     dataTentangKamiStrukturAwal
   );
   const [loadingTentangKami, setLoadingTentangKami] = useState(true);
+  const [errorTentangKami, setErrorTentangKami] = useState(null); // State error untuk Tentang Kami
 
   const [lkpId, setLkpId] = useState(null);
   const [lpkId, setLpkId] = useState(null);
@@ -3089,49 +3245,46 @@ const AdminKontenpage = () => {
   const [activeTentangKami, setActiveTentangKami] = useState(null);
 
   // Fungsi untuk fetch data Visi Misi (Implementasi API)
-  const fetchVisiMisiData = async () => {
+  const fetchVisiMisiData = useCallback(async () => { // Gunakan useCallback
     setLoadingVisiMisi(true);
+    setErrorVisiMisi(null); // Reset error sebelum fetch
     try {
-      // Menggunakan apiEndpoints.visiMisi yang diasumsikan ada
       const response = await fetchData(
         apiEndpoints.visiMisi || "/api/informasi-lembaga"
-      ); // Default fallback jika apiEndpoints.visiMisi belum ada
+      );
       if (response && response.data) {
-        // Asumsi API mengembalikan objek tunggal atau array dengan satu objek
         const apiItem = Array.isArray(response.data)
           ? response.data[0]
           : response.data;
         if (apiItem && apiItem.id) {
-          // Pastikan ada ID untuk mengidentifikasi record
           setVisiMisiData({
             visi: apiItem.visi || "",
             misi: apiItem.misi || "",
-            id: apiItem.id, // Simpan ID
+            id: apiItem.id,
           });
-          setVisiMisiId(apiItem.id); // Set ID ke state
+          setVisiMisiId(apiItem.id);
         } else {
-          // Jika API mengembalikan data tapi tanpa ID atau tidak terstruktur, inisialisasi kosong
           setVisiMisiData({ visi: "", misi: "" });
           setVisiMisiId(null);
         }
       } else {
-        // Jika tidak ada data atau response tidak valid
         setVisiMisiData({ visi: "", misi: "" });
         setVisiMisiId(null);
       }
     } catch (error) {
       console.error("Error fetching Visi Misi data:", error);
-      setError("Gagal memuat Visi dan Misi. Coba refresh halaman."); // Set error state jika ada masalah
+      setErrorVisiMisi("Gagal memuat Visi dan Misi. Coba refresh halaman.");
       setVisiMisiData({ visi: "", misi: "" });
       setVisiMisiId(null);
     } finally {
       setLoadingVisiMisi(false);
     }
-  };
+  }, []); // Tidak ada dependency karena ini hanya fetch
 
   // Fungsi untuk fetch data Informasi Kontak (Tidak Berubah)
-  const fetchInformasiKontakData = async () => {
+  const fetchInformasiKontakData = useCallback(async () => { // Gunakan useCallback
     setLoadingKontak(true);
+    setErrorKontak(null); // Reset error
     try {
       const response = await fetchData(
         apiEndpoints.informasiKontak || "/api/informasi-kontak"
@@ -3168,39 +3321,43 @@ const AdminKontenpage = () => {
             id: apiItem.id,
           });
           setKontakId(apiItem.id);
+        } else {
+          // Reset jika data tidak ditemukan atau tidak valid
+          setInformasiKontakData({
+            namaOrganisasi: "BINA ESSA",
+            alamat: "", email: "", telepon: "", whatsapp: "", instagram: "",
+            resources: [{ name: "Publikasi", url: "#" }],
+            socialMedia: [{ platform: "Facebook", url: "", icon: "facebook" }],
+          });
+          setKontakId(null);
         }
+      } else {
+        setInformasiKontakData({
+          namaOrganisasi: "BINA ESSA",
+          alamat: "", email: "", telepon: "", whatsapp: "", instagram: "",
+          resources: [{ name: "Publikasi", url: "#" }],
+          socialMedia: [{ platform: "Facebook", url: "", icon: "facebook" }],
+        });
+        setKontakId(null);
       }
     } catch (error) {
       console.error("Error fetching Informasi Kontak data:", error);
+      setErrorKontak("Gagal memuat informasi kontak.");
       setInformasiKontakData({
         namaOrganisasi: "BINA ESSA",
-        alamat: "",
-        email: "",
-        telepon: "",
-        whatsapp: "",
-        instagram: "",
-        resources: [
-          { name: "Publikasi", url: "#" },
-          { name: "Pelayanan Publik", url: "#" },
-          { name: "FAQ", url: "#" },
-          { name: "Hubungi Kami", url: "#" },
-        ],
-        socialMedia: [
-          { platform: "Facebook", url: "", icon: "facebook" },
-          { platform: "Twitter", url: "", icon: "twitter" },
-          { platform: "Instagram", url: "", icon: "instagram" },
-          { platform: "YouTube", url: "", icon: "youtube" },
-          { platform: "TikTok", url: "", icon: "tiktok" },
-        ],
+        alamat: "", email: "", telepon: "", whatsapp: "", instagram: "",
+        resources: [{ name: "Publikasi", url: "#" }],
+        socialMedia: [{ platform: "Facebook", url: "", icon: "facebook" }],
       });
       setKontakId(null);
     } finally {
       setLoadingKontak(false);
     }
-  };
+  }, []); // Tidak ada dependency
 
-  const fetchAllTentangKamiData = async () => {
+  const fetchAllTentangKamiData = useCallback(async () => { // Gunakan useCallback
     setLoadingTentangKami(true);
+    setErrorTentangKami(null); // Reset error
     const newTentangKamiData = { ...dataTentangKamiStrukturAwal };
     let fetchedLkpId = null;
     let fetchedLpkId = null;
@@ -3256,6 +3413,7 @@ const AdminKontenpage = () => {
       }
     } catch (error) {
       console.error("Error fetching initial Tentang Kami data:", error);
+      setErrorTentangKami("Gagal memuat data Tentang Kami.");
     } finally {
       setTentangKamiData(newTentangKamiData);
       setLkpId(fetchedLkpId);
@@ -3263,9 +3421,9 @@ const AdminKontenpage = () => {
       setYayasanId(fetchedYayasanId);
       setLoadingTentangKami(false);
     }
-  };
+  }, []); // Tidak ada dependency
 
-  const fetchAllContentData = async () => {
+  const fetchAllContentData = useCallback(async () => { // Gunakan useCallback
     // Fetch Slideshow
     try {
       const response = await fetchData(apiEndpoints.slideshow);
@@ -3307,7 +3465,7 @@ const AdminKontenpage = () => {
         items.map((item) => ({
           ...item,
           judul: item.title,
-          gambar: item.gambar ? `${item.gambar}` : null,
+          gambar: item.gambar ? `/storage/berita_gambar/${item.gambar}` : null, // Perbaikan Path
         }))
       );
     } catch (err) {
@@ -3327,16 +3485,17 @@ const AdminKontenpage = () => {
         items.map((item) => ({
           ...item,
           judulFoto: item.judul_foto || item.judulFoto,
-          file_foto: item.file_foto
-            ? `http://localhost:8000/storage/galeri_kegiatan/${item.file_foto}`
+          file_foto: item.file_foto // Perbaikan Path
+            ? `/storage/galeri_kegiatan/${item.file_foto}`
             : null,
         }))
       );
     } catch (err) {
       console.error("Failed to load gallery data:", err);
     }
-  };
+  }, []); // Tidak ada dependency
 
+  // Gunakan useEffect untuk memanggil fungsi fetch saat komponen dimuat
   useEffect(() => {
     const storedToken = localStorage.getItem("jwt");
     if (storedToken) {
@@ -3346,40 +3505,36 @@ const AdminKontenpage = () => {
       );
       fetchAllContentData();
       fetchAllTentangKamiData();
-      fetchVisiMisiData(); // Panggil saat komponen dimuat
-      fetchInformasiKontakData(); // Panggil saat komponen dimuat
+      fetchVisiMisiData();
+      fetchInformasiKontakData();
     } else {
       console.log(
         "AdminKontenpage useEffect: No token found in localStorage for initial data fetch. Please login."
       );
+      // Jika tidak ada token, mungkin arahkan ke halaman login atau tampilkan pesan
     }
-  }, []);
+  }, []); // Array kosong berarti hanya berjalan sekali saat mount
 
+  // Fungsi untuk toggle bagian utama
   const toggleSection = (section) => {
-    if (activeSection === section) {
-      setActiveSection(null);
-    } else {
-      setActiveSection(section);
-      if (section !== "tentangKami") {
-        setActiveTentangKami(null);
-      }
-    }
-  };
-
-  const toggleTentangKami = (section) => {
-    if (activeTentangKami === section) {
+    setActiveSection(activeSection === section ? null : section);
+    if (section !== "tentangKami") { // Jika mengklik section lain, tutup sub-bagian tentang kami
       setActiveTentangKami(null);
-    } else {
-      setActiveTentangKami(section);
     }
   };
 
+  // Fungsi untuk toggle sub-bagian tentang kami
+  const toggleTentangKami = (section) => {
+    setActiveTentangKami(activeTentangKami === section ? null : section);
+  };
+
+  // Fungsi helper untuk memperbarui state tentangKamiData
   const updateTentangKamiData = (type, newData) => {
     setTentangKamiData((prevData) => ({
       ...prevData,
       [type]: {
-        ...prevData[type],
-        ...newData,
+        ...prevData[type], // Pertahankan data lama yang tidak diubah
+        ...newData, // Timpa dengan data baru
       },
     }));
   };
@@ -3530,6 +3685,8 @@ const AdminKontenpage = () => {
                 <p className="text-blue-500 text-center">
                   Memuat informasi Tentang Kami...
                 </p>
+              ) : errorTentangKami ? ( // Tampilkan error jika ada
+                <p className="text-red-500 text-center">{errorTentangKami}</p>
               ) : (
                 <>
                   {/* SUB-SECTION: Visi dan Misi (INTEGRASI API) */}
@@ -3563,6 +3720,8 @@ const AdminKontenpage = () => {
                             <p className="text-blue-500 text-center">
                               Memuat informasi Visi dan Misi...
                             </p>
+                          ) : errorVisiMisi ? ( // Tampilkan error Visi Misi
+                            <p className="text-red-500 text-center">{errorVisiMisi}</p>
                           ) : (
                             <VisiMisiEditor
                               data={visiMisiData}
@@ -3570,10 +3729,10 @@ const AdminKontenpage = () => {
                               apiEndpoint={
                                 apiEndpoints.visiMisi ||
                                 "/api/informasi-lembaga"
-                              } // Menggunakan endpoint API
+                              }
                               visiMisiId={visiMisiId}
                               setVisiMisiId={setVisiMisiId}
-                              onSaveSuccess={fetchVisiMisiData} // Memanggil ulang fetch setelah save
+                              onSaveSuccess={fetchVisiMisiData}
                             />
                           )}
                         </div>
@@ -3581,7 +3740,7 @@ const AdminKontenpage = () => {
                     </div>
                   </div>
 
-                  {/* SUB-SECTIONS: Lembaga Information (Tidak Berubah) */}
+                  {/* SUB-SECTIONS: Lembaga Information */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div className="bg-white border rounded-lg overflow-hidden">
                       <button
@@ -3657,7 +3816,7 @@ const AdminKontenpage = () => {
                     </div>
                   </div>
 
-                  {/* Detail Sections untuk setiap lembaga (Tidak Berubah) */}
+                  {/* Detail Sections untuk setiap lembaga */}
                   {activeTentangKami === "LKP BINA ESSA" && (
                     <TentangKamiEditor
                       data={tentangKamiData["LKP BINA ESSA"]}
@@ -3703,7 +3862,7 @@ const AdminKontenpage = () => {
           )}
         </div>
 
-        {/* Section Informasi Kontak (Tidak Berubah) */}
+        {/* Section Informasi Kontak */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <button
             onClick={() => toggleSection("informasiKontak")}
@@ -3728,6 +3887,8 @@ const AdminKontenpage = () => {
                 <p className="text-blue-500 text-center">
                   Memuat informasi kontak...
                 </p>
+              ) : errorKontak ? ( // Tampilkan error Kontak
+                <p className="text-red-500 text-center">{errorKontak}</p>
               ) : (
                 <InformasiKontakEditor
                   data={informasiKontakData}

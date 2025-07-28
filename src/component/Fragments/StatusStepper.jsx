@@ -8,15 +8,13 @@ const StatusStepper = ({
   statusString,
   trainingStatus,
   onFeedback,
-  hasFeedback = false,
-  checkingFeedback = false,
 }) => {
   const isRejected = statusString === "Ditolak";
   const lolosSeleksiIndex = steps.indexOf("Lolos Seleksi");
   const unggahPersyaratanIndex = steps.indexOf("Unggah Persyaratan");
   const pelaksanaanPelatihanIndex = steps.indexOf("Pelaksanaan Pelatihan");
-  const feedbackPelatihanIndex = steps.indexOf("Feedback Pelatihan");
-  const selesaiPelatihanIndex = steps.indexOf("Selesai Pelatihan");
+  const feedbackPelatihanIndex = steps.indexOf("Feedback Pelatihan"); // Dapatkan indeks "Feedback Pelatihan"
+  const selesaiPelatihanIndex = steps.indexOf("Selesai Pelatihan"); // Dapatkan indeks "Selesai Pelatihan"
 
   return (
     <div className="bg-white shadow-md rounded-lg w-full max-w-4xl p-6">
@@ -43,6 +41,8 @@ const StatusStepper = ({
 
             // LOGIKA UNTUK "Pelaksanaan Pelatihan"
             if (index === pelaksanaanPelatihanIndex) {
+              // Jika peserta sudah lolos seleksi
+              // DAN status pelatihan adalah 'Sedang berlangsung' atau 'Selesai'
               if (
                 currentStep >= lolosSeleksiIndex &&
                 (trainingStatus === "Sedang berlangsung" ||
@@ -54,6 +54,9 @@ const StatusStepper = ({
 
             // LOGIKA UNTUK "Feedback Pelatihan"
             if (index === feedbackPelatihanIndex) {
+              // Jika peserta sudah lolos seleksi (atau sudah melewati Pelaksanaan Pelatihan secara logis)
+              // DAN status pelatihan adalah 'Selesai'
+              // ATAU status pendaftaran peserta adalah 'menunggu_feedback'
               if (
                 currentStep >= lolosSeleksiIndex &&
                 trainingStatus === "Selesai"
@@ -64,12 +67,29 @@ const StatusStepper = ({
 
             // LOGIKA UNTUK "Selesai Pelatihan"
             if (index === selesaiPelatihanIndex) {
+              // Jika peserta sudah lolos seleksi (atau sudah melewati Feedback Pelatihan secara logis)
+              // DAN status pelatihan adalah 'Selesai'
+              // ATAU status pendaftaran peserta adalah 'selesai'
               if (
                 currentStep >= lolosSeleksiIndex &&
                 trainingStatus === "Selesai"
               ) {
                 isStepCompleted = true;
               }
+            }
+
+            // Pastikan langkah-langkah sebelumnya juga dianggap selesai jika langkah yang lebih jauh sudah selesai
+            // Ini penting agar jalur hijau berlanjut dengan benar
+            if (
+              index > 0 &&
+              isStepCompleted &&
+              !steps[index - 1].isStepCompleted
+            ) {
+              // Jika langkah saat ini selesai, pastikan langkah sebelumnya juga selesai
+              // Ini mungkin tidak perlu jika `currentStep` selalu progresif,
+              // tetapi bisa membantu jika ada lompatan status.
+              // Namun, dengan `index <= currentStep` di awal, ini sudah tercakup.
+              // Jadi, lebih baik fokus pada kondisi spesifik per langkah.
             }
 
             // Tampilkan pesan lolos jika ini langkah "Lolos Seleksi" dan sudah selesai
@@ -113,44 +133,22 @@ const StatusStepper = ({
                 </p>
               )}
 
-              {/* Feedback section */}
-              {step === "Feedback Pelatihan" && (
-                <div className="mt-2">
-                  {!isRejected &&
-                    (trainingStatus === "Selesai" ||
-                      currentStep === feedbackPelatihanIndex) && (
-                      <div>
-                        {checkingFeedback ? (
-                          // Loading state saat checking feedback
-                          <div className="flex items-center space-x-2 text-gray-500">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                            <span className="text-sm">
-                              Mengecek status feedback...
-                            </span>
-                          </div>
-                        ) : hasFeedback ? (
-                          // If peserta has ANY feedback, show completed message
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                            <p className="text-green-700 text-sm font-medium">
-                              ✅ Feedback sudah dikirim
-                            </p>
-                            <p className="text-green-600 text-xs mt-1">
-                              Terima kasih atas feedback Anda.
-                            </p>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={onFeedback}
-                          >
-                            Beri Feedback
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                </div>
-              )}
+              {/* Tombol Feedback hanya muncul jika:
+                  1. Ini adalah langkah "Feedback Pelatihan"
+                  2. Status bukan ditolak
+                  3. Pelatihan sudah selesai (trainingStatus === 'Selesai')
+                     ATAU status pendaftaran peserta adalah 'menunggu_feedback'
+              */}
+              {step === "Feedback Pelatihan" &&
+                !isRejected &&
+                (trainingStatus === "Selesai" ||
+                  currentStep === feedbackPelatihanIndex) && (
+                  <div className="mt-2">
+                    <Button variant="secondary" size="sm" onClick={onFeedback}>
+                      Beri Feedback
+                    </Button>
+                  </div>
+                )}
             </li>
           );
         })}

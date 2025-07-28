@@ -43,7 +43,7 @@ const LupaPasswordForm = ({
         >
           Kirim Tautan
         </Button>
-      </div>
+      </div> 
     </form>
   );
 };

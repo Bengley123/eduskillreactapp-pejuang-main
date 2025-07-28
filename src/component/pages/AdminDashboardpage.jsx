@@ -200,7 +200,7 @@ const AdminDashboardPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <div className="bg-white p-4 rounded-lg shadow-md lg:col-span-2">
           <DataTable
-            title="Pelatihan Yang Tersedia"
+            title="Pelatihan Yang Dibuka"
             columns={pelatihanColumns}
             data={displayedPelatihanData}
             loading={loading}
@@ -254,7 +254,7 @@ const AdminDashboardPage = () => {
 
         <div className="bg-white p-4 rounded-lg shadow-md lg:col-span-2">
           <DataTable
-            title="Tempat Bekerja Alumni (Yang Telah Memberikan Feedback)"
+            title="Tempat Bekerja Alumni"
             columns={tempatKerjaColumns}
             data={displayedTempatKerjaData}
             loading={loading}

@@ -240,14 +240,17 @@ export default function ResetPasswordPage() {
               </ul>
             </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? "Menyimpan..." : "Reset Password"}
-            </Button>
+            {/* Container dengan flex dan justify-center untuk memastikan button di tengah */}
+            <div className="flex justify-center mt-6">
+              <Button
+                type="submit"
+                variant="dark"
+                disabled={loading || !isFormValid}
+                className="w-full max-w-xs px-8 py-3 text-center"
+              >
+                {loading ? "Menyimpan..." : "Reset Password"}
+              </Button>
+            </div>
           </form>
         ) : !successMessage ? (
           <div className="text-center text-red-600">

@@ -5,6 +5,90 @@ import DetailPelatihanSection from "../Fragments/DetailPelatihanSection";
 import ImgCard from "../../assets/imgcard1.jpg";
 import api, { fetchData } from "../../services/api";
 
+// Modal Component
+const Modal = ({ isOpen, onClose, children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div 
+        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// Info Modal
+const InfoModal = ({ isOpen, onClose, title, message, type = "info" }) => {
+  const getIcon = () => {
+    switch(type) {
+      case "error":
+        return (
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+        );
+      case "success":
+        return (
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        );
+      case "warning":
+        return (
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+            <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+        );
+      default:
+        return (
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+            <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <div className="p-6">
+        <div className="sm:flex sm:items-start">
+          {getIcon()}
+          <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2">
+              {title}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {message}
+            </p>
+          </div>
+        </div>
+        <div className="mt-5 sm:mt-4">
+          <button
+            type="button"
+            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors"
+            onClick={onClose}
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 const DetailPelatihan = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -15,6 +99,10 @@ const DetailPelatihan = () => {
   const [error, setError] = useState(null);
   const [kuotaTersisa, setKuotaTersisa] = useState(0);
   const [jumlahPendaftar, setJumlahPendaftar] = useState(0);
+
+  // Modal states
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [modalInfo, setModalInfo] = useState({ title: "", message: "", type: "info" });
 
   console.log("DetailPelatihan: ID dari useParams:", id);
 
@@ -114,15 +202,26 @@ const DetailPelatihan = () => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
 
     if (!isLoggedIn) {
-      alert("Silakan login terlebih dahulu!");
+      setModalInfo({
+        title: "Login Diperlukan",
+        message: "Silakan login terlebih dahulu untuk mendaftar pelatihan ini.",
+        type: "warning"
+      });
+      setShowInfoModal(true);
       return;
     }
 
     if (kuotaTersisa <= 0) {
-      alert("Maaf, kuota pelatihan sudah penuh!");
+      setModalInfo({
+        title: "Kuota Penuh",
+        message: "Maaf, kuota pelatihan sudah penuh! Silakan coba pelatihan lainnya.",
+        type: "error"
+      });
+      setShowInfoModal(true);
       return;
     }
 
+    // Langsung navigate ke halaman pendaftaran tanpa konfirmasi
     navigate(`/daftar/${id}`);
   };
 
@@ -143,20 +242,31 @@ const DetailPelatihan = () => {
     : ImgCard;
 
   return (
-    <DetailPelatihanSection
-      id={pelatihan.id}
-      title={pelatihan.nama_pelatihan}
-      imageSrc={imageUrl}
-      description={pelatihan.keterangan_pelatihan}
-      kategori={pelatihan.kategori}
-      instructor={pelatihan.mentor?.nama_mentor || "Tidak tersedia"}
-      biaya={pelatihan.biaya || 0}
-      kuota={pelatihan.jumlah_kuota || 0}
-      kuotaTersisa={kuotaTersisa}
-      jumlahPendaftar={jumlahPendaftar}
-      deadline={pelatihan.waktu_pengumpulan}
-      onDaftar={handleDaftar}
-    />
+    <>
+      <DetailPelatihanSection
+        id={pelatihan.id}
+        title={pelatihan.nama_pelatihan}
+        imageSrc={imageUrl}
+        description={pelatihan.keterangan_pelatihan}
+        kategori={pelatihan.kategori}
+        instructor={pelatihan.mentor?.nama_mentor || "Tidak tersedia"}
+        biaya={pelatihan.biaya || 0}
+        kuota={pelatihan.jumlah_kuota || 0}
+        kuotaTersisa={kuotaTersisa}
+        jumlahPendaftar={jumlahPendaftar}
+        deadline={pelatihan.waktu_pengumpulan}
+        onDaftar={handleDaftar}
+      />
+
+      {/* Info Modal - hanya untuk login diperlukan dan kuota penuh */}
+      <InfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        title={modalInfo.title}
+        message={modalInfo.message}
+        type={modalInfo.type}
+      />
+    </>
   );
 };
 

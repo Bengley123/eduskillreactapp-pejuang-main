@@ -1,3 +1,5 @@
+// FeedbackModal.jsx (DENGAN PENYEMPURNAAN)
+
 import React from "react";
 import Button from "../Elements/Button/index";
 
@@ -9,6 +11,7 @@ const FeedbackModal = ({
   setFeedback,
   workplace,
   setWorkplace,
+  hasSubmitted,
 }) => {
   if (!isOpen) return null;
 
@@ -24,6 +27,7 @@ const FeedbackModal = ({
           placeholder="Masukkan Tempat Kerja Anda (Opsional)"
           value={workplace}
           onChange={(e) => setWorkplace(e.target.value)}
+          disabled={hasSubmitted} // Opsional: nonaktifkan juga input
         />
 
         {/* Textarea Feedback */}
@@ -33,6 +37,7 @@ const FeedbackModal = ({
           placeholder="Tulis feedback Anda di sini..."
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
+          disabled={hasSubmitted} // Opsional: nonaktifkan juga input
         />
 
         {/* Tombol */}
@@ -40,8 +45,14 @@ const FeedbackModal = ({
           <Button variant="secondary" size="sm" onClick={onClose}>
             Tutup
           </Button>
-          <Button variant="primary" size="sm" onClick={onSubmit}>
-            Kirim Feedback
+          <Button
+            variant={hasSubmitted ? "disabled" : "primary"}
+            size="sm"
+            onClick={onSubmit}
+            disabled={hasSubmitted}
+          >
+            {/* Ganti teks jika sudah disubmit */}
+            {hasSubmitted ? "Terkirim" : "Kirim Feedback"}
           </Button>
         </div>
       </div>

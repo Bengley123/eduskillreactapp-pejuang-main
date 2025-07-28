@@ -12,6 +12,8 @@ const NavMenu = ({ isLoggedIn }) => {
   const [error, setError] = useState(null);
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
+
+
  
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -167,14 +169,8 @@ const NavMenu = ({ isLoggedIn }) => {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium text-sm">{notif.judul}</p>
-                          <p className="text-xs text-gray-600">{notif.pesan}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(notif.created_at).toLocaleString('id-ID', {
-                              dateStyle: 'medium',
-                              timeStyle: 'short'
-                            })}
-                          </p>
+                          <p className="font-medium text-sm">{notif.judul || 'Judul tidak tersedia'}</p>
+                          <p className="text-xs text-gray-600">{notif.pesan || 'Pesan tidak tersedia'}</p>
                         </div>
                         <div className="flex gap-2">
                           {notif.status === 'unread' && (
