@@ -31,7 +31,13 @@ import api, {
 } from "../../services/api.js";
 
 // --- Komponen Modal Konfirmasi (Terintegrasi Langsung) ---
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, message, isLoading }) => {
+const ConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  message,
+  isLoading,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -39,7 +45,10 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, message, isLoading }) =
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Konfirmasi</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
             <FaTimes size={16} />
           </button>
         </div>
@@ -55,7 +64,11 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, message, isLoading }) =
           <button
             onClick={onConfirm}
             className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors
-                        ${isLoading ? 'bg-gray-400' : 'bg-red-500 hover:bg-red-600'}`}
+                        ${
+                          isLoading
+                            ? "bg-gray-400"
+                            : "bg-red-500 hover:bg-red-600"
+                        }`}
             disabled={isLoading}
           >
             {isLoading ? "Memproses..." : "Ya, Hapus"}
@@ -65,7 +78,6 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, message, isLoading }) =
     </div>
   );
 };
-
 
 // --- Komponen Pagination (Tidak Berubah) ---
 const Pagination = ({
@@ -433,9 +445,14 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
           ...item,
           name: title === "Slideshow" ? item.nama_slide : item.nama_banner,
           // Perbaikan Path Gambar
-          filename: item.url_gambar || item.gambar
-            ? `/storage/${title.toLowerCase() === 'slideshow' ? 'slideshow_images' : 'banner_images'}/${item.url_gambar || item.gambar}` // Asumsi path folder
-            : null,
+          filename:
+            item.url_gambar || item.gambar
+              ? `/storage/${
+                  title.toLowerCase() === "slideshow"
+                    ? "slideshow_images"
+                    : "banner_images"
+                }/${item.url_gambar || item.gambar}` // Asumsi path folder
+              : null,
         }))
       );
     } catch (err) {
@@ -549,9 +566,14 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
                     ? updatedItem.nama_slide
                     : updatedItem.nama_banner,
                 // Perbaikan Path Gambar di state 'data'
-                filename: updatedItem.url_gambar || updatedItem.gambar
-                  ? `/storage/${title.toLowerCase() === 'slideshow' ? 'slideshow_images' : 'banner_images'}/${updatedItem.url_gambar || updatedItem.gambar}`
-                  : null,
+                filename:
+                  updatedItem.url_gambar || updatedItem.gambar
+                    ? `/storage/${
+                        title.toLowerCase() === "slideshow"
+                          ? "slideshow_images"
+                          : "banner_images"
+                      }/${updatedItem.url_gambar || updatedItem.gambar}`
+                    : null,
               }
             : item
         )
@@ -565,9 +587,14 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
             ? updatedItem.nama_slide
             : updatedItem.nama_banner,
         // Perbaikan Path Gambar di state 'selectedItem'
-        filename: updatedItem.url_gambar || updatedItem.gambar
-          ? `/storage/${title.toLowerCase() === 'slideshow' ? 'slideshow_images' : 'banner_images'}/${updatedItem.url_gambar || updatedItem.gambar}`
-          : null,
+        filename:
+          updatedItem.url_gambar || updatedItem.gambar
+            ? `/storage/${
+                title.toLowerCase() === "slideshow"
+                  ? "slideshow_images"
+                  : "banner_images"
+              }/${updatedItem.url_gambar || updatedItem.gambar}`
+            : null,
       }));
 
       setIsEditing(false);
@@ -641,9 +668,14 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
           name:
             title === "Slideshow" ? newItem.nama_slide : newItem.nama_banner,
           // Perbaikan Path Gambar untuk item baru
-          filename: newItem.url_gambar || newItem.gambar
-            ? `/storage/${title.toLowerCase() === 'slideshow' ? 'slideshow_images' : 'banner_images'}/${newItem.url_gambar || newItem.gambar}`
-            : null,
+          filename:
+            newItem.url_gambar || newItem.gambar
+              ? `/storage/${
+                  title.toLowerCase() === "slideshow"
+                    ? "slideshow_images"
+                    : "banner_images"
+                }/${newItem.url_gambar || newItem.gambar}`
+              : null,
         },
       ]);
       setForm({
@@ -1127,9 +1159,9 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
 
   const handleSaveEdit = async () => {
     const pubDate = new Date(editedItem.date);
-    pubDate.setHours(0,0,0,0);
+    pubDate.setHours(0, 0, 0, 0);
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     if (pubDate < today) {
       setActionError("Tanggal publikasi tidak boleh di masa lalu.");
       return;
@@ -1221,9 +1253,9 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
 
   const handleSubmitNew = async () => {
     const pubDate = new Date(form.date);
-    pubDate.setHours(0,0,0,0);
+    pubDate.setHours(0, 0, 0, 0);
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     if (pubDate < today) {
       setActionError("Tanggal publikasi tidak boleh di masa lalu.");
       return;
@@ -1541,7 +1573,9 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-700">Judul Berita</p>
+                <p className="text-sm font-medium text-gray-700">
+                  Judul Berita
+                </p>
                 {isEditing ? (
                   <input
                     type="text"
@@ -1617,7 +1651,9 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
                       <div className="flex flex-col items-center justify-center gap-1">
                         <FaUpload className="text-gray-400" size={16} />
                         <span className="text-sm text-gray-500">
-                          {selectedFile ? selectedFile.name : "Pilih gambar baru"}
+                          {selectedFile
+                            ? selectedFile.name
+                            : "Pilih gambar baru"}
                         </span>
                       </div>
                     </label>
@@ -2475,14 +2511,11 @@ const InformasiKontakEditor = ({
         JSON.stringify(editedData.socialMedia)
       );
 
-      let response;
       if (kontakId) {
-        // Jika sudah ada ID, berarti kita update
-        response = await updateData(apiEndpoint, kontakId, formDataToSend);
-      } else {
-        // Jika belum ada ID, berarti kita buat baru
-        response = await createData(apiEndpoint, formDataToSend);
+        formDataToSend.append("id", kontakId);
       }
+
+      const response = await createData(apiEndpoint, formDataToSend);
 
       const apiResponseData = response.data.data
         ? response.data.data
@@ -2677,7 +2710,9 @@ const InformasiKontakEditor = ({
                   required
                 />
               ) : (
-                <p className="p-2 bg-gray-50 rounded">{data?.alamat || "Alamat belum diisi"}</p>
+                <p className="p-2 bg-gray-50 rounded">
+                  {data?.alamat || "Alamat belum diisi"}
+                </p>
               )}
             </div>
             <div>
@@ -3016,8 +3051,8 @@ const TentangKamiEditor = ({
       // Update state ID jika baru dibuat
       if (type === "LKP BINA ESSA") setLkpId(apiResponseData.id || aboutId);
       if (type === "LPK BINA ESSA") setLpkId(apiResponseData.id || aboutId);
-      if (type === "YAYASAN BINA ESSA") setYayasanId(apiResponseData.id || aboutId);
-
+      if (type === "YAYASAN BINA ESSA")
+        setYayasanId(apiResponseData.id || aboutId);
 
       alert(`${type} berhasil disimpan!`);
       setIsEditing(false);
@@ -3160,7 +3195,10 @@ const TentangKamiEditor = ({
                 <div className="flex items-center space-x-2 mt-2">
                   <span className="text-sm text-gray-500">Logo saat ini:</span>
                   <span className="text-sm font-medium">
-                    {editedData.logoUrl ? editedData.logoUrl.split('/').pop() : "Tidak ada file dipilih"} {/* Tampilkan nama file saja */}
+                    {editedData.logoUrl
+                      ? editedData.logoUrl.split("/").pop()
+                      : "Tidak ada file dipilih"}{" "}
+                    {/* Tampilkan nama file saja */}
                   </span>
                 </div>
               </div>
@@ -3245,7 +3283,8 @@ const AdminKontenpage = () => {
   const [activeTentangKami, setActiveTentangKami] = useState(null);
 
   // Fungsi untuk fetch data Visi Misi (Implementasi API)
-  const fetchVisiMisiData = useCallback(async () => { // Gunakan useCallback
+  const fetchVisiMisiData = useCallback(async () => {
+    // Gunakan useCallback
     setLoadingVisiMisi(true);
     setErrorVisiMisi(null); // Reset error sebelum fetch
     try {
@@ -3282,7 +3321,8 @@ const AdminKontenpage = () => {
   }, []); // Tidak ada dependency karena ini hanya fetch
 
   // Fungsi untuk fetch data Informasi Kontak (Tidak Berubah)
-  const fetchInformasiKontakData = useCallback(async () => { // Gunakan useCallback
+  const fetchInformasiKontakData = useCallback(async () => {
+    // Gunakan useCallback
     setLoadingKontak(true);
     setErrorKontak(null); // Reset error
     try {
@@ -3325,7 +3365,11 @@ const AdminKontenpage = () => {
           // Reset jika data tidak ditemukan atau tidak valid
           setInformasiKontakData({
             namaOrganisasi: "BINA ESSA",
-            alamat: "", email: "", telepon: "", whatsapp: "", instagram: "",
+            alamat: "",
+            email: "",
+            telepon: "",
+            whatsapp: "",
+            instagram: "",
             resources: [{ name: "Publikasi", url: "#" }],
             socialMedia: [{ platform: "Facebook", url: "", icon: "facebook" }],
           });
@@ -3334,7 +3378,11 @@ const AdminKontenpage = () => {
       } else {
         setInformasiKontakData({
           namaOrganisasi: "BINA ESSA",
-          alamat: "", email: "", telepon: "", whatsapp: "", instagram: "",
+          alamat: "",
+          email: "",
+          telepon: "",
+          whatsapp: "",
+          instagram: "",
           resources: [{ name: "Publikasi", url: "#" }],
           socialMedia: [{ platform: "Facebook", url: "", icon: "facebook" }],
         });
@@ -3345,7 +3393,11 @@ const AdminKontenpage = () => {
       setErrorKontak("Gagal memuat informasi kontak.");
       setInformasiKontakData({
         namaOrganisasi: "BINA ESSA",
-        alamat: "", email: "", telepon: "", whatsapp: "", instagram: "",
+        alamat: "",
+        email: "",
+        telepon: "",
+        whatsapp: "",
+        instagram: "",
         resources: [{ name: "Publikasi", url: "#" }],
         socialMedia: [{ platform: "Facebook", url: "", icon: "facebook" }],
       });
@@ -3355,7 +3407,8 @@ const AdminKontenpage = () => {
     }
   }, []); // Tidak ada dependency
 
-  const fetchAllTentangKamiData = useCallback(async () => { // Gunakan useCallback
+  const fetchAllTentangKamiData = useCallback(async () => {
+    // Gunakan useCallback
     setLoadingTentangKami(true);
     setErrorTentangKami(null); // Reset error
     const newTentangKamiData = { ...dataTentangKamiStrukturAwal };
@@ -3423,7 +3476,8 @@ const AdminKontenpage = () => {
     }
   }, []); // Tidak ada dependency
 
-  const fetchAllContentData = useCallback(async () => { // Gunakan useCallback
+  const fetchAllContentData = useCallback(async () => {
+    // Gunakan useCallback
     // Fetch Slideshow
     try {
       const response = await fetchData(apiEndpoints.slideshow);
@@ -3518,7 +3572,8 @@ const AdminKontenpage = () => {
   // Fungsi untuk toggle bagian utama
   const toggleSection = (section) => {
     setActiveSection(activeSection === section ? null : section);
-    if (section !== "tentangKami") { // Jika mengklik section lain, tutup sub-bagian tentang kami
+    if (section !== "tentangKami") {
+      // Jika mengklik section lain, tutup sub-bagian tentang kami
       setActiveTentangKami(null);
     }
   };
@@ -3721,7 +3776,9 @@ const AdminKontenpage = () => {
                               Memuat informasi Visi dan Misi...
                             </p>
                           ) : errorVisiMisi ? ( // Tampilkan error Visi Misi
-                            <p className="text-red-500 text-center">{errorVisiMisi}</p>
+                            <p className="text-red-500 text-center">
+                              {errorVisiMisi}
+                            </p>
                           ) : (
                             <VisiMisiEditor
                               data={visiMisiData}
