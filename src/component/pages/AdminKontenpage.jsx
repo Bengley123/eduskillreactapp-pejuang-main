@@ -224,14 +224,13 @@ const VisiMisiEditor = ({
       const formDataToSend = new FormData();
       formDataToSend.append("visi", editedData.visi || "");
       formDataToSend.append("misi", editedData.misi || "");
-
-      let response;
+      // If an ID exists, it's an update. Add the ID to the payload.
       if (visiMisiId) {
-        formDataToSend.append("_method", "PUT");
-        response = await updateData(apiEndpoint, visiMisiId, formDataToSend);
-      } else {
-        response = await createData(apiEndpoint, formDataToSend);
+        formDataToSend.append("id", visiMisiId);
       }
+
+      // Always use the same 'createData' function that posts to the base endpoint.
+      const response = await createData(apiEndpoint, formDataToSend);
 
       const apiResponseData = response.data.data
         ? response.data.data
@@ -2967,107 +2966,69 @@ const TentangKamiEditor = ({
     setError(null);
     try {
       const formDataToSend = new FormData();
-      // formDataToSend.append("_method", "PUT"); // Laravel butuh ini jika pakai PUT dengan FormData
 
-      let response;
-      // Logika untuk menentukan endpoint dan field berdasarkan tipe lembaga
+      // FIXED: Use specific field names that the backend expects
       if (type === "LKP BINA ESSA") {
         formDataToSend.append("nama_lkp", editedData.title || "");
         formDataToSend.append("deskripsi_lkp", editedData.description || "");
-        if (selectedLogo) formDataToSend.append("foto_lkp", selectedLogo);
-        formDataToSend.append("id_lembaga", 1); // Asumsi ID untuk LKP
-
-        // Gunakan updateData jika ada ID, jika tidak, createData
-        if (aboutId) {
-          formDataToSend.append("_method", "PUT");
-          response = await updateData(apiEndpoint, aboutId, formDataToSend);
-        } else {
-          response = await createData(apiEndpoint, formDataToSend);
+        if (selectedLogo) {
+          formDataToSend.append("foto_lkp", selectedLogo);
         }
       } else if (type === "LPK BINA ESSA") {
         formDataToSend.append("nama_lpk", editedData.title || "");
         formDataToSend.append("deskripsi_lpk", editedData.description || "");
-        if (selectedLogo) formDataToSend.append("foto_lpk", selectedLogo);
-        formDataToSend.append("id_lembaga", 1); // Asumsi ID untuk LPK
-
-        if (aboutId) {
-          formDataToSend.append("_method", "PUT");
-          response = await updateData(apiEndpoint, aboutId, formDataToSend);
-        } else {
-          response = await createData(apiEndpoint, formDataToSend);
+        if (selectedLogo) {
+          formDataToSend.append("foto_lpk", selectedLogo);
         }
       } else if (type === "YAYASAN BINA ESSA") {
         formDataToSend.append("nama_yayasan", editedData.title || "");
-        formDataToSend.append(
-          "deskripsi_yayasan",
-          editedData.description || ""
-        );
-        if (selectedLogo) formDataToSend.append("foto_yayasan", selectedLogo);
-
-        if (aboutId) {
-          formDataToSend.append("_method", "PUT");
-          response = await updateData(apiEndpoint, aboutId, formDataToSend);
-        } else {
-          response = await createData(apiEndpoint, formDataToSend);
+        formDataToSend.append("deskripsi_yayasan", editedData.description || "");
+        if (selectedLogo) {
+          formDataToSend.append("foto_yayasan", selectedLogo);
         }
-      } else {
-        // Jika bukan lembaga yang terkelola via API (misalnya struktur awal yang belum ada di DB)
-        setData(editedData);
-        setIsEditing(false);
-        setLoading(false);
-        alert(`${type} berhasil disimpan (lokal)!`);
-        return;
       }
 
-      // Proses respon dari API
-      const apiResponseData = response.data.data
-        ? response.data.data
-        : response.data;
+      // Add the ID for updates, maintaining the unified endpoint logic
+      if (aboutId) {
+        formDataToSend.append("id", aboutId);
+      }
 
-      setData((prev) => ({
-        ...prev, // Tetap pertahankan data lain yang mungkin tidak berubah
-        [type]: {
-          ...editedData, // Gunakan data yang diedit sebagai dasar
-          title:
-            apiResponseData.nama_lkp ||
-            apiResponseData.nama_lpk ||
-            apiResponseData.nama_yayasan ||
-            editedData.title,
-          description:
-            apiResponseData.deskripsi_lkp ||
-            apiResponseData.deskripsi_lpk ||
-            apiResponseData.deskripsi_yayasan ||
-            editedData.description,
-          // Perbaikan Path Logo
-          logoUrl:
-            apiResponseData.foto_lkp ||
-            apiResponseData.foto_lpk ||
-            apiResponseData.foto_yayasan ||
-            editedData.logoUrl,
-          id: apiResponseData.id || aboutId,
-        },
-      }));
+      // Always call the same function to POST to the base endpoint
+      const response = await createData(apiEndpoint, formDataToSend);
 
-      // Update state ID jika baru dibuat
-      if (type === "LKP BINA ESSA") setLkpId(apiResponseData.id || aboutId);
-      if (type === "LPK BINA ESSA") setLpkId(apiResponseData.id || aboutId);
-      if (type === "YAYASAN BINA ESSA")
-        setYayasanId(apiResponseData.id || aboutId);
+      const responseData = response.data.data ? response.data.data : response.data;
+
+      // Create a correctly formatted object to update the parent state
+      const updatedStateData = {
+        title: responseData.nama_lkp || responseData.nama_lpk || responseData.nama_yayasan || editedData.title,
+        description: responseData.deskripsi_lkp || responseData.deskripsi_lpk || responseData.deskripsi_yayasan || editedData.description,
+        logoUrl: responseData.foto_lkp || responseData.foto_lpk || responseData.foto_yayasan || editedData.logoUrl,
+        id: responseData.id || aboutId,
+      };
+
+      // Call the parent's setData function, passing the updated object directly
+      setData(updatedStateData);
+
+      if (!aboutId && responseData.id) {
+        setAboutId(responseData.id);
+      }
 
       alert(`${type} berhasil disimpan!`);
       setIsEditing(false);
       setSelectedLogo(null);
 
       if (onSaveSuccess) {
-        onSaveSuccess(); // Panggil callback untuk refresh data global jika ada
+        onSaveSuccess();
       }
     } catch (err) {
       console.error(`Failed to save ${type} data:`, err);
-      setError(
-        `Gagal menyimpan data ${type}. Pesan: ${
-          err.response?.data?.message || err.message
-        }.`
-      );
+      // Try to display specific validation errors from Laravel
+      let errorMessage = err.response?.data?.message || err.message;
+      if (err.response?.data?.errors) {
+        const validationErrors = Object.values(err.response.data.errors).flat().join(' ');
+        errorMessage = `${errorMessage} Details: ${validationErrors}`;
+      }
+      setError(`Gagal menyimpan data ${type}. Pesan: ${errorMessage}.`);
     } finally {
       setLoading(false);
     }
