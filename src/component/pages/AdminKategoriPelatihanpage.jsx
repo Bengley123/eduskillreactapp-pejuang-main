@@ -174,8 +174,8 @@ const AdminKategoriPage = () => {
 
   const [form, setForm] = useState({
     nama_kategori: "",
-    deskripsi: "",
-    status: "aktif",
+    // deskripsi: "",
+    // status: "aktif",
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -273,9 +273,9 @@ const AdminKategoriPage = () => {
         const mappedData = fetchedRawItems.map((item) => ({
           id: item.id,
           nama_kategori: item.nama_kategori || "",
-          deskripsi: item.deskripsi || "",
-          status: item.status || "aktif",
-          jumlah_pelatihan: item.pelatihan_count || 0, // Laravel withCount creates 'field_count'
+          // deskripsi: item.deskripsi || "",
+          // status: item.status || "aktif",
+          // jumlah_pelatihan: item.pelatihan_count || 0, // Laravel withCount creates 'field_count'
           created_at: new Date(item.created_at).toLocaleDateString("id-ID"),
           updated_at: new Date(item.updated_at).toLocaleDateString("id-ID"),
         }));
@@ -634,8 +634,8 @@ const AdminKategoriPage = () => {
               setShowForm(true);
               setForm({
                 nama_kategori: "",
-                deskripsi: "",
-                status: "aktif",
+                // deskripsi: "",
+                // status: "aktif",
               });
               setValidationErrors({});
             }}
@@ -798,7 +798,7 @@ const AdminKategoriPage = () => {
                     </p>
                   )}
                 </div>
-                <div>
+                {/* <div>
                   <Label htmlFor="deskripsi">Deskripsi</Label>
                   <textarea
                     id="deskripsi"
@@ -816,8 +816,8 @@ const AdminKategoriPage = () => {
                       {validationErrors.deskripsi[0]}
                     </p>
                   )}
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <Label htmlFor="status">Status</Label>
                   <select
                     id="status"
@@ -836,7 +836,7 @@ const AdminKategoriPage = () => {
                       {validationErrors.status[0]}
                     </p>
                   )}
-                </div>
+                </div> */}
               </div>
               <div className="flex justify-end gap-2 mt-4">
                 <button
@@ -896,7 +896,7 @@ const AdminKategoriPage = () => {
 
                 {!isEditing && (
                   <>
-                    <div>
+                    {/* <div>
                       <Label>Deskripsi</Label>
                       <p className="font-medium">
                         {selectedKategori.deskripsi || "-"}
@@ -913,7 +913,7 @@ const AdminKategoriPage = () => {
                       <p className="font-medium">
                         {selectedKategori.jumlah_pelatihan} pelatihan
                       </p>
-                    </div>
+                    </div> */}
                     <div>
                       <Label>Dibuat</Label>
                       <p className="font-medium">
