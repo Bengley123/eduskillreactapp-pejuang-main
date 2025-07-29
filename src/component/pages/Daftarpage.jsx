@@ -3,7 +3,7 @@ import axios from "axios"; // Tidak perlu axios jika sudah ada api.js
 import InputWithLabel from "../Elements/Input/index";
 import Button from "../Elements/Button/index";
 import { useParams, useNavigate } from "react-router-dom";
-import api, { setAuthToken } from "../../services/api"; // Sesuaikan path
+import api, { setAuthToken } from "../../services/api"; 
 
 // Modal Component
 const Modal = ({ isOpen, onClose, onConfirm, title, message, type = "confirm" }) => {
@@ -81,7 +81,8 @@ const DaftarPage = () => {
   const { id: pelatihanId } = useParams();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
+  // Initial form data state
+  const initialFormData = {
     nama: "",
     noTelp: "",
     email: "",
@@ -94,9 +95,10 @@ const DaftarPage = () => {
     kk: null,
     ijazah: null,
     photo: null, // Ini untuk pas foto
-
     pelatihan_id: pelatihanId,
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
 
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingPelatihan, setLoadingPelatihan] = useState(true);
@@ -128,6 +130,32 @@ const DaftarPage = () => {
   const [photoError, setPhotoError] = useState(null); // Error untuk pas foto
 
   const [pendidikanOptions, setPendidikanOptions] = useState([]); // Untuk dropdown pendidikan
+
+  // Function to reset all form data and errors
+  const resetForm = () => {
+    setFormData({...initialFormData, pelatihan_id: pelatihanId});
+    
+    // Reset all errors
+    setNikError(null);
+    setNoTelpError(null);
+    setEmailError(null);
+    setPendidikanError(null);
+    setAlamatError(null);
+    setNamaError(null);
+    setJenisKelaminError(null);
+    setTanggalLahirError(null);
+    setKtpError(null);
+    setKkError(null);
+    setIjazahError(null);
+    setPhotoError(null);
+    setError(null);
+
+    // Reset file inputs manually
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+      input.value = '';
+    });
+  };
 
   // Modal helper functions
   const showModal = (type, title, message, onConfirm = null) => {
@@ -485,13 +513,13 @@ const DaftarPage = () => {
     const isIjazahValid = await validateFileIntegrity(formData.ijazah, setIjazahError, "Ijazah");
     const isPhotoValid = await validateFileIntegrity(formData.photo, setPhotoError, "Pas Foto");
 
-    if (!isNamaValid || !isNoTelpValid || !isEmailValid || !isNikValid || !isPendidikanValid || !isAlamatValid ||
-        !isJenisKelaminValid || !isTanggalLahirValid ||
-        !isKtpValid || !isKkValid || !isIjazahValid || !isPhotoValid) {
+    // if (!isNamaValid || !isNoTelpValid || !isEmailValid || !isNikValid || !isPendidikanValid || !isAlamatValid ||
+    //     !isJenisKelaminValid || !isTanggalLahirValid ||
+    //     !isKtpValid || !isKkValid || !isIjazahValid || !isPhotoValid) {
       
-      showModal("error", "Validasi Gagal", "Mohon lengkapi semua data dan perbaiki kesalahan validasi sebelum melanjutkan pendaftaran.");
-      return;
-    }
+    //   showModal("error", "Validasi Gagal", "Mohon lengkapi semua data dan perbaiki kesalahan validasi sebelum melanjutkan pendaftaran.");
+    //   return;
+    // }
     // --- Akhir Validasi ---
 
     const form = new FormData();
@@ -526,8 +554,11 @@ const DaftarPage = () => {
         },
       });
 
+      // Reset form setelah berhasil mendaftar
+      resetForm();
+
       showModal("success", "Pendaftaran Berhasil!", 
-        `Selamat! Pendaftaran Anda untuk pelatihan "${namaPelatihan}" telah berhasil disubmit.\n\nStatus: Menunggu tinjauan admin.`,
+        `Selamat! Pendaftaran Anda untuk pelatihan "${namaPelatihan}" telah berhasil disubmit.\n\nStatus: Menunggu tinjauan admin.\n\nForm telah direset dan siap untuk pendaftaran berikutnya.`,
       );
 
     } catch (error) {

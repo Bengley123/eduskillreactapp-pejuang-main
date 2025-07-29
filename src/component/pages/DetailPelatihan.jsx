@@ -237,9 +237,10 @@ const DetailPelatihan = () => {
     return <div className="text-center mt-10 text-gray-600">Pelatihan tidak ditemukan atau ID tidak valid.</div>;
   }
 
-  const imageUrl = pelatihan.gambar
-    ? `http://127.0.0.1:8000/storage/gambar_pelatihan/${pelatihan.gambar}`
-    : ImgCard;
+  const imageUrl = pelatihan.foto_pelatihan
+  ? `${import.meta.env.VITE_API_URL}${pelatihan.foto_pelatihan}`
+  : ImgCard;
+
 
   return (
     <>
