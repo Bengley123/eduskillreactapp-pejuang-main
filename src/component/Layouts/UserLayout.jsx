@@ -1,4 +1,3 @@
-// src/layouts/UserLayout.jsx
 import React, { useContext } from "react";
 import NavbarComponent from "../Fragments/NavbarComponent";
 import FooterComponent from "../Fragments/Footercomponent";
@@ -10,9 +9,11 @@ export default function UserLayout() {
   const { isLoggedIn } = useContext(AuthContext);
 
   const layoutContent = (
-    <div>
+    <div className="flex flex-col min-h-screen">
       <NavbarComponent />
-      <Outlet /> {/* Halaman akan dirender di sini */}
+      <main className="flex-grow">
+        <Outlet /> {/* Halaman akan dirender di sini */}
+      </main>
       <FooterComponent />
     </div>
   );

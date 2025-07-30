@@ -1,10 +1,9 @@
 import Heading from "../Elements/Head/Heading";
 import Image from "../Elements/Image/ImageIndex";
-import VisiSection from "../Moleculs/VisiSection";
-import MisiSection from "../Moleculs/MisiSection";
+// import VisiSection from "../Moleculs/VisiSection";
+// import MisiSection from "../Moleculs/MisiSection";
 import Paragraph from "../Elements/Paragraph/ParagraphText"
-// import TentangSection from "../Moleculs/TentangSection";
-// import logo from "../../assets/logo-tentang-kami.png";
+
 
 export default function InfoSectionContent({ title, image, alt, description }) {
   return (
@@ -15,8 +14,8 @@ export default function InfoSectionContent({ title, image, alt, description }) {
         <Image src={image} alt={alt} className="w-80 h-80 mb-4" />
       </div>
 
-      <VisiSection />
-      <MisiSection />
+      {/* <VisiSection />
+      <MisiSection /> */}
 
       <div className="text-gray-700 text-sm px-8">
         <Paragraph className="font-bold">

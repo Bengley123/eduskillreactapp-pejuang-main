@@ -266,51 +266,36 @@ const VisiMisiEditor = ({
       const formDataToSend = new FormData();
       formDataToSend.append("visi", editedData.visi || "");
       formDataToSend.append("misi", editedData.misi || "");
-      // If an ID exists, it's an update. Add the ID to the payload.
+
+      let response;
       if (visiMisiId) {
-        formDataToSend.append("id", visiMisiId);
+        formDataToSend.append("_method", "PUT");
+        response = await updateData(apiEndpoint, visiMisiId, formDataToSend);
+      } else {
+        response = await createData(apiEndpoint, formDataToSend);
       }
 
-      // Always use the same 'createData' function that posts to the base endpoint.
-      const response = await createData(apiEndpoint, formDataToSend);
-
-      const apiResponseData = response.data.data
-        ? response.data.data
-        : response.data;
+      // Ambil data dari response
+      const apiResponseData = response.data.data || response.data;
 
       setData({
-        visi: apiResponseData.visi || editedData.visi,
-        misi: apiResponseData.misi || editedData.misi,
-        id: apiResponseData.id || visiMisiId,
+        visi: apiResponseData.visi,
+        misi: apiResponseData.misi,
+        id: apiResponseData.id,
       });
-
-      if (!visiMisiId && apiResponseData.id) {
-        setVisiMisiId(apiResponseData.id);
-      }
 
       setNotifModal({
         open: true,
         message: "Visi dan Misi berhasil disimpan!",
         type: "success",
       });
+
       setIsEditing(false);
-
-      if (onSaveSuccess) {
-        onSaveSuccess();
-      }
+      if (onSaveSuccess) onSaveSuccess();
     } catch (err) {
-      console.error("Failed to save Visi Misi data:", err);
-      setError(
-        `Gagal menyimpan data Visi dan Misi. Pesan: ${
-          err.response?.data?.message || err.message
-        }.`
-      );
-
       setNotifModal({
         open: true,
-        message: `Gagal menyimpan data Visi dan Misi: ${
-          err.response?.data?.message || err.message
-        }`,
+        message: `Gagal menyimpan: ${err.response?.data?.message || err.message}`,
         type: "error",
       });
     } finally {

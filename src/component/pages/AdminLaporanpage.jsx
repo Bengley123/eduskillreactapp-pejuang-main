@@ -1,37 +1,28 @@
+// AdminLaporanPage.jsx
 import React, { useState, useEffect } from "react";
-import FileUpload from "../Moleculs/AdminSource/FileUpload";
 import { useNavigate } from "react-router-dom";
 import { setAuthToken } from "../../services/api";
 
-export default function UploadLaporanPage() {
+export default function AdminLaporanPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    peserta: "",
-    lulusanKerja: "",
-    pendaftar: "",
-    pelatihanAktif: "",
     informasiLain: "",
     file: null,
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [modal, setModal] = useState({ open: false, title: "", message: "", type: "success" });
+
+  const openModal = (title, message, type = "success") => setModal({ open: true, title, message, type });
+  const closeModal = () => setModal({ open: false, title: "", message: "", type: "success" });
 
   useEffect(() => {
-    const checkAuth = () => {
-      const storedToken = localStorage.getItem("jwt");
-
-      if (!storedToken) {
-        console.log(
-          "UploadLaporanPage: Tidak ada token, mengarahkan ke login."
-        );
-        navigate("/login");
-        return;
-      }
-
-      setAuthToken(storedToken);
-    };
-
-    checkAuth();
+    const token = localStorage.getItem("jwt");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    setAuthToken(token);
   }, [navigate]);
 
   const handleChange = (e) => {
@@ -40,36 +31,28 @@ export default function UploadLaporanPage() {
   };
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFormData((prev) => ({ ...prev, file: selectedFile }));
-    }
+    const file = e.target.files?.[0];
+    if (file) setFormData((prev) => ({ ...prev, file }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
+    const token = localStorage.getItem("jwt");
+    if (!token) {
+      openModal("Sesi berakhir", "Silakan login kembali.", "error");
+      navigate("/login");
+      setIsLoading(false);
+      return;
+    }
+
+    const submitData = new FormData();
+    submitData.append("laporan_deskripsi", formData.informasiLain);
+    if (formData.file) submitData.append("laporan_file", formData.file);
+
     try {
-      const token = localStorage.getItem("jwt");
-
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
-      const submitData = new FormData();
-      submitData.append("peserta", formData.peserta);
-      submitData.append("lulusanKerja", formData.lulusanKerja);
-      submitData.append("pendaftar", formData.pendaftar);
-      submitData.append("pelatihanAktif", formData.pelatihanAktif);
-      submitData.append("laporan_deskripsi", formData.informasiLain);
-
-      if (formData.file) {
-        submitData.append("laporan_file", formData.file);
-      }
-
-      const response = await fetch(
+      const res = await fetch(
         `${import.meta.env.VITE_API_URL}/api/my-laporan-admin`,
         {
           method: "POST",
@@ -77,104 +60,94 @@ export default function UploadLaporanPage() {
           headers: {
             Accept: "application/json",
             Authorization: `Bearer ${token}`,
-            // Don't set Content-Type header when using FormData
           },
         }
       );
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Success:", result);
-        alert("Laporan berhasil disubmit!");
-
-        // Reset form
-        setFormData({
-          peserta: "",
-          lulusanKerja: "",
-          pendaftar: "",
-          pelatihanAktif: "",
-          informasiLain: "",
-          file: null,
-        });
-      } else if (response.status === 401) {
-        console.log("Token expired or invalid, redirecting to login");
-        localStorage.removeItem("jwt");
-        localStorage.removeItem("user");
+      if (res.ok) {
+        openModal("Sukses", "Laporan berhasil disubmit!", "success");
+        setFormData({ informasiLain: "", file: null });
+      } else if (res.status === 401) {
+        localStorage.clear();
         navigate("/login");
-      } else if (response.status === 422) {
-        const errorData = await response.json();
-        console.log("Validation errors:", errorData);
-
-        // Show validation errors to user
-        if (errorData.errors) {
-          let errorMessage = "Validation errors:\n";
-          Object.keys(errorData.errors).forEach((key) => {
-            errorMessage += `${key}: ${errorData.errors[key].join(", ")}\n`;
-          });
-          alert(errorMessage);
-        } else {
-          alert("Validation failed. Please check your input.");
-        }
+      } else if (res.status === 422) {
+        const err = await res.json();
+        const msg = err.errors ? Object.values(err.errors).flat().join("\n") : "Input tidak valid.";
+        openModal("Validasi gagal", msg, "error");
       } else {
-        const errorData = await response.json().catch(() => null);
-        console.log("Error response:", errorData);
-        throw new Error("Failed to submit laporan");
+        openModal("Gagal", "Terjadi kesalahan saat mengirim laporan.", "error");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Gagal mengirim laporan. Silakan coba lagi.");
+    } catch (err) {
+      openModal("Error", "Gagal terhubung ke server.", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4">
-      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Upload Laporan Perkembangan
-        </h2>
+    <>
+      <div className="min-h-screen bg-gray-100 py-10 px-4">
+        <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Upload Laporan Perkembangan</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Kolom Informasi Penting Lainnya */}
-          <div>
-            <label className="block font-medium text-gray-700 mb-1">
-              Informasi Penting Lainnya
-            </label>
-            <textarea
-              name="informasiLain"
-              value={formData.informasiLain}
-              onChange={handleChange}
-              rows="4"
-              className="w-full px-4 py-2 border rounded resize-none"
-              placeholder="Tuliskan informasi tambahan yang perlu dilaporkan"
-            ></textarea>
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block font-medium text-gray-700 mb-1">Informasi Penting Lainnya</label>
+              <textarea
+                name="informasiLain"
+                value={formData.informasiLain}
+                onChange={handleChange}
+                rows="4"
+                className="w-full px-4 py-2 border rounded resize-none"
+                placeholder="Tuliskan informasi tambahan yang perlu dilaporkan"
+              />
+            </div>
 
-          {/* Upload File */}
-          <FileUpload
-            label="Upload Dokumen Pendukung"
-            currentFile={formData.file?.name || null}
-            onFileChange={handleFileChange}
-            accept=".pdf,.doc,.docx"
-          />
+            <div>
+              <label className="block font-medium text-gray-700 mb-1">Upload Dokumen Pendukung</label>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleFileChange}
+                className="w-full px-4 py-2 border rounded"
+              />
+            </div>
 
-          {/* Tombol Submit */}
-          <div className="text-right pt-4">
+            <div className="text-right pt-4">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`px-6 py-2 rounded transition ${
+                  isLoading ? "bg-gray-400 text-gray-700 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                {isLoading ? "Mengirim..." : "Submit Laporan"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Modal Pop-up */}
+      {modal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
+            <h3 className={`text-lg font-semibold mb-2 ${modal.type === "success" ? "text-green-600" : "text-red-600"}`}>
+              {modal.title}
+            </h3>
+            <p className="text-sm text-gray-700 mb-4 whitespace-pre-line">{modal.message}</p>
             <button
-              type="submit"
-              disabled={isLoading}
-              className={`px-6 py-2 rounded transition ${
-                isLoading
-                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
+              onClick={() => {
+                closeModal();
+                if (modal.type === "error" && modal.title === "Sesi berakhir") navigate("/login");
+              }}
+              className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              {isLoading ? "Mengirim..." : "Submit Laporan"}
+              Tutup
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }
