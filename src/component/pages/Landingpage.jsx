@@ -1,5 +1,5 @@
 import React from "react";
-import CardPelatihan from "../Fragments/CardPelatihan";
+//import CardPelatihan from "../Moleculs/CardPelatihan";
 import CarouselComponent from "../Elements/Slideimg/Carouselcomponent";
 import TestimoniCarousel from "../Fragments/TestimoniCarousel";
 import BeritaSection from "../Fragments/BeritaSection";

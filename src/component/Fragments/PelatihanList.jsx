@@ -1,6 +1,6 @@
 // src/components/Fragments/PelatihanList.jsx
 import React, { useEffect, useState } from "react";
-import CardPelatihan from "./CardPelatihan";
+import CardPelatihan from "../Moleculs/CardPelatihan";
 import { fetchData } from "../../services/api";
 
 const PelatihanList = () => {

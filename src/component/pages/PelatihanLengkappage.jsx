@@ -1,6 +1,6 @@
 // src/pages/PelatihanPage.jsx
 import React, { useEffect, useState } from "react";
-import CardPelatihan from "../Fragments/CardPelatihan";
+import CardPelatihan from "../Moleculs/CardPelatihan";
 import { fetchData } from "../../services/api";
 
 const PelatihanPage = () => {
