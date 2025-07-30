@@ -32,14 +32,23 @@ import api, {
 } from "../../services/api.js";
 
 // --- Komponen Modal Konfirmasi ---
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, message, isLoading }) => {
+const ConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  message,
+  isLoading,
+}) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Konfirmasi</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
             <FaTimes size={16} />
           </button>
         </div>
@@ -54,7 +63,9 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, message, isLoading }) =
           </button>
           <button
             onClick={onConfirm}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-md ${isLoading ? 'bg-gray-400' : 'bg-red-500 hover:bg-red-600'}`}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+              isLoading ? "bg-gray-400" : "bg-red-500 hover:bg-red-600"
+            }`}
             disabled={isLoading}
           >
             {isLoading ? "Memproses..." : "Ya, Hapus"}
@@ -68,26 +79,32 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, message, isLoading }) =
 // --- Komponen Notifikasi Modal ---
 const NotifModal = ({ isOpen, onClose, message, type = "success" }) => {
   if (!isOpen) return null;
-  
-  const icon = type === "success" ? 
-    <FaCheckCircle className="text-green-500 text-4xl mb-3" /> : 
-    <FaExclamationTriangle className="text-red-500 text-4xl mb-3" />;
-  
+
+  const icon =
+    type === "success" ? (
+      <FaCheckCircle className="text-green-500 text-4xl mb-3" />
+    ) : (
+      <FaExclamationTriangle className="text-red-500 text-4xl mb-3" />
+    );
+
   const bgColor = type === "success" ? "bg-green-50" : "bg-red-50";
-  const borderColor = type === "success" ? "border-green-200" : "border-red-200";
+  const borderColor =
+    type === "success" ? "border-green-200" : "border-red-200";
   const textColor = type === "success" ? "text-green-800" : "text-red-800";
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50">
-      <div className={`${bgColor} ${borderColor} border rounded-lg shadow-lg p-6 w-full max-w-sm`}>
+      <div
+        className={`${bgColor} ${borderColor} border rounded-lg shadow-lg p-6 w-full max-w-sm`}
+      >
         <div className="flex flex-col items-center text-center">
           {icon}
           <p className={`${textColor} font-medium mb-4`}>{message}</p>
           <button
             onClick={onClose}
             className={`px-4 py-2 text-sm rounded-md ${
-              type === "success" 
-                ? "bg-green-500 hover:bg-green-600 text-white" 
+              type === "success"
+                ? "bg-green-500 hover:bg-green-600 text-white"
                 : "bg-red-500 hover:bg-red-600 text-white"
             }`}
           >
@@ -288,10 +305,12 @@ const VisiMisiEditor = ({
           err.response?.data?.message || err.message
         }.`
       );
-      
+
       setNotifModal({
         open: true,
-        message: `Gagal menyimpan data Visi dan Misi: ${err.response?.data?.message || err.message}`,
+        message: `Gagal menyimpan data Visi dan Misi: ${
+          err.response?.data?.message || err.message
+        }`,
         type: "error",
       });
     } finally {
@@ -423,7 +442,7 @@ const VisiMisiEditor = ({
           </div>
         </div>
       </div>
-      
+
       <NotifModal
         isOpen={notifModal.open}
         onClose={() => setNotifModal({ ...notifModal, open: false })}
@@ -546,7 +565,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
       await deleteData(apiEndpoint, id);
       setData(data.filter((item) => item.id !== id));
       setShowDetail(false); // Tutup modal detail jika terbuka
-      
+
       setNotifModal({
         open: true,
         message: `${title} berhasil dihapus!`,
@@ -556,7 +575,9 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
       console.error(`Failed to delete ${title}:`, err);
       setNotifModal({
         open: true,
-        message: `Gagal menghapus ${title}: ${err.response?.data?.message || err.message}`,
+        message: `Gagal menghapus ${title}: ${
+          err.response?.data?.message || err.message
+        }`,
         type: "error",
       });
     } finally {
@@ -650,7 +671,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
 
       setIsEditing(false);
       setSelectedFile(null);
-      
+
       setNotifModal({
         open: true,
         message: `${title} berhasil diperbarui!`,
@@ -660,7 +681,9 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
       console.error(`Failed to update ${title}:`, err);
       setNotifModal({
         open: true,
-        message: `Gagal memperbarui ${title}: ${err.response?.data?.message || err.message}`,
+        message: `Gagal memperbarui ${title}: ${
+          err.response?.data?.message || err.message
+        }`,
         type: "error",
       });
     } finally {
@@ -740,7 +763,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
       });
       setSelectedFile(null);
       setShowForm(false);
-      
+
       setNotifModal({
         open: true,
         message: `${title} berhasil ditambahkan!`,
@@ -1092,7 +1115,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
         message={`Apakah Anda yakin ingin menghapus ${title.toLowerCase()} ini?`}
         isLoading={isDeleting}
       />
-      
+
       <NotifModal
         isOpen={notifModal.open}
         onClose={() => setNotifModal({ ...notifModal, open: false })}
@@ -1213,7 +1236,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       await deleteData(apiEndpoint, id);
       setData(data.filter((item) => item.id !== id));
       setShowDetail(false); // Tutup modal detail jika terbuka
-      
+
       setNotifModal({
         open: true,
         message: "Berita berhasil dihapus!",
@@ -1223,7 +1246,9 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       console.error("Failed to delete news item:", err);
       setNotifModal({
         open: true,
-        message: `Gagal menghapus berita: ${err.response?.data?.message || err.message}`,
+        message: `Gagal menghapus berita: ${
+          err.response?.data?.message || err.message
+        }`,
         type: "error",
       });
     } finally {
@@ -1302,7 +1327,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       }));
       setIsEditing(false);
       setSelectedFile(null);
-      
+
       setNotifModal({
         open: true,
         message: "Berita berhasil diperbarui!",
@@ -1403,7 +1428,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       });
       setSelectedFile(null);
       setShowForm(false);
-      
+
       setNotifModal({
         open: true,
         message: "Berita berhasil ditambahkan!",
@@ -1867,7 +1892,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
         message="Apakah Anda yakin ingin menghapus berita ini?"
         isLoading={isDeleting}
       />
-      
+
       <NotifModal
         isOpen={notifModal.open}
         onClose={() => setNotifModal({ ...notifModal, open: false })}
@@ -1984,7 +2009,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       await deleteData(apiEndpoint, id);
       setData(data.filter((item) => item.id !== id));
       setShowDetail(false); // Tutup modal detail jika terbuka
-      
+
       setNotifModal({
         open: true,
         message: "Foto galeri berhasil dihapus!",
@@ -1994,7 +2019,9 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       console.error("Failed to delete gallery item:", err);
       setNotifModal({
         open: true,
-        message: `Gagal menghapus foto galeri: ${err.response?.data?.message || err.message}`,
+        message: `Gagal menghapus foto galeri: ${
+          err.response?.data?.message || err.message
+        }`,
         type: "error",
       });
     } finally {
@@ -2057,7 +2084,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       }));
       setIsEditing(false);
       setSelectedFile(null);
-      
+
       setNotifModal({
         open: true,
         message: "Foto galeri berhasil diperbarui!",
@@ -2067,7 +2094,9 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       console.error("Failed to update gallery item:", err);
       setNotifModal({
         open: true,
-        message: `Gagal memperbarui foto galeri: ${err.response?.data?.message || err.message}`,
+        message: `Gagal memperbarui foto galeri: ${
+          err.response?.data?.message || err.message
+        }`,
         type: "error",
       });
     } finally {
@@ -2134,7 +2163,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       });
       setSelectedFile(null);
       setShowForm(false);
-      
+
       setNotifModal({
         open: true,
         message: "Foto galeri berhasil ditambahkan!",
@@ -2144,7 +2173,9 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       console.error("Failed to add photo:", err);
       setNotifModal({
         open: true,
-        message: `Gagal menambahkan foto galeri: ${err.response?.data?.message || err.message}`,
+        message: `Gagal menambahkan foto galeri: ${
+          err.response?.data?.message || err.message
+        }`,
         type: "error",
       });
     } finally {
@@ -2518,7 +2549,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
         message="Apakah Anda yakin ingin menghapus foto ini?"
         isLoading={isDeleting}
       />
-      
+
       <NotifModal
         isOpen={notifModal.open}
         onClose={() => setNotifModal({ ...notifModal, open: false })}
@@ -2540,25 +2571,14 @@ const InformasiKontakEditor = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({
-    namaOrganisasi: data?.namaOrganisasi || "BINA ESSA",
-    alamat: data?.alamat || "",
-    email: data?.email || "",
-    telepon: data?.telepon || "",
-    whatsapp: data?.whatsapp || "",
-    instagram: data?.instagram || "",
-    resources: data?.resources || [
-      { name: "Publikasi", url: "#" },
-      { name: "Pelayanan Publik", url: "#" },
-      { name: "FAQ", url: "#" },
-      { name: "Hubungi Kami", url: "#" },
-    ],
-    socialMedia: data?.socialMedia || [
-      { platform: "Facebook", url: "", icon: "facebook" },
-      { platform: "Twitter", url: "", icon: "twitter" },
-      { platform: "Instagram", url: "", icon: "instagram" },
-      { platform: "YouTube", url: "", icon: "youtube" },
-      { platform: "TikTok", url: "", icon: "tiktok" },
-    ],
+    namaOrganisasi: "BINA ESSA",
+    alamat: "",
+    email: "",
+    telepon: "",
+    whatsapp: "",
+    instagram: "",
+    resources: [],
+    socialMedia: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -2576,20 +2596,9 @@ const InformasiKontakEditor = ({
       email: data?.email || "",
       telepon: data?.telepon || "",
       whatsapp: data?.whatsapp || "",
-      instagram: data?.instagram || "",
-      resources: data?.resources || [
-        { name: "Publikasi", url: "#" },
-        { name: "Pelayanan Publik", url: "#" },
-        { name: "FAQ", url: "#" },
-        { name: "Hubungi Kami", url: "#" },
-      ],
-      socialMedia: data?.socialMedia || [
-        { platform: "Facebook", url: "", icon: "facebook" },
-        { platform: "Twitter", url: "", icon: "twitter" },
-        { platform: "Instagram", url: "", icon: "instagram" },
-        { platform: "YouTube", url: "", icon: "youtube" },
-        { platform: "TikTok", url: "", icon: "tiktok" },
-      ],
+      instagram: data?.instagram || "", // RE-ADDED: For the username
+      resources: data?.resources || [],
+      socialMedia: data?.socialMedia || [],
     });
   }, [data]);
 
@@ -2622,7 +2631,7 @@ const InformasiKontakEditor = ({
     setIsEditing(false);
     setError(null);
   };
-  
+
   const validatePhoneNumber = (number) => {
     return /^[0-9]{8,15}$/.test(number);
   };
@@ -2657,11 +2666,10 @@ const InformasiKontakEditor = ({
       formDataToSend.append("telepon", editedData.telepon || "");
       formDataToSend.append("whatsapp", editedData.whatsapp || "");
       formDataToSend.append("instagram", editedData.instagram || "");
-      formDataToSend.append("resources", JSON.stringify(editedData.resources));
-      formDataToSend.append(
-        "social_media",
-        JSON.stringify(editedData.socialMedia)
-      );
+      editedData.socialMedia.forEach((social) => {
+        const key = `${social.platform.toLowerCase()}_url`; // e.g., 'facebook_url', 'instagram_url'
+        formDataToSend.append(key, social.url || "");
+      });
 
       if (kontakId) {
         formDataToSend.append("id", kontakId);
@@ -2692,7 +2700,7 @@ const InformasiKontakEditor = ({
       if (!kontakId && apiResponseData.id) {
         setKontakId(apiResponseData.id);
       }
-      
+
       setNotifModal({
         open: true,
         message: "Informasi Kontak berhasil disimpan!",
@@ -2710,10 +2718,12 @@ const InformasiKontakEditor = ({
           err.response?.data?.message || err.message
         }.`
       );
-      
+
       setNotifModal({
         open: true,
-        message: `Gagal menyimpan informasi kontak: ${err.response?.data?.message || err.message}`,
+        message: `Gagal menyimpan informasi kontak: ${
+          err.response?.data?.message || err.message
+        }`,
         type: "error",
       });
     } finally {
@@ -2840,25 +2850,6 @@ const InformasiKontakEditor = ({
             Informasi Organisasi
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nama Organisasi
-              </label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={editedData.namaOrganisasi}
-                  onChange={(e) =>
-                    handleInputChange("namaOrganisasi", e.target.value)
-                  }
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              ) : (
-                <p className="text-gray-700 font-semibold">
-                  {data?.namaOrganisasi || "BINA ESSA"}
-                </p>
-              )}
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Alamat
@@ -3086,7 +3077,7 @@ const InformasiKontakEditor = ({
           </div>
         </div>
       </div>
-      
+
       <NotifModal
         isOpen={notifModal.open}
         onClose={() => setNotifModal({ ...notifModal, open: false })}
@@ -3154,7 +3145,10 @@ const TentangKamiEditor = ({
         }
       } else if (type === "YAYASAN BINA ESSA") {
         formDataToSend.append("nama_yayasan", editedData.title || "");
-        formDataToSend.append("deskripsi_yayasan", editedData.description || "");
+        formDataToSend.append(
+          "deskripsi_yayasan",
+          editedData.description || ""
+        );
         if (selectedLogo) {
           formDataToSend.append("foto_yayasan", selectedLogo);
         }
@@ -3168,13 +3162,27 @@ const TentangKamiEditor = ({
       // Always call the same function to POST to the base endpoint
       const response = await createData(apiEndpoint, formDataToSend);
 
-      const responseData = response.data.data ? response.data.data : response.data;
+      const responseData = response.data.data
+        ? response.data.data
+        : response.data;
 
       // Create a correctly formatted object to update the parent state
       const updatedStateData = {
-        title: responseData.nama_lkp || responseData.nama_lpk || responseData.nama_yayasan || editedData.title,
-        description: responseData.deskripsi_lkp || responseData.deskripsi_lpk || responseData.deskripsi_yayasan || editedData.description,
-        logoUrl: responseData.foto_lkp || responseData.foto_lpk || responseData.foto_yayasan || editedData.logoUrl,
+        title:
+          responseData.nama_lkp ||
+          responseData.nama_lpk ||
+          responseData.nama_yayasan ||
+          editedData.title,
+        description:
+          responseData.deskripsi_lkp ||
+          responseData.deskripsi_lpk ||
+          responseData.deskripsi_yayasan ||
+          editedData.description,
+        logoUrl:
+          responseData.foto_lkp ||
+          responseData.foto_lpk ||
+          responseData.foto_yayasan ||
+          editedData.logoUrl,
         id: responseData.id || aboutId,
       };
 
@@ -3184,7 +3192,7 @@ const TentangKamiEditor = ({
       if (!aboutId && responseData.id) {
         setAboutId(responseData.id);
       }
-      
+
       setNotifModal({
         open: true,
         message: `${type} berhasil disimpan!`,
@@ -3201,11 +3209,13 @@ const TentangKamiEditor = ({
       // Try to display specific validation errors from Laravel
       let errorMessage = err.response?.data?.message || err.message;
       if (err.response?.data?.errors) {
-        const validationErrors = Object.values(err.response.data.errors).flat().join(' ');
+        const validationErrors = Object.values(err.response.data.errors)
+          .flat()
+          .join(" ");
         errorMessage = `${errorMessage} Details: ${validationErrors}`;
       }
       setError(`Gagal menyimpan data ${type}. Pesan: ${errorMessage}.`);
-      
+
       setNotifModal({
         open: true,
         message: `Gagal menyimpan ${type}: ${errorMessage}`,
@@ -3374,7 +3384,7 @@ const TentangKamiEditor = ({
           </div>
         </div>
       </div>
-      
+
       <NotifModal
         isOpen={notifModal.open}
         onClose={() => setNotifModal({ ...notifModal, open: false })}
@@ -3391,20 +3401,19 @@ const AdminKontenpage = () => {
   const [bannerData, setBannerData] = useState([]);
   const [beritaData, setBeritaData] = useState([]);
   const [galeriData, setGaleriData] = useState([]);
-
-  // State untuk Visi Misi
   const [visiMisiData, setVisiMisiData] = useState({ visi: "", misi: "" });
   const [visiMisiId, setVisiMisiId] = useState(null);
   const [loadingVisiMisi, setLoadingVisiMisi] = useState(true);
-  const [errorVisiMisi, setErrorVisiMisi] = useState(null); // State error untuk Visi Misi
+  const [errorVisiMisi, setErrorVisiMisi] = useState(null);
 
   // State untuk Informasi Kontak (FITUR BARU)
   const [informasiKontakData, setInformasiKontakData] = useState({
     namaOrganisasi: "BINA ESSA",
+    alamat: "",
     email: "",
     telepon: "",
     whatsapp: "",
-    instagram: "",
+    instagram: "", // For the username
     resources: [],
     socialMedia: [],
   });
@@ -3471,81 +3480,83 @@ const AdminKontenpage = () => {
   const fetchInformasiKontakData = useCallback(async () => {
     setLoadingKontak(true);
     setErrorKontak(null);
+    const defaultSocials = [
+      { platform: "Facebook", url: "", icon: "facebook" },
+      { platform: "Twitter", url: "", icon: "twitter" },
+      { platform: "Instagram", url: "", icon: "instagram" },
+      { platform: "YouTube", url: "", icon: "youtube" },
+      { platform: "TikTok", url: "", icon: "tiktok" },
+    ];
+    const defaultState = {
+      namaOrganisasi: "BINA ESSA",
+      alamat: "",
+      email: "",
+      telepon: "",
+      whatsapp: "",
+      instagram: "", // username
+      resources: [],
+      socialMedia: defaultSocials,
+    };
+
     try {
       const response = await fetchData(
         apiEndpoints.informasiKontak || "/api/informasi-kontak"
       );
       if (response && response.data) {
-        const apiItem = Array.isArray(response.data)
-          ? response.data[0]
-          : response.data;
+        const apiData = response.data.data || response.data;
+        const apiItem = Array.isArray(apiData) ? apiData[0] : apiData;
+
         if (apiItem && apiItem.id) {
           setInformasiKontakData({
+            id: apiItem.id,
             namaOrganisasi: apiItem.nama_organisasi || "BINA ESSA",
             alamat: apiItem.alamat || "",
             email: apiItem.email || "",
             telepon: apiItem.telepon || "",
             whatsapp: apiItem.whatsapp || "",
-            instagram: apiItem.instagram || "",
-            resources: apiItem.resources
-              ? JSON.parse(apiItem.resources)
-              : [
-                  { name: "Publikasi", url: "#" },
-                  { name: "Pelayanan Publik", url: "#" },
-                  { name: "FAQ", url: "#" },
-                  { name: "Hubungi Kami", url: "#" },
-                ],
-            socialMedia: apiItem.social_media
-              ? JSON.parse(apiItem.social_media)
-              : [
-                  { platform: "Facebook", url: "", icon: "facebook" },
-                  { platform: "Twitter", url: "", icon: "twitter" },
-                  { platform: "Instagram", url: "", icon: "instagram" },
-                  { platform: "YouTube", url: "", icon: "youtube" },
-                  { platform: "TikTok", url: "", icon: "tiktok" },
-                ],
-            id: apiItem.id,
+            instagram: apiItem.instagram || "", // Handles the username
+            resources: apiItem.resources ? JSON.parse(apiItem.resources) : [],
+            socialMedia: [
+              {
+                platform: "Facebook",
+                url: apiItem.facebook_url || "",
+                icon: "facebook",
+              },
+              {
+                platform: "Twitter",
+                url: apiItem.twitter_url || "",
+                icon: "twitter",
+              },
+              {
+                platform: "Instagram",
+                url: apiItem.instagram_url || "",
+                icon: "instagram",
+              },
+              {
+                platform: "YouTube",
+                url: apiItem.youtube_url || "",
+                icon: "youtube",
+              },
+              {
+                platform: "TikTok",
+                url: apiItem.tiktok_url || "",
+                icon: "tiktok",
+              },
+            ],
           });
           setKontakId(apiItem.id);
         } else {
-          setInformasiKontakData({
-            namaOrganisasi: "BINA ESSA",
-            alamat: "",
-            email: "",
-            telepon: "",
-            whatsapp: "",
-            instagram: "",
-            resources: [{ name: "Publikasi", url: "#" }],
-            socialMedia: [{ platform: "Facebook", url: "", icon: "facebook" }],
-          });
+          setInformasiKontakData(defaultState);
           setKontakId(null);
         }
       } else {
-        setInformasiKontakData({
-          namaOrganisasi: "BINA ESSA",
-          alamat: "",
-          email: "",
-          telepon: "",
-          whatsapp: "",
-          instagram: "",
-          resources: [{ name: "Publikasi", url: "#" }],
-          socialMedia: [{ platform: "Facebook", url: "", icon: "facebook" }],
-        });
+        setInformasiKontakData(defaultState);
         setKontakId(null);
       }
     } catch (error) {
       console.error("Error fetching Informasi Kontak data:", error);
       setErrorKontak("Gagal memuat informasi kontak.");
-      setInformasiKontakData({
-        namaOrganisasi: "BINA ESSA",
-        alamat: "",
-        email: "",
-        telepon: "",
-        whatsapp: "",
-        instagram: "",
-        resources: [{ name: "Publikasi", url: "#" }],
-        socialMedia: [{ platform: "Facebook", url: "", icon: "facebook" }],
-      });
+      setInformasiKontakData(defaultState);
       setKontakId(null);
     } finally {
       setLoadingKontak(false);
