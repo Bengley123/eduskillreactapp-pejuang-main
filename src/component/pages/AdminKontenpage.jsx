@@ -1,5 +1,5 @@
 // src/components/Admin/AdminKontenpage.jsx
-import React, { useState, useEffect, useCallback } from "react"; // Tambahkan useCallback
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FaSearch,
   FaPlus,
@@ -18,9 +18,10 @@ import {
   FaChevronLeft,
   FaEye,
   FaFlag,
+  FaCheckCircle,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 
-// Pastikan apiEndpoints memiliki definisi untuk visiMisi
 import api, {
   fetchData,
   updateData,
@@ -30,25 +31,15 @@ import api, {
   setAuthToken,
 } from "../../services/api.js";
 
-// --- Komponen Modal Konfirmasi (Terintegrasi Langsung) ---
-const ConfirmationModal = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  message,
-  isLoading,
-}) => {
+// --- Komponen Modal Konfirmasi ---
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, message, isLoading }) => {
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Konfirmasi</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <FaTimes size={16} />
           </button>
         </div>
@@ -56,19 +47,14 @@ const ConfirmationModal = ({
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
             disabled={isLoading}
           >
             Batal
           </button>
           <button
             onClick={onConfirm}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors
-                        ${
-                          isLoading
-                            ? "bg-gray-400"
-                            : "bg-red-500 hover:bg-red-600"
-                        }`}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-md ${isLoading ? 'bg-gray-400' : 'bg-red-500 hover:bg-red-600'}`}
             disabled={isLoading}
           >
             {isLoading ? "Memproses..." : "Ya, Hapus"}
@@ -79,7 +65,41 @@ const ConfirmationModal = ({
   );
 };
 
-// --- Komponen Pagination (Tidak Berubah) ---
+// --- Komponen Notifikasi Modal ---
+const NotifModal = ({ isOpen, onClose, message, type = "success" }) => {
+  if (!isOpen) return null;
+  
+  const icon = type === "success" ? 
+    <FaCheckCircle className="text-green-500 text-4xl mb-3" /> : 
+    <FaExclamationTriangle className="text-red-500 text-4xl mb-3" />;
+  
+  const bgColor = type === "success" ? "bg-green-50" : "bg-red-50";
+  const borderColor = type === "success" ? "border-green-200" : "border-red-200";
+  const textColor = type === "success" ? "text-green-800" : "text-red-800";
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50">
+      <div className={`${bgColor} ${borderColor} border rounded-lg shadow-lg p-6 w-full max-w-sm`}>
+        <div className="flex flex-col items-center text-center">
+          {icon}
+          <p className={`${textColor} font-medium mb-4`}>{message}</p>
+          <button
+            onClick={onClose}
+            className={`px-4 py-2 text-sm rounded-md ${
+              type === "success" 
+                ? "bg-green-500 hover:bg-green-600 text-white" 
+                : "bg-red-500 hover:bg-red-600 text-white"
+            }`}
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Komponen Pagination ---
 const Pagination = ({
   currentPage,
   totalPages,
@@ -196,6 +216,11 @@ const VisiMisiEditor = ({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [notifModal, setNotifModal] = useState({
+    open: false,
+    message: "",
+    type: "success",
+  });
 
   useEffect(() => {
     setEditedData({
@@ -246,7 +271,11 @@ const VisiMisiEditor = ({
         setVisiMisiId(apiResponseData.id);
       }
 
-      alert("Visi dan Misi berhasil disimpan!");
+      setNotifModal({
+        open: true,
+        message: "Visi dan Misi berhasil disimpan!",
+        type: "success",
+      });
       setIsEditing(false);
 
       if (onSaveSuccess) {
@@ -259,6 +288,12 @@ const VisiMisiEditor = ({
           err.response?.data?.message || err.message
         }.`
       );
+      
+      setNotifModal({
+        open: true,
+        message: `Gagal menyimpan data Visi dan Misi: ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -388,6 +423,13 @@ const VisiMisiEditor = ({
           </div>
         </div>
       </div>
+      
+      <NotifModal
+        isOpen={notifModal.open}
+        onClose={() => setNotifModal({ ...notifModal, open: false })}
+        message={notifModal.message}
+        type={notifModal.type}
+      />
     </div>
   );
 };
@@ -404,6 +446,11 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingAction, setLoadingAction] = useState(false);
   const [actionError, setActionError] = useState(null);
+  const [notifModal, setNotifModal] = useState({
+    open: false,
+    message: "",
+    type: "success",
+  });
 
   // State untuk modal konfirmasi hapus
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -499,14 +546,19 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
       await deleteData(apiEndpoint, id);
       setData(data.filter((item) => item.id !== id));
       setShowDetail(false); // Tutup modal detail jika terbuka
-      alert(`${title} deleted successfully!`);
+      
+      setNotifModal({
+        open: true,
+        message: `${title} berhasil dihapus!`,
+        type: "success",
+      });
     } catch (err) {
       console.error(`Failed to delete ${title}:`, err);
-      setActionError(
-        `Failed to delete ${title}. Error: ${
-          err.response?.data?.message || err.message
-        }`
-      );
+      setNotifModal({
+        open: true,
+        message: `Gagal menghapus ${title}: ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setIsDeleting(false);
       setIsConfirmModalOpen(false);
@@ -598,14 +650,19 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
 
       setIsEditing(false);
       setSelectedFile(null);
-      alert(`${title} updated successfully!`);
+      
+      setNotifModal({
+        open: true,
+        message: `${title} berhasil diperbarui!`,
+        type: "success",
+      });
     } catch (err) {
       console.error(`Failed to update ${title}:`, err);
-      setActionError(
-        `Failed to update ${title}. Error: ${
-          err.response?.data?.message || err.message
-        }`
-      );
+      setNotifModal({
+        open: true,
+        message: `Gagal memperbarui ${title}: ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setLoadingAction(false);
     }
@@ -683,16 +740,29 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
       });
       setSelectedFile(null);
       setShowForm(false);
-      alert(`${title} added successfully!`);
+      
+      setNotifModal({
+        open: true,
+        message: `${title} berhasil ditambahkan!`,
+        type: "success",
+      });
     } catch (err) {
       console.error(`Failed to add ${title}:`, err);
       if (err.response && err.response.data && err.response.data.errors) {
         const errorMessages = Object.values(err.response.data.errors)
           .flat()
           .join("; ");
-        setActionError(`Failed to add ${title}. Errors: ${errorMessages}`);
+        setNotifModal({
+          open: true,
+          message: `Gagal menambahkan ${title}: ${errorMessages}`,
+          type: "error",
+        });
       } else {
-        setActionError(`Failed to add ${title}. Error: ${err.message}`);
+        setNotifModal({
+          open: true,
+          message: `Gagal menambahkan ${title}: ${err.message}`,
+          type: "error",
+        });
       }
     } finally {
       setLoadingAction(false);
@@ -879,7 +949,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src =
-                        "https://placehold.co/100x100?text=No+Image";
+                        "https://placehold.co/100x100?text=No+Image  ";
                     }}
                     alt="Preview"
                     className="w-24 h-24 object-contain mb-2 border rounded"
@@ -984,7 +1054,7 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
               ) : (
                 <>
                   <button
-                    onClick={() => handleDelete(selectedItem.id)} // Panggil handleDelete untuk membuka modal konfirmasi
+                    onClick={() => handleDelete(selectedItem.id)}
                     className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded inline-flex items-center gap-1 text-xs"
                   >
                     <FaTrashAlt size={12} /> Hapus
@@ -1018,9 +1088,16 @@ const TableSection = ({ title, apiEndpoint, data, setData }) => {
           setIsConfirmModalOpen(false);
           setItemToDeleteId(null);
         }}
-        onConfirm={confirmDelete} // Panggil fungsi konfirmasi hapus
-        message={`Are you sure you want to delete this ${title.toLowerCase()}?`}
+        onConfirm={confirmDelete}
+        message={`Apakah Anda yakin ingin menghapus ${title.toLowerCase()} ini?`}
         isLoading={isDeleting}
+      />
+      
+      <NotifModal
+        isOpen={notifModal.open}
+        onClose={() => setNotifModal({ ...notifModal, open: false })}
+        message={notifModal.message}
+        type={notifModal.type}
       />
     </div>
   );
@@ -1038,6 +1115,11 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingAction, setLoadingAction] = useState(false);
   const [actionError, setActionError] = useState(null);
+  const [notifModal, setNotifModal] = useState({
+    open: false,
+    message: "",
+    type: "success",
+  });
 
   // State untuk modal konfirmasi hapus
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -1131,14 +1213,19 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       await deleteData(apiEndpoint, id);
       setData(data.filter((item) => item.id !== id));
       setShowDetail(false); // Tutup modal detail jika terbuka
-      alert("News item deleted successfully!");
+      
+      setNotifModal({
+        open: true,
+        message: "Berita berhasil dihapus!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Failed to delete news item:", err);
-      setActionError(
-        `Failed to delete news item. Error: ${
-          err.response?.data?.message || err.message
-        }`
-      );
+      setNotifModal({
+        open: true,
+        message: `Gagal menghapus berita: ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setIsDeleting(false);
       setIsConfirmModalOpen(false);
@@ -1215,16 +1302,29 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       }));
       setIsEditing(false);
       setSelectedFile(null);
-      alert("News item updated successfully!");
+      
+      setNotifModal({
+        open: true,
+        message: "Berita berhasil diperbarui!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Failed to update news item:", err);
       if (err.response && err.response.data && err.response.data.errors) {
         const errorMessages = Object.values(err.response.data.errors)
           .flat()
           .join("; ");
-        setActionError(`Failed to update news item. Errors: ${errorMessages}`);
+        setNotifModal({
+          open: true,
+          message: `Gagal memperbarui berita: ${errorMessages}`,
+          type: "error",
+        });
       } else {
-        setActionError(`Failed to update news item. Error: ${err.message}`);
+        setNotifModal({
+          open: true,
+          message: `Gagal memperbarui berita: ${err.message}`,
+          type: "error",
+        });
       }
     } finally {
       setLoadingAction(false);
@@ -1303,16 +1403,29 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
       });
       setSelectedFile(null);
       setShowForm(false);
-      alert("News item added successfully!");
+      
+      setNotifModal({
+        open: true,
+        message: "Berita berhasil ditambahkan!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Failed to add news item:", err);
       if (err.response && err.response.data && err.response.data.errors) {
         const errorMessages = Object.values(err.response.data.errors)
           .flat()
           .join("; ");
-        setActionError(`Failed to add news item. Errors: ${errorMessages}`);
+        setNotifModal({
+          open: true,
+          message: `Gagal menambahkan berita: ${errorMessages}`,
+          type: "error",
+        });
       } else {
-        setActionError(`Failed to add news item. Error: ${err.message}`);
+        setNotifModal({
+          open: true,
+          message: `Gagal menambahkan berita: ${err.message}`,
+          type: "error",
+        });
       }
     } finally {
       setLoadingAction(false);
@@ -1559,7 +1672,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src =
-                        "https://placehold.co/128x128/e0e0e0/888888?text=No+Image";
+                        "https://placehold.co/128x128/e0e0e0/888888?text=No+Image  ";
                     }}
                     alt="Gambar Berita Preview"
                     className="w-32 h-32 object-contain mb-2 border rounded"
@@ -1716,7 +1829,7 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
               ) : (
                 <>
                   <button
-                    onClick={() => handleDelete(selectedItem.id)} // Panggil handleDelete untuk membuka modal konfirmasi
+                    onClick={() => handleDelete(selectedItem.id)}
                     className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded inline-flex items-center gap-1 text-sm"
                   >
                     <FaTrashAlt size={12} /> Hapus
@@ -1751,8 +1864,15 @@ const BeritaSection = ({ apiEndpoint, data, setData }) => {
           setItemToDeleteId(null);
         }}
         onConfirm={confirmDelete}
-        message="Are you sure you want to delete this news item?"
+        message="Apakah Anda yakin ingin menghapus berita ini?"
         isLoading={isDeleting}
+      />
+      
+      <NotifModal
+        isOpen={notifModal.open}
+        onClose={() => setNotifModal({ ...notifModal, open: false })}
+        message={notifModal.message}
+        type={notifModal.type}
       />
     </div>
   );
@@ -1770,6 +1890,11 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingAction, setLoadingAction] = useState(false);
   const [actionError, setActionError] = useState(null);
+  const [notifModal, setNotifModal] = useState({
+    open: false,
+    message: "",
+    type: "success",
+  });
 
   // State untuk modal konfirmasi hapus
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -1859,14 +1984,19 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       await deleteData(apiEndpoint, id);
       setData(data.filter((item) => item.id !== id));
       setShowDetail(false); // Tutup modal detail jika terbuka
-      alert("Gallery item deleted successfully!");
+      
+      setNotifModal({
+        open: true,
+        message: "Foto galeri berhasil dihapus!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Failed to delete gallery item:", err);
-      setActionError(
-        `Failed to delete gallery item. Error: ${
-          err.response?.data?.message || err.message
-        }`
-      );
+      setNotifModal({
+        open: true,
+        message: `Gagal menghapus foto galeri: ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setIsDeleting(false);
       setIsConfirmModalOpen(false);
@@ -1927,14 +2057,19 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       }));
       setIsEditing(false);
       setSelectedFile(null);
-      alert("Gallery item updated successfully!");
+      
+      setNotifModal({
+        open: true,
+        message: "Foto galeri berhasil diperbarui!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Failed to update gallery item:", err);
-      setActionError(
-        `Failed to update gallery item. Error: ${
-          err.response?.data?.message || err.message
-        }`
-      );
+      setNotifModal({
+        open: true,
+        message: `Gagal memperbarui foto galeri: ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setLoadingAction(false);
     }
@@ -1999,14 +2134,19 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
       });
       setSelectedFile(null);
       setShowForm(false);
-      alert("Photo added successfully!");
+      
+      setNotifModal({
+        open: true,
+        message: "Foto galeri berhasil ditambahkan!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Failed to add photo:", err);
-      setActionError(
-        `Failed to add photo. Error: ${
-          err.response?.data?.message || err.message
-        }`
-      );
+      setNotifModal({
+        open: true,
+        message: `Gagal menambahkan foto galeri: ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setLoadingAction(false);
     }
@@ -2226,7 +2366,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src =
-                        "https://placehold.co/128x128/e0e0e0/888888?text=No+Image";
+                        "https://placehold.co/128x128/e0e0e0/888888?text=No+Image  ";
                     }}
                     alt="Foto Galeri Preview"
                     className="w-32 h-32 object-contain mb-2 border rounded"
@@ -2340,7 +2480,7 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
               ) : (
                 <>
                   <button
-                    onClick={() => handleDelete(selectedItem.id)} // Panggil handleDelete untuk membuka modal konfirmasi
+                    onClick={() => handleDelete(selectedItem.id)}
                     className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded inline-flex items-center gap-1 text-sm"
                   >
                     <FaTrashAlt size={12} /> Hapus
@@ -2374,9 +2514,16 @@ const GaleriSection = ({ apiEndpoint, data, setData }) => {
           setIsConfirmModalOpen(false);
           setItemToDeleteId(null);
         }}
-        onConfirm={confirmDelete} // Panggil fungsi konfirmasi hapus
-        message="Are you sure you want to delete this gallery item?"
+        onConfirm={confirmDelete}
+        message="Apakah Anda yakin ingin menghapus foto ini?"
         isLoading={isDeleting}
+      />
+      
+      <NotifModal
+        isOpen={notifModal.open}
+        onClose={() => setNotifModal({ ...notifModal, open: false })}
+        message={notifModal.message}
+        type={notifModal.type}
       />
     </div>
   );
@@ -2416,6 +2563,11 @@ const InformasiKontakEditor = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("organisasi");
+  const [notifModal, setNotifModal] = useState({
+    open: false,
+    message: "",
+    type: "success",
+  });
 
   useEffect(() => {
     setEditedData({
@@ -2470,6 +2622,7 @@ const InformasiKontakEditor = ({
     setIsEditing(false);
     setError(null);
   };
+  
   const validatePhoneNumber = (number) => {
     return /^[0-9]{8,15}$/.test(number);
   };
@@ -2539,8 +2692,12 @@ const InformasiKontakEditor = ({
       if (!kontakId && apiResponseData.id) {
         setKontakId(apiResponseData.id);
       }
-
-      alert("Informasi Kontak berhasil disimpan!");
+      
+      setNotifModal({
+        open: true,
+        message: "Informasi Kontak berhasil disimpan!",
+        type: "success",
+      });
       setIsEditing(false);
 
       if (onSaveSuccess) {
@@ -2553,6 +2710,12 @@ const InformasiKontakEditor = ({
           err.response?.data?.message || err.message
         }.`
       );
+      
+      setNotifModal({
+        open: true,
+        message: `Gagal menyimpan informasi kontak: ${err.response?.data?.message || err.message}`,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -2923,6 +3086,13 @@ const InformasiKontakEditor = ({
           </div>
         </div>
       </div>
+      
+      <NotifModal
+        isOpen={notifModal.open}
+        onClose={() => setNotifModal({ ...notifModal, open: false })}
+        message={notifModal.message}
+        type={notifModal.type}
+      />
     </div>
   );
 };
@@ -2942,9 +3112,11 @@ const TentangKamiEditor = ({
   const [selectedLogo, setSelectedLogo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // State untuk modal konfirmasi hapus (jika diperlukan, tapi untuk tentang kami biasanya tidak ada hapus langsung)
-  // Jika ada tombol hapus untuk suatu bagian (misal hapus seluruh data tentang kami), tambahkan state di sini.
+  const [notifModal, setNotifModal] = useState({
+    open: false,
+    message: "",
+    type: "success",
+  });
 
   useEffect(() => {
     setEditedData(data);
@@ -3012,8 +3184,12 @@ const TentangKamiEditor = ({
       if (!aboutId && responseData.id) {
         setAboutId(responseData.id);
       }
-
-      alert(`${type} berhasil disimpan!`);
+      
+      setNotifModal({
+        open: true,
+        message: `${type} berhasil disimpan!`,
+        type: "success",
+      });
       setIsEditing(false);
       setSelectedLogo(null);
 
@@ -3029,6 +3205,12 @@ const TentangKamiEditor = ({
         errorMessage = `${errorMessage} Details: ${validationErrors}`;
       }
       setError(`Gagal menyimpan data ${type}. Pesan: ${errorMessage}.`);
+      
+      setNotifModal({
+        open: true,
+        message: `Gagal menyimpan ${type}: ${errorMessage}`,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -3159,7 +3341,6 @@ const TentangKamiEditor = ({
                     {editedData.logoUrl
                       ? editedData.logoUrl.split("/").pop()
                       : "Tidak ada file dipilih"}{" "}
-                    {/* Tampilkan nama file saja */}
                   </span>
                 </div>
               </div>
@@ -3168,15 +3349,14 @@ const TentangKamiEditor = ({
                 {data.logoUrl ? (
                   <img
                     src={
-                      // Perbaikan Path Logo
                       data.logoUrl
-                        ? `/storage/images/${data.logoUrl}` // Gunakan path relatif
-                        : "https://placehold.co/128x128/e0e0e0/888888?text=No+Image"
+                        ? `/storage/images/${data.logoUrl}`
+                        : "https://placehold.co/128x128/e0e0e0/888888?text=No+Image  "
                     }
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src =
-                        "https://placehold.co/128x128/e0e0e0/888888?text=No+Image";
+                        "https://placehold.co/128x128/e0e0e0/888888?text=No+Image  ";
                     }}
                     alt="Logo"
                     className="w-32 h-32 object-contain mx-auto mb-2"
@@ -3194,6 +3374,13 @@ const TentangKamiEditor = ({
           </div>
         </div>
       </div>
+      
+      <NotifModal
+        isOpen={notifModal.open}
+        onClose={() => setNotifModal({ ...notifModal, open: false })}
+        message={notifModal.message}
+        type={notifModal.type}
+      />
     </div>
   );
 };
@@ -3245,9 +3432,8 @@ const AdminKontenpage = () => {
 
   // Fungsi untuk fetch data Visi Misi (Implementasi API)
   const fetchVisiMisiData = useCallback(async () => {
-    // Gunakan useCallback
     setLoadingVisiMisi(true);
-    setErrorVisiMisi(null); // Reset error sebelum fetch
+    setErrorVisiMisi(null);
     try {
       const response = await fetchData(
         apiEndpoints.visiMisi || "/api/informasi-lembaga"
@@ -3279,13 +3465,12 @@ const AdminKontenpage = () => {
     } finally {
       setLoadingVisiMisi(false);
     }
-  }, []); // Tidak ada dependency karena ini hanya fetch
+  }, []);
 
-  // Fungsi untuk fetch data Informasi Kontak (Tidak Berubah)
+  // Fungsi untuk fetch data Informasi Kontak
   const fetchInformasiKontakData = useCallback(async () => {
-    // Gunakan useCallback
     setLoadingKontak(true);
-    setErrorKontak(null); // Reset error
+    setErrorKontak(null);
     try {
       const response = await fetchData(
         apiEndpoints.informasiKontak || "/api/informasi-kontak"
@@ -3323,7 +3508,6 @@ const AdminKontenpage = () => {
           });
           setKontakId(apiItem.id);
         } else {
-          // Reset jika data tidak ditemukan atau tidak valid
           setInformasiKontakData({
             namaOrganisasi: "BINA ESSA",
             alamat: "",
@@ -3366,12 +3550,11 @@ const AdminKontenpage = () => {
     } finally {
       setLoadingKontak(false);
     }
-  }, []); // Tidak ada dependency
+  }, []);
 
   const fetchAllTentangKamiData = useCallback(async () => {
-    // Gunakan useCallback
     setLoadingTentangKami(true);
-    setErrorTentangKami(null); // Reset error
+    setErrorTentangKami(null);
     const newTentangKamiData = { ...dataTentangKamiStrukturAwal };
     let fetchedLkpId = null;
     let fetchedLpkId = null;
@@ -3435,10 +3618,9 @@ const AdminKontenpage = () => {
       setYayasanId(fetchedYayasanId);
       setLoadingTentangKami(false);
     }
-  }, []); // Tidak ada dependency
+  }, []);
 
   const fetchAllContentData = useCallback(async () => {
-    // Gunakan useCallback
     // Fetch Slideshow
     try {
       const response = await fetchData(apiEndpoints.slideshow);
@@ -3480,7 +3662,7 @@ const AdminKontenpage = () => {
         items.map((item) => ({
           ...item,
           judul: item.title,
-          gambar: item.gambar ? `/storage/berita_gambar/${item.gambar}` : null, // Perbaikan Path
+          gambar: item.gambar ? `/storage/berita_gambar/${item.gambar}` : null,
         }))
       );
     } catch (err) {
@@ -3500,7 +3682,7 @@ const AdminKontenpage = () => {
         items.map((item) => ({
           ...item,
           judulFoto: item.judul_foto || item.judulFoto,
-          file_foto: item.file_foto // Perbaikan Path
+          file_foto: item.file_foto
             ? `/storage/galeri_kegiatan/${item.file_foto}`
             : null,
         }))
@@ -3508,33 +3690,24 @@ const AdminKontenpage = () => {
     } catch (err) {
       console.error("Failed to load gallery data:", err);
     }
-  }, []); // Tidak ada dependency
+  }, []);
 
   // Gunakan useEffect untuk memanggil fungsi fetch saat komponen dimuat
   useEffect(() => {
     const storedToken = localStorage.getItem("jwt");
     if (storedToken) {
       setAuthToken(storedToken);
-      console.log(
-        "AdminKontenpage useEffect: Token set from localStorage for initial data fetch."
-      );
       fetchAllContentData();
       fetchAllTentangKamiData();
       fetchVisiMisiData();
       fetchInformasiKontakData();
-    } else {
-      console.log(
-        "AdminKontenpage useEffect: No token found in localStorage for initial data fetch. Please login."
-      );
-      // Jika tidak ada token, mungkin arahkan ke halaman login atau tampilkan pesan
     }
-  }, []); // Array kosong berarti hanya berjalan sekali saat mount
+  }, []);
 
   // Fungsi untuk toggle bagian utama
   const toggleSection = (section) => {
     setActiveSection(activeSection === section ? null : section);
     if (section !== "tentangKami") {
-      // Jika mengklik section lain, tutup sub-bagian tentang kami
       setActiveTentangKami(null);
     }
   };
@@ -3549,8 +3722,8 @@ const AdminKontenpage = () => {
     setTentangKamiData((prevData) => ({
       ...prevData,
       [type]: {
-        ...prevData[type], // Pertahankan data lama yang tidak diubah
-        ...newData, // Timpa dengan data baru
+        ...prevData[type],
+        ...newData,
       },
     }));
   };
@@ -3701,7 +3874,7 @@ const AdminKontenpage = () => {
                 <p className="text-blue-500 text-center">
                   Memuat informasi Tentang Kami...
                 </p>
-              ) : errorTentangKami ? ( // Tampilkan error jika ada
+              ) : errorTentangKami ? (
                 <p className="text-red-500 text-center">{errorTentangKami}</p>
               ) : (
                 <>
@@ -3736,7 +3909,7 @@ const AdminKontenpage = () => {
                             <p className="text-blue-500 text-center">
                               Memuat informasi Visi dan Misi...
                             </p>
-                          ) : errorVisiMisi ? ( // Tampilkan error Visi Misi
+                          ) : errorVisiMisi ? (
                             <p className="text-red-500 text-center">
                               {errorVisiMisi}
                             </p>
@@ -3905,7 +4078,7 @@ const AdminKontenpage = () => {
                 <p className="text-blue-500 text-center">
                   Memuat informasi kontak...
                 </p>
-              ) : errorKontak ? ( // Tampilkan error Kontak
+              ) : errorKontak ? (
                 <p className="text-red-500 text-center">{errorKontak}</p>
               ) : (
                 <InformasiKontakEditor
