@@ -11,7 +11,7 @@ export default function TentangKamiYayasanPage() {
     const fetchData = async () => {
       try {
         const [profileRes, visiMisiRes] = await Promise.all([
-          axios.get('http://127.0.0.1:8000/api/profile-yayasan/1'),
+          axios.get('http://127.0.0.1:8000/api/profile-yayasan'),
           axios.get('http://127.0.0.1:8000/api/informasi-lembaga'),
         ]);
 
@@ -36,7 +36,7 @@ export default function TentangKamiYayasanPage() {
     <div className="min-h-screen bg-gray-100 pt-8 pb-16 px-4">
       <TentangKamiContent
         title={profile.nama_yayasan}
-        image={profile.foto_yayasan}
+        image={profile.url_foto_yayasan}
         alt="Logo Yayasan Bina ESSA"
         description={
           <>
