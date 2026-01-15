@@ -798,45 +798,6 @@ const AdminKategoriPage = () => {
                     </p>
                   )}
                 </div>
-                {/* <div>
-                  <Label htmlFor="deskripsi">Deskripsi</Label>
-                  <textarea
-                    id="deskripsi"
-                    name="deskripsi"
-                    value={form.deskripsi}
-                    onChange={(e) =>
-                      setForm({ ...form, deskripsi: e.target.value })
-                    }
-                    className="w-full p-2 border rounded mt-1 text-sm"
-                    rows="3"
-                    placeholder="Deskripsi kategori (opsional)"
-                  />
-                  {validationErrors.deskripsi && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {validationErrors.deskripsi[0]}
-                    </p>
-                  )}
-                </div> */}
-                {/* <div>
-                  <Label htmlFor="status">Status</Label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={form.status}
-                    onChange={(e) =>
-                      setForm({ ...form, status: e.target.value })
-                    }
-                    className="w-full p-2 border rounded mt-1 text-sm"
-                  >
-                    <option value="aktif">Aktif</option>
-                    <option value="nonaktif">Nonaktif</option>
-                  </select>
-                  {validationErrors.status && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {validationErrors.status[0]}
-                    </p>
-                  )}
-                </div> */}
               </div>
               <div className="flex justify-end gap-2 mt-4">
                 <button
@@ -896,24 +857,6 @@ const AdminKategoriPage = () => {
 
                 {!isEditing && (
                   <>
-                    {/* <div>
-                      <Label>Deskripsi</Label>
-                      <p className="font-medium">
-                        {selectedKategori.deskripsi || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <Label>Status</Label>
-                      <div className="mt-1">
-                        {getStatusBadge(selectedKategori.status)}
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Jumlah Pelatihan</Label>
-                      <p className="font-medium">
-                        {selectedKategori.jumlah_pelatihan} pelatihan
-                      </p>
-                    </div> */}
                     <div>
                       <Label>Dibuat</Label>
                       <p className="font-medium">
